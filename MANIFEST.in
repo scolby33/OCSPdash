@@ -1,0 +1,9 @@
+graft src
+
+include .bumpversion.cfg
+
+include tox.ini
+
+include *.rst
+
+global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store
