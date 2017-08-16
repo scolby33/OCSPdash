@@ -13,7 +13,7 @@ At the moment, installation must be performed via GitHub:
 
 .. code-block:: sh
 
-    $ pip install git+git://github.com/scolby33/OCSPdash.git
+    $ pip install git+https://github.com/scolby33/OCSPdash.git
 
 :code:`OCSPdash` supports only Python 3.6 or later.
 
