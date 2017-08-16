@@ -207,7 +207,4 @@ class ServerQuery(object):
         subject_cert = asymmetric.load_certificate(example_cert_bytes)
 
         parsed_ocsp_response = self.send_ocsp_request(subject_cert, issuer_cert, url)
-        if parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful':
-            return True
-        else:
-            return False
+        return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
