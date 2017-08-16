@@ -1,3 +1,4 @@
+"""The CLI module for OCSPdash."""
 from collections import OrderedDict
 import logging
 import json
