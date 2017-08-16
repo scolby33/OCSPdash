@@ -12,3 +12,6 @@ __email__ = 'scolby33@gmail.com'
 
 __license__ = 'MIT'
 __copyright__ = 'Copyright (c) 2017 Scott Colby'
+
+
+from . import server_query
