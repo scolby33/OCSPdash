@@ -1,11 +1,12 @@
 from collections import OrderedDict
 import logging
 import json
+import os
 import urllib.parse
 
 import click
 
-from . import server_query
+from .server_query import ServerQuery
 
 
 @click.command()
@@ -17,6 +18,9 @@ def main(n, o, v):
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
+
+    server_query = ServerQuery(os.environ.get('UID'), os.environ.get('SECRET'))
+
     issuers = server_query.get_top_authorities(n)
 
     ocsp_reports = OrderedDict(
