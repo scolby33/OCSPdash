@@ -29,6 +29,7 @@
             color: #FFFFFF;
             padding: 10px 0 10px 0;
             font-size: 2.2em;
+            margin-bottom: 20px;
         }
 
         .content {
@@ -40,7 +41,7 @@
         }
 
         .questionable {
-            color: yellow;
+            color: orange;
         }
 
         .bad {
@@ -56,45 +57,48 @@
             <h1>OCSP Dashboard</h1>
         </div>
     </div>
-    <div class="content">
-        <div class="container">
-            <div class="panel panel-default">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>Authority</th>
-                        {% for location in payload['locations'] %}
-                            <th>{{ location }}</th>
-                        {% endfor %}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for entry in payload['data'] %}
-                        <tr>
-                            <td>{{ entry['authority'] }}</td>
-                        </tr>
-                        {% for endpoint in entry['endpoints'] %}
-                            <tr>
-                                <td>{{ endpoint['url'] }}</td>
-                                {% for status in endpoint['statuses'] %}
-                                    <td>
-                                        {% if status == 'good' %}
-                                            <span class="glyphicon glyphicon-ok-sign good"></span>
-                                        {% elif status == 'questionable' %}
-                                            <span class="glyphicon glyphicon-warning-sign questionable"></span>
-                                        {% elif status=='bad' %}
-                                            <span class="glyphicon glyphicon-remove-sign bad"></span>
-                                        {% else %}
-                                            <span class="glyphicon glyphicon-question-sign"></span>
-                                        {% endif %}
-                                    </td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
+
+    <div class="container">
+        <div class="panel panel-default">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th></th>
+                    {% for location in payload['locations'] %}
+                        <th class="text-center">{{ location }}</th>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                </tr>
+                </thead>
+                <tbody>
+                {% for entry in payload['data'] %}
+                    <tr>
+                        <td colspan="{{ 1 + payload['locations']|length }}">
+                            {{ entry['authority'] }}
+                        </td>
+                    </tr>
+                    {% for endpoint in entry['endpoints'] %}
+                        <tr>
+                            <td>{{ endpoint['url'] }}</td>
+                            {% for status in endpoint['statuses'] %}
+                                <td class="text-center">
+                                    {% if status == 'good' %}
+                                        <span class="glyphicon glyphicon-ok-sign good"></span>
+                                    {% elif status == 'questionable' %}
+                                        <span class="glyphicon glyphicon-warning-sign questionable"></span>
+                                    {% elif status=='bad' %}
+                                        <span class="glyphicon glyphicon-remove-sign bad"></span>
+                                    {% else %}
+                                        <span class="glyphicon glyphicon-question-sign"></span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+
+
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 {% endblock %}
