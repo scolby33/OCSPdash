@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 
 from oscrypto import asymmetric
@@ -9,7 +9,6 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Boolean,
-    UniqueConstraint,
     Integer,
     String,
     DateTime,
@@ -42,23 +41,6 @@ class Authority(Base):
     rank = Column(Integer, doc=("Update this when rankings change. Don't delete formerly-high-ranked "
                                 "authorities as that would mess up relations to old test results"))
 
-    endpoints = relationship(
-        'Endpoint',
-        secondary=Responder,
-        primaryjoin=(id == Responder.authority_id),
-        secondaryjoin=(id == Responder.endpoint_id),
-        backref=backref('authorities')
-    )
-
-
-class Endpoint(Base):
-    """Represents the URL at which an OCSP responder is present"""
-    __tablename__ = 'endpoint'
-
-    id = Column(Integer, primary_key=True)
-
-    url = Column(Text, nullable=False, doc='the URL of the OCSP endpoint')
-
 
 class Responder(Base):
     """Represents the unique pair of authority/endpoint"""
@@ -67,14 +49,12 @@ class Responder(Base):
     id = Column(Integer, primary_key=True)
 
     authority_id = Column(Integer, ForeignKey('authority.id'), nullable=False, doc='the authority')
-    endpoint_id = Column(Integer, ForeignKey('endpoint.id'), nullable=False, doc='the endpoint')
+    authority = relationship('Authority', backref=backref('responders'))
+
+    url = Column(Text, nullable=False, doc='the URL of the OCSP endpoint')
 
     cardinality = Column(Integer, doc="The number of certs observed using this authority/endpoint pair in the "
                                       "wild. Update this when rankings are updated.")
-
-    __table_args__ = (
-        UniqueConstraint(authority_id, endpoint_id),
-    )
 
 
 class Chain(Base):
@@ -84,22 +64,23 @@ class Chain(Base):
     id = Column(Integer, primary_key=True)
 
     responder_id = Column(Integer, ForeignKey('responder.id'))
-    responder = relationship('Responder')
+    responder = relationship('Responder', backref=backref('chains'))
 
     subject = Column(Binary, nullable=False, doc='raw bytes of the subject certificate')
     issuer = Column(Binary, nullable=False, doc="raw bytes of the subject's issuer certificate")
-    retrieved = Column(DateTime, nullable=False,
+    retrieved = Column(DateTime, default=datetime.utcnow, nullable=False,
                        doc='expire the cached chain when this date is more than 7 days ago')
-
-    @property
-    def expires_on(self) -> datetime:  # expire the cached certificate when this date is in the past
-        certificate = asymmetric.load_certificate(self.subject_cert)
-        return certificate.asn1['tbs_certificate']['validity']['not_after'].native
 
     @property
     def expired(self) -> bool:
         """Has this certificate expired?"""
-        return self.expires_on < datetime.now()
+        certificate = asymmetric.load_certificate(self.subject_cert)
+        expires_on = certificate.asn1['tbs_certificate']['validity']['not_after'].native
+        return expires_on < datetime.utcnow()
+
+    @property
+    def old(self) -> bool:
+        return self.retrieved < datetime.utcnow() - timedelta(days=7)
 
 
 class User(Base):
@@ -108,7 +89,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
 
-    location = Column(Text, doc='the location to be displayed')
+    location = Column(String(255),index=True, doc='the location to be displayed')
 
 
 class Result(Base):
@@ -117,17 +98,16 @@ class Result(Base):
 
     id = Column(Integer, primary_key=True)
 
-    responder_id = Column(Integer, ForeignKey('responder.id'), doc='the authority/endpoint pair that was tested')
-    responder = relationship('Responder', backref=backref('results'))
-
-    chain_id = Column(Integer, ForeignKey('chain.id'), doc='the certificate chain that was used for the OCSP '
-                                                           'test')
+    chain_id = Column(Integer, ForeignKey('chain.id'), doc='the certificate chain that was used for the OCSP test')
     chain = relationship('Chain', backref=backref('results'))
 
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False, doc='the user that ran the test')
     user = relationship('User', backref=backref('results', lazy='dynamic'))
 
     retrieved = Column(DateTime, default=datetime.utcnow, doc='when the test was run')
+
+    failed = Column(Boolean, default=True, nullable=False, doc="cant create chain")
+    current = Column(Boolean, default=False, nullable=False, doc='is this a current responder') # TODO better docs
     ping = Column(Boolean, default=False, nullable=False, doc='did the server respond to a ping?')
     ocsp = Column(Boolean, default=False, nullable=False, doc='did a valid OCSP request get a good response?')
 
