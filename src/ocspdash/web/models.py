@@ -108,23 +108,15 @@ class Result(Base):
 
     id = Column(Integer, primary_key=True)
 
-    responder_id = Column(Integer, ForeignKey('responder.id'))
-    responder = relationship('Responder')
+    certificate_id = Column(Integer, ForeignKey('certificate.id'))
+    certificate = relationship('Certificate', backref=backref('results'))
 
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False, doc='The user that ran the test')
-    user = relationship('User')
+    user = relationship('User', backref=backref('results', lazy='dynamic'))
 
     retrieved = Column(DateTime, default=datetime.utcnow, doc="When was the test run")
     ping = Column(Boolean, default=False, nullable=False, doc='did the server respond to a ping?')
     ocsp = Column(Boolean, default=False, nullable=False, doc='did a valid OCSP request get a good response?')
-
-    @property
-    def authority(self):
-        return self.responder.authority
-
-    @property
-    def endpoint(self):
-        return self.responder.endpoint
 
     @property
     def status(self) -> OCSPResponderStatus:  # relates to the glyphicon displayed
