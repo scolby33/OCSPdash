@@ -7,11 +7,8 @@ api = Blueprint('api', __name__)
 ui = Blueprint('ui', __name__)
 
 
-def create_application():
-    """Creates the OCSPdash Flask application
-
-    :rtype: flask.Flask
-    """
+def create_application() -> Flask:
+    """Creates the OCSPdash Flask application"""
     app = Flask(__name__)
 
     Bootstrap(app)
