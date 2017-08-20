@@ -46,10 +46,8 @@ def main(n, o, v):
             results['ping'] = server_query.ping(host)
             # run OCSP response test
             certs = server_query.get_certs_for_issuer_and_url(issuer, url)  # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
-            if certs:
-                results['ocsp_response'] = server_query.check_ocsp_response(*certs, url)
-            else:
-                results['ocsp_response'] = False
+
+            results['ocsp_response'] = server_query.check_ocsp_response(*certs, url) if certs else False
 
     if o:
         print(json.dumps(test_results, indent=2))
