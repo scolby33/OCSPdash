@@ -128,11 +128,14 @@ class Result(Base):
 
     @property
     def status(self) -> OCSPResponderStatus:  # relates to the glyphicon displayed
-        if self.ocsp and self.ping:
-            return OCSPResponderStatus.good
-        elif self.ocsp and not self.ping:
-            return OCSPResponderStatus.questionable
-        elif not self.ocsp:
+        """Gets the status
+
+        :rtype: OCSPResponderStatus
+        """
+        if not self.ocsp:
             return OCSPResponderStatus.bad
-        else:
-            return OCSPResponderStatus.unknown  # I don't think we'd ever get here
+
+        if self.ping:
+            return OCSPResponderStatus.good
+
+        return OCSPResponderStatus.questionable
