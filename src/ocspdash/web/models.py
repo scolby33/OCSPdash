@@ -92,6 +92,14 @@ class Certificate(Base):
         certificate = asymmetric.load_certificate(self.subject_cert)
         return certificate.asn1['tbs_certificate']['validity']['not_after'].native
 
+    @property
+    def expired(self):
+        """Has this certificate expired?
+
+        :rtype: bool
+        """
+        return self.expires_on < datetime.now()
+
 
 class User(Base):
     """References a user"""
