@@ -36,7 +36,7 @@ class Authority(Base):
 
     name = Column(String(255), nullable=False, index=True, doc='The name of the authority')
 
-    number_of_certs = Column(Integer)  # TODO document this
+    cardinality = Column(Integer, doc='Number of certificates that the Authority has issued. From Censys crawler')
 
     rank = Column(Integer, doc=("Update this when rankings change. Don't delete formerly-high-ranked "
                                 "authorities as that would mess up relations to old test results"))
