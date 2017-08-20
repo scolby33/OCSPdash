@@ -27,6 +27,7 @@ INSTALL_REQUIRES = [
     'requests',
     'flask',
     'flask-bootstrap',
+    'sqlalchemy',
 ]
 EXTRAS_REQUIRE = {}
 TESTS_REQUIRE = ['tox']

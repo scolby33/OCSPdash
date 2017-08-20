@@ -6,3 +6,4 @@ oscrypto
 requests
 flask
 flask-bootstrap
+sqlalchemy
