@@ -1,0 +1,182 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}OCSPdash{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+
+        tr > td:first-child {
+            border: 0px;
+        }
+
+        tr td:only-child {
+            font-weight: bold;
+        }
+
+        tr td:not(:first-child) {
+            text-align: center;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .header {
+            background-color: #79f0c0;
+            color: #FFFFFF;
+            padding: 10px 0 10px 0;
+            font-size: 2.2em;
+        }
+
+        .content {
+            padding-top: 20px;
+        }
+
+        .good {
+            color: green;
+        }
+
+        .questionable {
+            color: yellow;
+        }
+
+        .bad {
+            color: red;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="header">
+        <div class="container">
+            <h1>OCSP Dashboard</h1>
+        </div>
+    </div>
+    <div class="content">
+        <div class="container">
+            <div class="panel panel-default">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Authority</th>
+                        <th>CA, USA</th>
+                        <th>NY, USA</th>
+                        <th>NRW, DE</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Let's Encrypt</td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.int-x3.letsencrypt.org/</td>
+                        <td>
+                            <span class="glyphicon glyphicon-ok-sign good"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-warning-sign questionable"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-remove-sign bad"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.int-x3.letsencrypt.org</td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.int-x1.letsencrypt.org/</td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>cPanel, Inc.</td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.comodoca.com</td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>COMODO CA Limited</td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.comodoca4.com</td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.comodoca.com</td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.comodoca2.com</td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>http://ocsp.comodoca3.com</td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-question-sign"></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -24,7 +24,9 @@ INSTALL_REQUIRES = [
     'click',
     'ocspbuilder',
     'oscrypto',
-    'requests'
+    'requests',
+    'flask',
+    'flask-bootstrap',
 ]
 EXTRAS_REQUIRE = {}
 TESTS_REQUIRE = ['tox']
