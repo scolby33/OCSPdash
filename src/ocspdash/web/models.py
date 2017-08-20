@@ -97,11 +97,8 @@ class Chain(Base):
         return certificate.asn1['tbs_certificate']['validity']['not_after'].native
 
     @property
-    def expired(self):
-        """Has this certificate expired?
-
-        :rtype: bool
-        """
+    def expired(self) -> bool:
+        """Has this certificate expired?"""
         return self.expires_on < datetime.now()
 
 
@@ -120,13 +117,15 @@ class Result(Base):
 
     id = Column(Integer, primary_key=True)
 
-    certificate_id = Column(Integer, ForeignKey('certificate.id'))
-    certificate = relationship('Certificate', backref=backref('results'))
+    responder_id = Column(Integer, ForeignKey('responder.id'), doc='the authority/endpoint pair that was tested')
+    responder = relationship('Responder', backref=backref('results'))
+
+    chain_id = Column(Integer, ForeignKey('chain.id'), doc='the certificate chain that was used for the OCSP '
+                                                           'test')
+    chain = relationship('Chain', backref=backref('results'))
 
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False, doc='the user that ran the test')
     user = relationship('User', backref=backref('results', lazy='dynamic'))
-
-    certificate: Chain = None  # TODO: the certificate used to make the OCSP request
 
     retrieved = Column(DateTime, default=datetime.utcnow, doc='when the test was run')
     ping = Column(Boolean, default=False, nullable=False, doc='did the server respond to a ping?')
@@ -134,10 +133,7 @@ class Result(Base):
 
     @property
     def status(self) -> OCSPResponderStatus:  # relates to the glyphicon displayed
-        """Gets the status
-
-        :rtype: OCSPResponderStatus
-        """
+        """Gets the status"""
         if not self.ocsp:
             return OCSPResponderStatus.bad
 
