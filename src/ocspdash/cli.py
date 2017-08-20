@@ -1,5 +1,6 @@
 """The CLI module for OCSPdash."""
 from collections import OrderedDict
+import datetime
 import logging
 import json
 import os
@@ -22,9 +23,9 @@ def main(n, o, v):
 
     server_query = ServerQuery(os.environ.get('UID'), os.environ.get('SECRET'))
 
-    issuers = server_query.get_top_authorities(n)
+    issuers = server_query.get_top_authorities(n)  # TODO: cache this result for 24 hours
 
-    ocsp_reports = OrderedDict(
+    ocsp_reports = OrderedDict(  # TODO: cache this result for 24 hours
         (issuer, server_query.get_ocsp_urls_for_issuer(issuer))
         for issuer in issuers.keys()
     )
@@ -36,6 +37,7 @@ def main(n, o, v):
 
     for issuer, urls in test_results.items():
         for url, results in urls.items():
+            results['timestamp'] = datetime.datetime.utcnow().timestamp()
             # check if current
             current = server_query.is_ocsp_url_current_for_issuer(issuer, url)
             results['current'] = current
@@ -43,7 +45,11 @@ def main(n, o, v):
             host = urllib.parse.urlparse(url)[1]
             results['ping'] = server_query.ping(host)
             # run OCSP response test
-            results['ocsp_response'] = server_query.ocsp(issuer, url)
+            certs = server_query.get_certs_for_issuer_and_url(issuer, url)  # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
+            if certs:
+                results['ocsp_response'] = server_query.check_ocsp_response(*certs, url)
+            else:
+                results['ocsp_response'] = False
 
     if o:
         print(json.dumps(test_results, indent=2))
@@ -51,16 +57,7 @@ def main(n, o, v):
         for issuer, urls in test_results.items():
             print(issuer)
             for url, results in urls.items():
-                if results['ocsp_response'] is True:
-                    ocsp_status = '.'
-                elif results['ocsp_response'] == 'No Issuer Url':
-                    ocsp_status = 'I'
-                elif results['ocsp_response'] == 'Failed to Download Issuer Cert':
-                    ocsp_status = 'D'
-                else:
-                    ocsp_status = 'X'
-
-                print(f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{ocsp_status}')
+                print(f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{"." if results["ocsp_response"] else "X"}')
 
 
 if __name__ == '__main__':
