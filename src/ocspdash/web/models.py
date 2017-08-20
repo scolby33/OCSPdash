@@ -37,7 +37,7 @@ class Authority(Base):
     name = Column(String(255), nullable=False, index=True, doc='the name of the authority')
 
     cardinality = Column(Integer, doc="The number of certs observed from this authority in the wild. Update this "
-                                      "when rankings change.")
+                                      "when rankings change. From the Censys crawler.")
 
     rank = Column(Integer, doc=("Update this when rankings change. Don't delete formerly-high-ranked "
                                 "authorities as that would mess up relations to old test results"))
@@ -96,6 +96,14 @@ class Chain(Base):
         certificate = asymmetric.load_certificate(self.subject_cert)
         return certificate.asn1['tbs_certificate']['validity']['not_after'].native
 
+    @property
+    def expired(self):
+        """Has this certificate expired?
+
+        :rtype: bool
+        """
+        return self.expires_on < datetime.now()
+
 
 class User(Base):
     """References a user"""
@@ -112,11 +120,11 @@ class Result(Base):
 
     id = Column(Integer, primary_key=True)
 
-    responder_id = Column(Integer, ForeignKey('responder.id'))
-    responder = relationship('Responder')
+    certificate_id = Column(Integer, ForeignKey('certificate.id'))
+    certificate = relationship('Certificate', backref=backref('results'))
 
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False, doc='the user that ran the test')
-    user = relationship('User')
+    user = relationship('User', backref=backref('results', lazy='dynamic'))
 
     certificate: Chain = None  # TODO: the certificate used to make the OCSP request
 
@@ -125,20 +133,15 @@ class Result(Base):
     ocsp = Column(Boolean, default=False, nullable=False, doc='did a valid OCSP request get a good response?')
 
     @property
-    def authority(self):
-        return self.responder.authority
-
-    @property
-    def endpoint(self):
-        return self.responder.endpoint
-
-    @property
     def status(self) -> OCSPResponderStatus:  # relates to the glyphicon displayed
-        if self.ocsp and self.ping:
-            return OCSPResponderStatus.good
-        elif self.ocsp and not self.ping:
-            return OCSPResponderStatus.questionable
-        elif not self.ocsp:
+        """Gets the status
+
+        :rtype: OCSPResponderStatus
+        """
+        if not self.ocsp:
             return OCSPResponderStatus.bad
-        else:
-            return OCSPResponderStatus.unknown  # I don't think we'd ever get here
+
+        if self.ping:
+            return OCSPResponderStatus.good
+
+        return OCSPResponderStatus.questionable
