@@ -29,10 +29,10 @@ class ServerQuery(object):
     def get_top_authorities(self, count: int=10) -> MutableMapping[str, int]:
         """Retrieve the name and count of certificates for the top n certificate authorities by number of certs
 
-                :param count: The number of top authorities to retrieve
+        :param count: The number of top authorities to retrieve
 
-                :returns: A mapping of authority name to count of certificates, sorted in descending order by certificate count
-                """
+        :returns: A mapping of authority name to count of certificates, sorted in descending order by certificate count
+        """
         issuers_report = self.censys_api.report(query='valid_nss: true', field='parsed.issuer.organization', buckets=count)
         issuers_and_counts = OrderedDict(sorted(
             ((result['key'], result['doc_count']) for result in issuers_report['results']),
@@ -44,10 +44,10 @@ class ServerQuery(object):
     def get_ocsp_urls_for_issuer(self, issuer: str) -> MutableMapping[str, int]:
         """Retrieve all the OCSP URLs used by the authority in the wild
 
-                :param issuer: The name of the authority to get OCSP URLs for
+        :param issuer: The name of the authority to get OCSP URLs for
 
-                :returns: A mapping of OCSP URLs to count of certificates, sorted in descending order by certificate count
-                """
+        :returns: A mapping of OCSP URLs to count of certificates, sorted in descending order by certificate count
+        """
         ocsp_urls_report = self.censys_api.report(
             query=f'valid_nss: true AND parsed.issuer.organization: "{issuer}"',
             field='parsed.extensions.authority_info_access.ocsp_urls'
@@ -61,13 +61,13 @@ class ServerQuery(object):
 
     def is_ocsp_url_current_for_issuer(self, issuer: str, url: str) -> bool:
         """Determine if an issuer is currently using a particular OCSP URL.
-                A URL is deemed "current" if there is at least one non-expired, valid certificate that lists it.
+        A URL is deemed "current" if there is at least one non-expired, valid certificate that lists it.
 
-                :param issuer: The name of the authority
-                :param url: the OCSP URL to check
+        :param issuer: The name of the authority
+        :param url: the OCSP URL to check
 
-                :returns: True if the URL appears to be in use, False otherwise
-                """
+        :returns: True if the URL appears to be in use, False otherwise
+        """
         tags_report = self.censys_api.report(
             query=f'valid_nss: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND (tags: "unexpired" OR tags: "expired")',
             field='tags'

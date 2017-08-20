@@ -1,10 +1,10 @@
 """The CLI module for OCSPdash."""
-from collections import OrderedDict
 import datetime
-import logging
 import json
+import logging
 import os
 import urllib.parse
+from collections import OrderedDict
 
 import click
 
@@ -31,7 +31,13 @@ def main(n, o, v):
     )
 
     test_results = OrderedDict(
-        (issuer, OrderedDict((url, {'current': None, 'ping': None, 'ocsp_response': None}) for url in urls))
+        (
+            issuer,
+            OrderedDict(
+                (url, {'current': None, 'ping': None, 'ocsp_response': None})
+                for url in urls
+            )
+        )
         for issuer, urls in ocsp_reports.items()
     )
 
@@ -39,13 +45,14 @@ def main(n, o, v):
         for url, results in urls.items():
             results['timestamp'] = datetime.datetime.utcnow().timestamp()
             # check if current
-            current = server_query.is_ocsp_url_current_for_issuer(issuer, url)
-            results['current'] = current
+            results['current'] = server_query.is_ocsp_url_current_for_issuer(issuer, url)
             # run ping test
-            host = urllib.parse.urlparse(url)[1]
-            results['ping'] = server_query.ping(host)
+            parse_result = urllib.parse.urlparse(url)
+            results['ping'] = server_query.ping(parse_result.netloc)
+
             # run OCSP response test
-            certs = server_query.get_certs_for_issuer_and_url(issuer, url)  # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
+            # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
+            certs = server_query.get_certs_for_issuer_and_url(issuer, url)
 
             if certs is None:
                 results['ocsp_response'] = False
