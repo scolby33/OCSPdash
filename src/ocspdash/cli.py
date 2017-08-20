@@ -47,7 +47,11 @@ def main(n, o, v):
             # run OCSP response test
             certs = server_query.get_certs_for_issuer_and_url(issuer, url)  # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
 
-            results['ocsp_response'] = server_query.check_ocsp_response(*certs, url) if certs else False
+            if certs is None:
+                results['ocsp_response'] = False
+            else:
+                subject_cert, issuer_cert = certs
+                results['ocsp_response'] = server_query.check_ocsp_response(subject_cert, issuer_cert, url)
 
     if o:
         print(json.dumps(test_results, indent=2))
