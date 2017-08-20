@@ -1,5 +1,5 @@
 """A dashboard for the status of the top certificate authorities' OCSP responders."""
-# metdata
+# metadata
 __version__ = '0.1.0-dev'
 
 __title__ = 'OCSPdash'
