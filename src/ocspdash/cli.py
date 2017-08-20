@@ -1,9 +1,10 @@
 """The CLI module for OCSPdash."""
-from collections import OrderedDict
-import logging
+import datetime
 import json
+import logging
 import os
 import urllib.parse
+from collections import OrderedDict
 
 import click
 
@@ -22,28 +23,42 @@ def main(n, o, v):
 
     server_query = ServerQuery(os.environ.get('UID'), os.environ.get('SECRET'))
 
-    issuers = server_query.get_top_authorities(n)
+    issuers = server_query.get_top_authorities(n)  # TODO: cache this result for 24 hours
 
-    ocsp_reports = OrderedDict(
+    ocsp_reports = OrderedDict(  # TODO: cache this result for 24 hours
         (issuer, server_query.get_ocsp_urls_for_issuer(issuer))
         for issuer in issuers.keys()
     )
 
     test_results = OrderedDict(
-        (issuer, OrderedDict((url, {'current': None, 'ping': None, 'ocsp_response': None}) for url in urls))
+        (
+            issuer,
+            OrderedDict(
+                (url, {'current': None, 'ping': None, 'ocsp_response': None})
+                for url in urls
+            )
+        )
         for issuer, urls in ocsp_reports.items()
     )
 
     for issuer, urls in test_results.items():
         for url, results in urls.items():
+            results['timestamp'] = datetime.datetime.utcnow().timestamp()
             # check if current
-            current = server_query.is_ocsp_url_current_for_issuer(issuer, url)
-            results['current'] = current
+            results['current'] = server_query.is_ocsp_url_current_for_issuer(issuer, url)
             # run ping test
-            host = urllib.parse.urlparse(url)[1]
-            results['ping'] = server_query.ping(host)
+            parse_result = urllib.parse.urlparse(url)
+            results['ping'] = server_query.ping(parse_result.netloc)
+
             # run OCSP response test
-            results['ocsp_response'] = server_query.ocsp(issuer, url)
+            # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
+            certs = server_query.get_certs_for_issuer_and_url(issuer, url)
+
+            if certs is None:
+                results['ocsp_response'] = False
+            else:
+                subject_cert, issuer_cert = certs
+                results['ocsp_response'] = server_query.check_ocsp_response(subject_cert, issuer_cert, url)
 
     if o:
         print(json.dumps(test_results, indent=2))
@@ -51,16 +66,7 @@ def main(n, o, v):
         for issuer, urls in test_results.items():
             print(issuer)
             for url, results in urls.items():
-                if results['ocsp_response'] is True:
-                    ocsp_status = '.'
-                elif results['ocsp_response'] == 'No Issuer Url':
-                    ocsp_status = 'I'
-                elif results['ocsp_response'] == 'Failed to Download Issuer Cert':
-                    ocsp_status = 'D'
-                else:
-                    ocsp_status = 'X'
-
-                print(f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{ocsp_status}')
+                print(f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{"." if results["ocsp_response"] else "X"}')
 
 
 if __name__ == '__main__':
