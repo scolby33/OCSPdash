@@ -86,8 +86,9 @@ class ServerQuery(object):
                 :returns: True if an ICMP echo is received, False otherwise
                 """
         logger.debug(f'Pinging {host}')
-        parameters = '-n 1' if platform.system().lower() == 'windows' else '-c 1'
-        return subprocess.run(f'ping {parameters} {host}', stdout=subprocess.DEVNULL).returncode == 0
+        parameters = ['-n', '1'] if platform.system().lower() == 'windows' else ['-c', '1']
+        results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
+        return results.returncode == 0
 
     def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], None]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
