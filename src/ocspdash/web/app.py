@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, Blueprint, render_template, jsonify
+from flask import Flask, Blueprint, render_template, jsonify, current_app
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
@@ -38,15 +38,15 @@ def create_application() -> Flask:
 
     app.config.setdefault('OCSPDASH_CONNECTION')
 
-    manager = Manager(
+    app.manager = Manager(
         connection=app.config.get('OCSPDASH_CONNECTION', OCSPDASH_DATABASE_CONNECTION),
         user=app.config.get('CENSYS_API_ID'),
         password=app.config.get('CENSYS_API_SECRET'),
     )
 
-    manager.create_all()
+    app.manager.create_all()
 
-    make_admin(app, manager.session)
+    make_admin(app, app.manager.session)
 
     app.register_blueprint(api)
     app.register_blueprint(ui)
