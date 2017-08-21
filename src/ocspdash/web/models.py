@@ -136,4 +136,4 @@ class Result(Base):
         return OCSPResponderStatus.questionable
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} (failed: {self.created}, current: {self.current}, ping: {self.ping}, ocsp: {self.ocsp})>'
+        return f'<{self.__class__.__name__} created={self.created}, current={self.current}, ping={self.ping}, ocsp={self.ocsp})>'
