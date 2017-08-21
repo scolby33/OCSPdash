@@ -27,6 +27,7 @@ INSTALL_REQUIRES = [
     'requests',
     'flask',
     'flask-bootstrap',
+    'flask-admin',
     'sqlalchemy',
 ]
 EXTRAS_REQUIRE = {}

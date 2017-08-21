@@ -1,10 +1,30 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 from flask import Flask, Blueprint, render_template, jsonify
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
+
+from ocspdash.web.manager import Manager
+from ocspdash.web.models import Authority, Responder, Chain, User, Result
 
 api = Blueprint('api', __name__)
 ui = Blueprint('ui', __name__)
+
+
+def make_admin(app: Flask, session):
+    """Adds admin views to the app"""
+    admin = Admin(app)
+
+    admin.add_view(ModelView(Authority, session))
+    admin.add_view(ModelView(Responder, session))
+    admin.add_view(ModelView(Chain, session))
+    admin.add_view(ModelView(User, session))
+    admin.add_view(ModelView(Result, session))
+
+    return admin
 
 
 def create_application() -> Flask:
@@ -12,6 +32,17 @@ def create_application() -> Flask:
     app = Flask(__name__)
 
     Bootstrap(app)
+
+    manager = Manager(
+        echo=True,
+        connection=app.config.get('CONNECTION', 'sqlite:///' + os.path.join(os.path.expanduser('~'), 'Desktop', 'ocsp.db')),
+        user=app.config.get('CENSYS_API_ID'),
+        password=app.config.get('CENSYS_API_SECRET'),
+    )
+
+    manager.create_all()
+
+    make_admin(app, manager.session)
 
     app.register_blueprint(api)
     app.register_blueprint(ui)
