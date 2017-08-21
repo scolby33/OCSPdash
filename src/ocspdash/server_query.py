@@ -143,9 +143,14 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bo
     try:
         ocsp_resp = requests.post(url, data=ocsp_request.dump(),
                                   headers={'Content-Type': 'application/ocsp-request'})
-        parsed_ocsp_response = OCSPResponse.load(ocsp_resp.content)
+
     except requests.RequestException:
         logger.warning(f'Failed to make OCSP request for {issuer}: {url}')
+        return False
+    try:
+        parsed_ocsp_response = OCSPResponse.load(ocsp_resp.content)
+    except ValueError:
+        logger.warning(f'Failed to parse OCSP response for {issuer}: {url}')
         return False
 
     return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
