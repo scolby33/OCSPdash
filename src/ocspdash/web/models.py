@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from oscrypto import asymmetric
@@ -82,7 +82,7 @@ class Chain(Base):
         """Has this certificate expired?"""
         certificate = asymmetric.load_certificate(self.subject)
         expires_on = certificate.asn1['tbs_certificate']['validity']['not_after'].native
-        return expires_on < datetime.utcnow()
+        return expires_on < datetime.utcnow().replace(tzinfo=timezone.utc)
 
     @property
     def old(self) -> bool:
