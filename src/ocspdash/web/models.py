@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import operator
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 
@@ -61,6 +62,18 @@ class Responder(Base):
 
     def __repr__(self):
         return f'{self.authority} at {self.url}'
+
+    @property
+    def current(self) -> bool:
+        """Calculates if this responder is current by the status of its most recent result over all chains."""
+        return max(
+            (
+                result
+                for chain in self.chains
+                for result in chain.results
+            ),
+            key=operator.attrgetter('retrieved')
+        ).current
 
 
 class Chain(Base):
