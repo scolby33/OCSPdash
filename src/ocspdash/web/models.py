@@ -118,7 +118,7 @@ class Result(Base):
 
     retrieved = Column(DateTime, default=datetime.utcnow, doc='when the test was run')
 
-    failed = Column(Boolean, default=True, nullable=False, doc="cant create chain")
+    created = Column(Boolean, default=False, nullable=False, doc="able to create chain")
     current = Column(Boolean, default=False, nullable=False, doc='is this responder specified by any currently '
                                                                  'valid certificates?')
     ping = Column(Boolean, default=False, nullable=False, doc='did the server respond to a ping?')
@@ -136,4 +136,4 @@ class Result(Base):
         return OCSPResponderStatus.questionable
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} (failed: {self.failed}, current: {self.current}, ping: {self.ping}, ocsp: {self.ocsp})>'
+        return f'<{self.__class__.__name__} (failed: {self.created}, current: {self.current}, ping: {self.ping}, ocsp: {self.ocsp})>'

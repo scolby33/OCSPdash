@@ -166,7 +166,7 @@ class Manager(BaseCacheManager):
                 )
 
                 if chain is not None:
-                    result.failed = False
+                    result.created = True
                     result.current = self.server_query.is_ocsp_url_current_for_issuer(authority.name, url)
                     parse_result = urllib.parse.urlparse(url)
                     result.ping = self.server_query.ping(parse_result.netloc)
