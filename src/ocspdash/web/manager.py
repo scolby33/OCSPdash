@@ -15,13 +15,21 @@ from .models import (
     Result
 )
 from ..server_query import ServerQuery
+from ..constants import OCSPDASH_DATABASE_CONNECTION
 
 logger = logging.getLogger(__name__)
 
 
 class BaseCacheManager(object):
     def __init__(self, connection=None, echo=False):
-        self.connection = connection if connection is not None else 'sqlite://'
+        if connection:
+            self.connection = connection
+        elif 'OCSPDASH_CONNECTION' in os.environ:
+            logger.info('using connection from environment: %s', os.environ['OCSPDASH_CONNECTION'])
+            self.connection = os.environ['OCSPDASH_CONNECTION']
+        else:
+            logger.info('using default connection: %s', OCSPDASH_DATABASE_CONNECTION)
+            self.connection = OCSPDASH_DATABASE_CONNECTION
 
         self.engine = create_engine(self.connection, echo=echo)
 

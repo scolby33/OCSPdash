@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
-
 from flask import Flask, Blueprint, render_template, jsonify
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 
+from ocspdash.constants import OCSPDASH_DATABASE_CONNECTION
 from ocspdash.web.manager import Manager
 from ocspdash.web.models import Authority, Responder, Chain, User, Result
 
@@ -37,9 +36,10 @@ def create_application() -> Flask:
 
     Bootstrap(app)
 
+    app.config.setdefault('OCSPDASH_CONNECTION')
+
     manager = Manager(
-        echo=True,
-        connection=app.config.get('CONNECTION', 'sqlite:///' + os.path.join(os.path.expanduser('~'), 'Desktop', 'ocsp.db')),
+        connection=app.config.get('OCSPDASH_CONNECTION', OCSPDASH_DATABASE_CONNECTION),
         user=app.config.get('CENSYS_API_ID'),
         password=app.config.get('CENSYS_API_SECRET'),
     )
