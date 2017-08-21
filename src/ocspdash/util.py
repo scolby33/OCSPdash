@@ -1,12 +1,14 @@
-from functools import wraps
 import logging
 import threading
 import time
+from functools import wraps
 from typing import Callable, Union
 
 import censys.certificates
 
 logger = logging.getLogger(__name__)
+
+CENSYS_RATE_LIMIT = 0.2
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:
@@ -44,11 +46,15 @@ def rate_limited(max_per_second: Union[int, float]) -> Callable:
 
     return decorate
 
-censys_rate_limit = rate_limited(0.2)
+
+censys_rate_limit = rate_limited(CENSYS_RATE_LIMIT)
 
 
 class RateLimitedCensysCertificates(censys.certificates.CensysCertificates):
-    """A :class:`censys.certificates.CensysCertificates` subclass with the :meth:`search` and :meth:`report` methods rate-limited to 0.4 calls/sec"""
+    """A :class:`censys.certificates.CensysCertificates` subclass with the :meth:`search` and :meth:`report`
+    methods rate-limited to :data:`CENSYS_RATE_LIMIT` calls/sec
+    """
+
     @censys_rate_limit
     def search(self, *args, **kwargs):
         return super().search(*args, **kwargs)
