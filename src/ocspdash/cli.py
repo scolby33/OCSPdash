@@ -100,5 +100,14 @@ def update(n, connection, verbose):
     m.update(user, n=n)
 
 
+@main.command()
+@click.option('--connection')
+def nuke(connection):
+    """Nukes the database"""
+    if click.confirm('Nuke the database?'):
+        m = Manager(connection=connection, echo=True)
+        m.drop_database()
+
+
 if __name__ == '__main__':
     main()
