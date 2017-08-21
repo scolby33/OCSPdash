@@ -41,7 +41,12 @@ class BaseCacheManager(object):
 
 
 class Manager(BaseCacheManager):
-    def __init__(self, connection=None, echo=None, user=None, password=None):
+    def __init__(self, connection=None, echo: bool = None, user: str = None, password: str = None):
+        """All the operations required to find the OCSP servers of the top certificate authorities and test them.
+
+        :param user: A valid `Censys <https://censys.io>`_ API ID
+        :param password: The matching `Censys <https://censys.io>`_ API secret
+        """
         super().__init__(connection=connection, echo=echo)
         self.server_query = ServerQuery(os.environ.get('UID', user), os.environ.get('SECRET', password))
 
@@ -145,7 +150,7 @@ class Manager(BaseCacheManager):
 
         self.session.commit()
 
-    def get_top_authorities(self, n: int=10) -> List[Authority]:
+    def get_top_authorities(self, n: int = 10) -> List[Authority]:
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
     def get_most_recent_result_for_each_location(self):
