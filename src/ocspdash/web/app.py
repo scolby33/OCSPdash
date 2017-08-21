@@ -142,6 +142,19 @@ def get_payload():
     return jsonify(example_payload)
 
 
+@api.route('/responder/<int:responder_id>')
+def get_responder(responder_id):
+    return jsonify(current_app.manager.session.query(Responder).get(responder_id).to_json())
+
+
+@api.route('/responder')
+def get_responders():
+    return jsonify([
+        responder.to_json()
+        for responder in current_app.manager.session.query(Responder).all()
+    ])
+
+
 @ui.route('/')
 def home():
     """Shows the user the home view"""

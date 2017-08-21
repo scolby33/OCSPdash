@@ -75,6 +75,14 @@ class Responder(Base):
             key=operator.attrgetter('retrieved')
         ).current
 
+    def to_json(self):
+        return {
+            'authority_id': self.authority_id,
+            'url': self.url,
+            'cardinality': self.cardinality,
+            'current': self.current,
+        }
+
 
 class Chain(Base):
     """Represents a certificate and its issuing certificate"""
