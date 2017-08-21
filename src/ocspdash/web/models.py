@@ -45,6 +45,23 @@ class Authority(Base):
     def __repr__(self):
         return self.name
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'cardinality': self.cardinality,
+            'rank': self.rank,
+            'responders': [
+                {
+                    'id': responder.id,
+                    'url': responder.url,
+                    'cardinality': responder.cardinality,
+                    'current': responder.current,
+                }
+                for responder in self.responders
+            ]
+        }
+
 
 class Responder(Base):
     """Represents the unique pair of authority/endpoint"""
@@ -77,7 +94,13 @@ class Responder(Base):
 
     def to_json(self):
         return {
-            'authority_id': self.authority_id,
+            'id': self.id,
+            'authority': {
+                'id': self.authority.id,
+                'name': self.authority.name,
+                'cardinality': self.authority.cardinality,
+                'rank': self.authority.rank
+            },
             'url': self.url,
             'cardinality': self.cardinality,
             'current': self.current,
@@ -111,6 +134,14 @@ class Chain(Base):
 
     def __repr__(self):
         return f'{self.responder} at {self.retrieved}'
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'retrieved': str(self.retrieved),
+            'expired': self.expired,
+            'old': self.old,
+        }
 
 
 class User(Base):
@@ -158,3 +189,20 @@ class Result(Base):
 
     def __repr__(self):
         return f'<{self.__class__.__name__} created={self.created}, current={self.current}, ping={self.ping}, ocsp={self.ocsp})>'
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'user': {
+                'id': self.user.id,
+                'location': self.user.location
+            },
+            'chain': {
+                'id': self.chain_id,
+            },
+            'retrieved': str(self.retrieved),
+            'created': self.created,
+            'current': self.current,
+            'ping': self.ping,
+            'ocsp': self.ocsp,
+        }
