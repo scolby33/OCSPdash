@@ -78,19 +78,23 @@ def run(n, o, v):
 
 
 @main.command()
-def web():
-    create_application().run()
+@click.option('--host', default='0.0.0.0', help='Flask host. Defaults to localhost')
+@click.option('--port', type=int, help='Flask port. Defaults to 5000')
+@click.option('--flask-debug', is_flag=True)
+@click.option('-v', '--verbose', is_flag=True, help='Verbose output')
+def web(host, port, flask_debug, verbose):
+    logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
+
+    create_application().run(host=host, port=port, debug=flask_debug)
 
 
 @main.command()
 @click.option('-n', default=2, type=int, help='Number of top authorities')
 @click.option('--connection')
-@click.option('-v', is_flag=True, help='Verbose output')
-def update(n, connection, v):
-    if v:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
+@click.option('-v', '--verbose', is_flag=True, help='Verbose output')
+def update(n, connection, verbose):
+    logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
+
     m = Manager(connection=connection)
     user = m.get_or_create_user('test')
     m.update(user, n=n)

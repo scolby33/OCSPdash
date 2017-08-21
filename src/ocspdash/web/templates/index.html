@@ -9,19 +9,8 @@
 {% block styles %}
     {{ super() }}
     <style>
-
-        tr > td:first-child {
-            border: 0px;
-        }
-
         tr td:only-child {
             font-weight: bold;
-        }
-
-        tr td:not(:first-child) {
-            text-align: center;
-            margin-left: 10px;
-            margin-right: 10px;
         }
 
         .header {
@@ -30,10 +19,6 @@
             padding: 10px 0 10px 0;
             font-size: 2.2em;
             margin-bottom: 20px;
-        }
-
-        .content {
-            padding-top: 20px;
         }
 
         .good {
@@ -54,7 +39,10 @@
 {% block content %}
     <div class="header">
         <div class="container">
-            <h1>OCSP Dashboard</h1>
+            <h1>
+                OCSP Dashboard
+                <small><a href="{{ url_for('admin.index') }}">Admin</a></small>
+            </h1>
         </div>
     </div>
 
@@ -94,8 +82,6 @@
                             {% endfor %}
                         </tr>
                     {% endfor %}
-
-
                 {% endfor %}
                 </tbody>
             </table>
