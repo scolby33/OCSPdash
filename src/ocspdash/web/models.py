@@ -41,6 +41,9 @@ class Authority(Base):
     rank = Column(Integer, doc=("Update this when rankings change. Don't delete formerly-high-ranked "
                                 "authorities as that would mess up relations to old test results"))
 
+    def __repr__(self):
+        return self.name
+
 
 class Responder(Base):
     """Represents the unique pair of authority/endpoint"""
@@ -55,6 +58,9 @@ class Responder(Base):
 
     cardinality = Column(Integer, doc="The number of certs observed using this authority/endpoint pair in the "
                                       "wild. Update this when rankings are updated.")
+
+    def __repr__(self):
+        return f'{self.authority}: {self.url}'
 
 
 class Chain(Base):
@@ -82,6 +88,9 @@ class Chain(Base):
     def old(self) -> bool:
         return self.retrieved < datetime.utcnow() - timedelta(days=7)
 
+    def __repr__(self):
+        return f'{self.responder} at {self.retrieved}'
+
 
 class User(Base):
     """References a user"""
@@ -89,7 +98,10 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
 
-    location = Column(String(255),index=True, doc='the location to be displayed')
+    location = Column(String(255), index=True, doc='the location to be displayed')
+
+    def __repr__(self):
+        return self.location
 
 
 class Result(Base):
