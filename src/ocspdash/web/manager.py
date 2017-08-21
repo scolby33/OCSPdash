@@ -48,7 +48,11 @@ class Manager(BaseCacheManager):
         :param password: The matching `Censys <https://censys.io>`_ API secret
         """
         super().__init__(connection=connection, echo=echo)
-        self.server_query = ServerQuery(os.environ.get('UID', user), os.environ.get('SECRET', password))
+
+        if user is not None and password is not None:
+            self.server_query = ServerQuery(os.environ.get('UID', user), os.environ.get('SECRET', password))
+        else:
+            self.server_query = None
 
     def ensure_authority(self, name: str, rank: int, cardinality: int) -> Authority:
         authority = self.session.query(Authority).filter(Authority.name == name).one_or_none()
@@ -121,7 +125,10 @@ class Manager(BaseCacheManager):
 
         return user
 
-    def update(self, user: User, n: int=10):
+    def update(self, user: User, n: int = 10):
+        if self.server_query is None:
+            raise RuntimeError('No username and password for Censys supplied')
+
         issuers = self.server_query.get_top_authorities(n)
 
         for rank, (issuer_name, issuer_cardinality) in enumerate(issuers.items()):
