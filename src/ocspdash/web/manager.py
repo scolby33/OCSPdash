@@ -6,15 +6,22 @@ from typing import Optional, List
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from .models import *
+from .models import (
+    Base,
+    Authority,
+    Responder,
+    Chain,
+    User,
+    Result
+)
 from ..server_query import ServerQuery
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class BaseCacheManager(object):
     def __init__(self, connection=None, echo=False):
-        self.connection = connection if connection is not None else ':memory:'
+        self.connection = connection if connection is not None else 'sqlite://'
 
         self.engine = create_engine(self.connection, echo=echo)
 
@@ -77,11 +84,10 @@ class Manager(BaseCacheManager):
         return responder
 
     def ensure_chain(self, responder: Responder) -> Optional[Chain]:
-
         most_recent = self.session.query(Chain).filter(Chain.responder_id == responder.id).order_by(
             Chain.retrieved.desc()).first()
 
-        if not most_recent.expired and not most_recent.old:
+        if most_recent and not most_recent.expired and not most_recent.old:
             return most_recent
 
         certs = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
@@ -101,7 +107,7 @@ class Manager(BaseCacheManager):
 
         return chain
 
-    def get_or_create_user(self, location) -> User:
+    def get_or_create_user(self, location: str) -> User:
         user = self.session.query(User).filter(User.location == location).one_or_none()
 
         if user is None:
@@ -110,22 +116,22 @@ class Manager(BaseCacheManager):
 
         return user
 
-    def update(self, user: User, n: int = 10):
+    def update(self, user: User, n: int=10):
         issuers = self.server_query.get_top_authorities(n)
 
-        for rank, (issuer_name, issuer_cardinality) in enumerate(issuers):
+        for rank, (issuer_name, issuer_cardinality) in enumerate(issuers.items()):
             authority = self.ensure_authority(issuer_name, rank, issuer_cardinality)
 
-            stuff = self.server_query.get_ocsp_urls_for_issuer(authority.name)
+            ocsp_urls = self.server_query.get_ocsp_urls_for_issuer(authority.name)
 
-            for url, responder_cardinality in stuff.items():
+            for url, responder_cardinality in ocsp_urls.items():
                 responder = self.ensure_responder(authority, url, responder_cardinality)
 
                 chain = self.ensure_chain(responder)
 
                 result = Result(
                     chain=chain,
-                    user=user,
+                    user=user
                 )
 
                 if chain is not None:
@@ -139,13 +145,9 @@ class Manager(BaseCacheManager):
 
         self.session.commit()
 
-    def get_top_authorities(self, n=10):
-        return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n)
+    def get_top_authorities(self, n: int=10) -> List[Authority]:
+        return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
     def get_most_recent_result_for_each_location(self):
-        """
-
-        :return:
-        """
         return self.session.query(Authority, Responder, Chain, Result, User). \
             group_by(Authority, Responder, User).having(func.max(Result.retrieved)).all()
