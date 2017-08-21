@@ -60,7 +60,7 @@ class Responder(Base):
                                       "wild. Update this when rankings are updated.")
 
     def __repr__(self):
-        return f'{self.authority}: {self.url}'
+        return f'{self.authority} at {self.url}'
 
 
 class Chain(Base):
