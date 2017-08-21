@@ -81,7 +81,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
         return results.returncode == 0
 
-    def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], None]:
+    def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
 
         :param issuer: The name of the authority from which a certificate is sought
@@ -107,7 +107,7 @@ class ServerQuery(RateLimitedCensysCertificates):
             )
             subject_cert = next(search, None)
             if subject_cert is None:
-                return
+                return None, None
 
         logger.debug(f'Getting issuer cert for {issuer}: {url}')
         issuer_urls = subject_cert['parsed.extensions.authority_info_access.issuer_urls']
@@ -119,7 +119,7 @@ class ServerQuery(RateLimitedCensysCertificates):
             except requests.RequestException:
                 logger.warning(f'Failed to download issuer cert from {issuer_url}')
         else:
-            return
+            return None, None
 
         return base64.b64decode(subject_cert['raw']), resp.content
 

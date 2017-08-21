@@ -113,12 +113,10 @@ class Manager(BaseCacheManager):
         if most_recent and not most_recent.expired and not most_recent.old:
             return most_recent
 
-        certs = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
+        subject, issuer = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
 
-        if certs is None:
+        if subject is None or issuer is None:
             return None
-
-        subject, issuer = certs
 
         chain = Chain(
             responder=responder,
