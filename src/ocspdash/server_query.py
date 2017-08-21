@@ -4,7 +4,7 @@ import logging
 from operator import itemgetter
 import platform
 import subprocess
-from typing import MutableMapping, Tuple, Union
+from typing import MutableMapping, Tuple, Optional
 
 from asn1crypto.ocsp import OCSPResponse
 from ocspbuilder import OCSPRequestBuilder
@@ -89,7 +89,7 @@ class ServerQuery(object):
         parameters = '-n 1' if platform.system().lower() == 'windows' else '-c 1'
         return subprocess.run(f'ping {parameters} {host}', stdout=subprocess.DEVNULL).returncode == 0
 
-    def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], None]:
+    def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Optional[Tuple[bytes, bytes]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
 
         :param issuer: The name of the authority from which a certificate is sought
