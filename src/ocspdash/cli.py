@@ -84,13 +84,14 @@ def web():
 
 @main.command()
 @click.option('-n', default=2, type=int, help='Number of top authorities')
+@click.option('--connection')
 @click.option('-v', is_flag=True, help='Verbose output')
-def update(n, v):
+def update(n, connection, v):
     if v:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-    m = Manager()
+    m = Manager(connection=connection)
     user = m.get_or_create_user('test')
     m.update(user, n=n)
 
