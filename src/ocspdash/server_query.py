@@ -13,7 +13,6 @@ import requests
 
 from .util import RateLimitedCensysCertificates
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -26,14 +25,15 @@ class ServerQuery(object):
         """
         self.censys_api = RateLimitedCensysCertificates(api_id, api_secret)
 
-    def get_top_authorities(self, count: int=10) -> MutableMapping[str, int]:
+    def get_top_authorities(self, count: int = 10) -> MutableMapping[str, int]:
         """Retrieve the name and count of certificates for the top n certificate authorities by number of certs
 
         :param count: The number of top authorities to retrieve
 
         :returns: A mapping of authority name to count of certificates, sorted in descending order by certificate count
         """
-        issuers_report = self.censys_api.report(query='valid_nss: true', field='parsed.issuer.organization', buckets=count)
+        issuers_report = self.censys_api.report(query='valid_nss: true', field='parsed.issuer.organization',
+                                                buckets=count)
         issuers_and_counts = OrderedDict(sorted(
             ((result['key'], result['doc_count']) for result in issuers_report['results']),
             key=itemgetter(1),
@@ -149,7 +149,8 @@ class ServerQuery(object):
         ocsp_request = builder.build()
 
         try:
-            ocsp_resp = requests.post(url, data=ocsp_request.dump(), headers={'Content-Type': 'application/ocsp-request'})
+            ocsp_resp = requests.post(url, data=ocsp_request.dump(),
+                                      headers={'Content-Type': 'application/ocsp-request'})
             parsed_ocsp_response = OCSPResponse.load(ocsp_resp.content)
         except requests.RequestException:
             logger.warning(f'Failed to make OCSP request for {issuer}: {url}')
