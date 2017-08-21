@@ -19,7 +19,7 @@ def main():
 
 
 @main.command()
-@click.option('-n', default=2, help='Number of top authorities')
+@click.option('-n', default=2, type=int, help='Number of top authorities')
 @click.option('-o', is_flag=True, help='Output as JSON')
 @click.option('-v', is_flag=True, help='Verbose output')
 def run(n, o, v):
@@ -83,15 +83,16 @@ def web():
 
 
 @main.command()
+@click.option('-n', default=2, type=int, help='Number of top authorities')
 @click.option('-v', is_flag=True, help='Verbose output')
-def update(v):
+def update(n, v):
     if v:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
     m = Manager()
     user = m.get_or_create_user('test')
-    m.update(user)
+    m.update(user, n=n)
 
 
 if __name__ == '__main__':
