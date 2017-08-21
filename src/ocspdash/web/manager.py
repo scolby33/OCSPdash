@@ -110,8 +110,12 @@ class Manager(BaseCacheManager):
         most_recent = self.session.query(Chain).filter(Chain.responder_id == responder.id).order_by(
             Chain.retrieved.desc()).first()
 
-        if most_recent and not most_recent.expired and not most_recent.old:
-            return most_recent
+        if most_recent and not most_recent.old:
+            if not most_recent.expired:
+                return most_recent
+
+            if not responder.current:
+                return most_recent
 
         subject, issuer = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
 
