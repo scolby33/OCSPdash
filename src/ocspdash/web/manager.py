@@ -180,6 +180,9 @@ class Manager(BaseCacheManager):
         self.session.commit()
 
     def get_top_authorities(self, n: int = 10) -> List[Authority]:
+        """Retrieve the top (by cardinality) authorities from the database.
+        Will get up to n, but if there are fewer entries in the db, it will not create more.
+        """
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
     def get_most_recent_result_for_each_location(self):
