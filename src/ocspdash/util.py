@@ -44,7 +44,7 @@ def rate_limited(max_per_second: Union[int, float]) -> Callable:
 
     return decorate
 
-censys_rate_limit = rate_limited(0.4)
+censys_rate_limit = rate_limited(0.2)
 
 
 class RateLimitedCensysCertificates(censys.certificates.CensysCertificates):
