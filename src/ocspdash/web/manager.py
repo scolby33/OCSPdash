@@ -1,7 +1,7 @@
 import logging
 import os
 import urllib.parse
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -187,6 +187,12 @@ class Manager(BaseCacheManager):
         """
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
-    def get_most_recent_result_for_each_location(self):
-        return self.session.query(Authority, Responder, Chain, Result, User). \
-            group_by(Authority, Responder, User).having(func.max(Result.retrieved)).all()
+    def get_most_recent_result_for_each_location(self) -> List[Tuple[Responder, Result, User]]:
+        """Gets the most recent results for each location"""
+        return self.session.query(Responder, Result, User) \
+            .join(Chain) \
+            .join(Result) \
+            .join(User) \
+            .group_by(Responder, User) \
+            .having(func.max(Result.retrieved)) \
+            .all()
