@@ -49,10 +49,16 @@ class Manager(BaseCacheManager):
         """
         super().__init__(connection=connection, echo=echo)
 
-        if user is not None and password is not None:
-            self.server_query = ServerQuery(os.environ.get('UID', user), os.environ.get('SECRET', password))
-        else:
+        if user is None:
+            user = os.environ.get('CENSYS_API_ID')
+
+        if password is None:
+            password = os.environ.get('CENSYS_API_SECRET')
+
+        if user is None and password is None:
             self.server_query = None
+        else:
+            self.server_query = ServerQuery(user, password)
 
     def ensure_authority(self, name: str, rank: int, cardinality: int) -> Authority:
         authority = self.session.query(Authority).filter(Authority.name == name).one_or_none()
@@ -126,6 +132,11 @@ class Manager(BaseCacheManager):
         return user
 
     def update(self, user: User, n: int = 10):
+        """Runs the update
+
+        :param user: The user from which the update function is run
+        :param n: The number of top authorities to query
+        """
         if self.server_query is None:
             raise RuntimeError('No username and password for Censys supplied')
 

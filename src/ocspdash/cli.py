@@ -9,13 +9,20 @@ from collections import OrderedDict
 import click
 
 from .server_query import ServerQuery
+from .web.app import create_application
+from .web.manager import Manager
 
 
-@click.command()
+@click.group()
+def main():
+    """Run OCSP Dashboard"""
+
+
+@main.command()
 @click.option('-n', default=2, help='Number of top authorities')
 @click.option('-o', is_flag=True, help='Output as JSON')
 @click.option('-v', is_flag=True, help='Verbose output')
-def main(n, o, v):
+def run(n, o, v):
     if v:
         logging.basicConfig(level=logging.DEBUG)
     else:
@@ -66,7 +73,25 @@ def main(n, o, v):
         for issuer, urls in test_results.items():
             print(issuer)
             for url, results in urls.items():
-                print(f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{"." if results["ocsp_response"] else "X"}')
+                print(
+                    f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{"." if results["ocsp_response"] else "X"}')
+
+
+@main.command()
+def web():
+    create_application().run()
+
+
+@main.command()
+@click.option('-v', is_flag=True, help='Verbose output')
+def update(v):
+    if v:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    m = Manager()
+    user = m.get_or_create_user('test')
+    m.update(user)
 
 
 if __name__ == '__main__':
