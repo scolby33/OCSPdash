@@ -20,7 +20,11 @@ def make_admin(app: Flask, session):
 
     admin.add_view(ModelView(Authority, session))
     admin.add_view(ModelView(Responder, session))
-    admin.add_view(ModelView(Chain, session))
+
+    class ChainView(ModelView):
+        column_exclude_list = ['subject', 'issuer']
+
+    admin.add_view(ChainView(Chain, session))
     admin.add_view(ModelView(User, session))
     admin.add_view(ModelView(Result, session))
 
