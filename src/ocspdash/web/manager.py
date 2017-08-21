@@ -189,10 +189,14 @@ class Manager(BaseCacheManager):
 
     def get_most_recent_result_for_each_location(self) -> List[Tuple[Responder, Result, User]]:
         """Gets the most recent results for each location"""
-        return self.session.query(Responder, Result, User) \
+        return self.session.query(Authority, Responder, Result, User) \
+            .join(Responder) \
             .join(Chain) \
             .join(Result) \
             .join(User) \
             .group_by(Responder, User) \
             .having(func.max(Result.retrieved)) \
+            .order_by(Authority.cardinality.desc()) \
+            .order_by(Responder.cardinality.desc()) \
+            .order_by(User.location) \
             .all()
