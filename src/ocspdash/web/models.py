@@ -74,7 +74,7 @@ class Chain(Base):
     @property
     def expired(self) -> bool:
         """Has this certificate expired?"""
-        certificate = asymmetric.load_certificate(self.subject_cert)
+        certificate = asymmetric.load_certificate(self.subject)
         expires_on = certificate.asn1['tbs_certificate']['validity']['not_after'].native
         return expires_on < datetime.utcnow()
 
@@ -107,7 +107,8 @@ class Result(Base):
     retrieved = Column(DateTime, default=datetime.utcnow, doc='when the test was run')
 
     failed = Column(Boolean, default=True, nullable=False, doc="cant create chain")
-    current = Column(Boolean, default=False, nullable=False, doc='is this a current responder') # TODO better docs
+    current = Column(Boolean, default=False, nullable=False, doc='is this responder specified by any currently '
+                                                                 'valid certificates?')
     ping = Column(Boolean, default=False, nullable=False, doc='did the server respond to a ping?')
     ocsp = Column(Boolean, default=False, nullable=False, doc='did a valid OCSP request get a good response?')
 
@@ -121,3 +122,6 @@ class Result(Base):
             return OCSPResponderStatus.good
 
         return OCSPResponderStatus.questionable
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} (failed: {self.failed}, current: {self.current}, ping: {self.ping}, ocsp: {self.ocsp})>'
