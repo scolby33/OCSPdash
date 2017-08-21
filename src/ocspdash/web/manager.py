@@ -14,8 +14,8 @@ from .models import (
     User,
     Result
 )
-from ..server_query import ServerQuery
 from ..constants import OCSPDASH_DATABASE_CONNECTION
+from ..server_query import ServerQuery, check_ocsp_response
 
 logger = logging.getLogger(__name__)
 
@@ -170,9 +170,12 @@ class Manager(BaseCacheManager):
                     result.current = self.server_query.is_ocsp_url_current_for_issuer(authority.name, url)
                     parse_result = urllib.parse.urlparse(url)
                     result.ping = self.server_query.ping(parse_result.netloc)
-                    result.ocsp = self.server_query.check_ocsp_response(chain.subject, chain.issuer, url)
+                    result.ocsp = check_ocsp_response(chain.subject, chain.issuer, url)
 
                 self.session.add(result)
+                self.session.commit()
+
+            self.session.commit()
 
         self.session.commit()
 

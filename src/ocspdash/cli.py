@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 import click
 
-from .server_query import ServerQuery
+from .server_query import ServerQuery, check_ocsp_response
 from .web.app import create_application
 from .web.manager import Manager
 
@@ -65,7 +65,7 @@ def run(n, o, v):
                 results['ocsp_response'] = False
             else:
                 subject_cert, issuer_cert = certs
-                results['ocsp_response'] = server_query.check_ocsp_response(subject_cert, issuer_cert, url)
+                results['ocsp_response'] = check_ocsp_response(subject_cert, issuer_cert, url)
 
     if o:
         print(json.dumps(test_results, indent=2))
