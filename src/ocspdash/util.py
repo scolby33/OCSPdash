@@ -6,9 +6,9 @@ from typing import Callable, Union
 
 import censys.certificates
 
-logger = logging.getLogger(__name__)
+from ocspdash.constants import CENSYS_RATE_LIMIT
 
-CENSYS_RATE_LIMIT = 0.2
+logger = logging.getLogger(__name__)
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:

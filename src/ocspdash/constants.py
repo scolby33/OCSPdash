@@ -7,3 +7,5 @@ if not os.path.exists(OCSPDASH_DIRECTORY):
 
 OCSPDASH_DATABASE_PATH = os.path.join(OCSPDASH_DIRECTORY, 'ocspdash.db')
 OCSPDASH_DATABASE_CONNECTION = 'sqlite:///' + OCSPDASH_DATABASE_PATH
+
+CENSYS_RATE_LIMIT = 0.2  # max requests per second
