@@ -187,7 +187,7 @@ class Manager(BaseCacheManager):
         """
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
-    def get_most_recent_result_for_each_location(self) -> List[Tuple[Responder, Result, User]]:
+    def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, User]]:
         """Gets the most recent results for each location"""
         return self.session.query(Authority, Responder, Result, User) \
             .join(Responder) \
