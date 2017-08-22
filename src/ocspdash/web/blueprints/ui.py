@@ -5,7 +5,7 @@ from typing import List
 
 from flask import Blueprint, render_template, request, current_app
 
-from ...models import User
+from ...models import Location
 
 ui = Blueprint('ui', __name__)
 
@@ -28,8 +28,8 @@ def submit():
 
 
 def make_payload():
-    locations: List[User] = current_app.manager.get_all_locations_with_test_results()
-    Row = namedtuple('Row', f'url current {" ".join(user.location for user in locations)}')
+    locations: List[Location] = current_app.manager.get_all_locations_with_test_results()
+    Row = namedtuple('Row', f'url current {" ".join(location.name for location in locations)}')
     Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 2)
 
     sections = OrderedDict()
@@ -37,8 +37,8 @@ def make_payload():
         sections[authority.name] = []
         for responder, group2 in groupby(group, itemgetter(1)):
             results = {
-                user.location: result
-                for _, _, result, user in group2
+                location.name: result
+                for _, _, result, location in group2
             }
             row = Row(url=responder.url, current=responder.current, **results)
             sections[authority.name].append(row)

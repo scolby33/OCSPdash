@@ -143,16 +143,16 @@ class Chain(Base):
         }
 
 
-class User(Base):
-    """References a user"""
-    __tablename__ = 'user'
+class Location(Base):
+    """References a testing location"""
+    __tablename__ = 'location'
 
     id = Column(Integer, primary_key=True)
 
-    location = Column(String(255), index=True, doc='the location to be displayed')
+    name = Column(String(255), index=True, doc='the name of the location')
 
     def __repr__(self):
-        return self.location
+        return self.name
 
 
 class Result(Base):
@@ -164,8 +164,8 @@ class Result(Base):
     chain_id = Column(Integer, ForeignKey('chain.id'), doc='the certificate chain that was used for the OCSP test')
     chain = relationship('Chain', backref=backref('results'))
 
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False, doc='the user that ran the test')
-    user = relationship('User', backref=backref('results', lazy='dynamic'))
+    location_id = Column(Integer, ForeignKey('location.id'), nullable=False, doc='the location that ran the test')
+    location = relationship('Location', backref=backref('results', lazy='dynamic'))
 
     retrieved = Column(DateTime, default=datetime.utcnow, doc='when the test was run')
 
@@ -192,9 +192,9 @@ class Result(Base):
     def to_json(self):
         return {
             'id': self.id,
-            'user': {
-                'id': self.user.id,
-                'location': self.user.location
+            'location': {
+                'id': self.location.id,
+                'location': self.location.name
             },
             'chain': {
                 'id': self.chain_id,

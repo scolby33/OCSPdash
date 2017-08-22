@@ -12,7 +12,7 @@ from .models import (
     Authority,
     Responder,
     Chain,
-    User,
+    Location,
     Result
 )
 from .server_query import ServerQuery, check_ocsp_response, ping
@@ -132,19 +132,19 @@ class Manager(BaseCacheManager):
 
         return chain
 
-    def get_or_create_user(self, location: str) -> User:
-        user = self.session.query(User).filter(User.location == location).one_or_none()
+    def get_or_create_location(self, name: str) -> Location:
+        location = self.session.query(Location).filter(Location.name == name).one_or_none()
 
-        if user is None:
-            user = User(location=location)
-            self.session.add(user)
+        if location is None:
+            location = Location(name=name)
+            self.session.add(location)
 
-        return user
+        return location
 
-    def update(self, user: User, n: int = 10):
+    def update(self, location: Location, n: int = 10):
         """Runs the update
 
-        :param user: The user from which the update function is run
+        :param location: The location from which the update function is run
         :param n: The number of top authorities to query
         """
         if self.server_query is None:
@@ -164,7 +164,7 @@ class Manager(BaseCacheManager):
 
                 result = Result(
                     chain=chain,
-                    user=user
+                    location=location
                 )
 
                 if chain is not None:
@@ -187,22 +187,22 @@ class Manager(BaseCacheManager):
         """
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
-    def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, User]]:
+    def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, Location]]:
         """Gets the most recent results for each location"""
-        return self.session.query(Authority, Responder, Result, User) \
+        return self.session.query(Authority, Responder, Result, Location) \
             .join(Responder) \
             .join(Chain) \
             .join(Result) \
-            .join(User) \
-            .group_by(Responder, User) \
+            .join(Location) \
+            .group_by(Responder, Location) \
             .having(func.max(Result.retrieved)) \
             .order_by(Authority.cardinality.desc()) \
             .order_by(Authority.name) \
             .order_by(Responder.cardinality.desc()) \
             .order_by(Responder.url) \
-            .order_by(User.location) \
+            .order_by(Location.name) \
             .all()
 
-    def get_all_locations_with_test_results(self) -> List[User]:
-        """Return all the User objects that have at least one associated Result"""
-        return self.session.query(User).all()  # TODO: actually ensure there are associated results
+    def get_all_locations_with_test_results(self) -> List[Location]:
+        """Return all the Location objects that have at least one associated Result"""
+        return self.session.query(Location).all()  # TODO: actually ensure there are associated results

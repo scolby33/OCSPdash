@@ -97,7 +97,7 @@ def update(n, connection, verbose, username):
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     m = Manager(connection=connection)
-    user = m.get_or_create_user(username)
+    user = m.get_or_create_location(username)
     m.update(user, n=n)
 
 

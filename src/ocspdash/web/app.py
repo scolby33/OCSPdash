@@ -12,7 +12,7 @@ from flask_bootstrap import Bootstrap
 
 from ..constants import OCSPDASH_DATABASE_CONNECTION, OCSPDASH_API_VERSION
 from ..manager import Manager
-from ..models import Authority, Responder, Chain, Result, User
+from ..models import Authority, Responder, Chain, Result, Location
 from .blueprints import api, ui
 
 
@@ -27,7 +27,7 @@ def make_admin(app: Flask, session):
         column_exclude_list = ['subject', 'issuer']
 
     admin.add_view(ChainView(Chain, session))
-    admin.add_view(ModelView(User, session))
+    admin.add_view(ModelView(Location, session))
     admin.add_view(ModelView(Result, session))
 
     return admin
