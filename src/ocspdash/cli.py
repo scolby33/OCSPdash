@@ -89,6 +89,7 @@ def run(n, o, v):
 @click.option('--flask-debug', is_flag=True)
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
 def web(host, port, flask_debug, verbose):
+    """Run the Flask development server"""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     create_application().run(host=host, port=port, debug=flask_debug)
@@ -100,6 +101,7 @@ def web(host, port, flask_debug, verbose):
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
 @click.option('-u', '--username', default='test', help='Username to use')
 def update(n, connection, verbose, username):
+    """Update the local db"""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     m = Manager(connection=connection)
@@ -136,6 +138,7 @@ def newloc(connection, location_name):
 @click.argument('url')
 @click.argument('registration_token')
 def register(url, registration_token):
+    """Register a new private key with the server"""
     private_key = nacl.signing.SigningKey.generate()
     public_key = private_key.verify_key.encode(encoder=nacl.encoding.URLSafeBase64Encoder)
 
@@ -149,6 +152,7 @@ def register(url, registration_token):
 @main.command()
 @click.argument('url')
 def submit(url):
+    """Submit recent updates to the sever"""
     location_id, private_key_bytes = os.environ.get('OCSPDASH_PRIVATE_KEY').split(':', 1)
     private_key = nacl.signing.SigningKey(private_key_bytes, encoder=nacl.encoding.URLSafeBase64Encoder)
 
