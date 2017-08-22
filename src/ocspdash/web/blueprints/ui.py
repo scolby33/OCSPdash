@@ -1,5 +1,7 @@
+import base64
 from collections import namedtuple, OrderedDict
 from itertools import groupby
+import json
 from operator import itemgetter
 from typing import List
 
@@ -32,10 +34,10 @@ def submit():
     try:
         pubkey = location.pubkey
         verify_key = nacl.signing.VerifyKey(pubkey, encoder=nacl.encoding.URLSafeBase64Encoder)
-        verify_key.verify(data)
+        payload = verify_key.verify(data, encoder=nacl.encoding.URLSafeBase64Encoder)
     except nacl.exceptions.BadSignatureError:
         return '', '403'
-    print(data)
+    print(json.loads(base64.urlsafe_b64decode(payload).decode('utf-8')))
     return '', 204
 
 

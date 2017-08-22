@@ -22,13 +22,14 @@ INSTALL_REQUIRES = [
     'asn1crypto',
     'censys',
     'click',
+    'flask',
+    'flask-admin',
+    'flask-bootstrap',
     'ocspbuilder',
     'oscrypto',
+    'pynacl',
     'requests',
-    'flask',
-    'flask-bootstrap',
-    'flask-admin',
-    'sqlalchemy',
+    'sqlalchemy'
 ]
 EXTRAS_REQUIRE = {}
 TESTS_REQUIRE = ['tox']

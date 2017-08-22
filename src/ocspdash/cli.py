@@ -7,10 +7,11 @@ import os
 import secrets
 import urllib.parse
 from collections import OrderedDict
-import nacl.encoding
-import nacl.signing
 
 import click
+import nacl.encoding
+import nacl.signing
+import requests
 
 from .manager import Manager
 from .models import Location
@@ -132,20 +133,33 @@ def newloc(connection, location_name):
 
 
 @main.command()
+@click.argument('url')
 @click.argument('registration_token')
-def register(registration_token):
+def register(url, registration_token):
     private_key = nacl.signing.SigningKey.generate()
-    public_key = private_key.verify_key
-    click.echo(f'POST {registration_token}, {public_key.encode(encoder=nacl.encoding.URLSafeBase64Encoder)}')
+    public_key = private_key.verify_key.encode(encoder=nacl.encoding.URLSafeBase64Encoder)
+
+    resp = requests.post(urllib.parse.urljoin(url, '/api/v0/register'), headers={'Authorization': registration_token},
+                         data=public_key)
+
+    click.echo(resp.content)
+    click.echo(private_key.encode(nacl.encoding.URLSafeBase64Encoder))
 
 
 @main.command()
-def submit():
+@click.argument('url')
+def submit(url):
+    location_id, private_key_bytes = os.environ.get('OCSPDASH_PRIVATE_KEY').split(':', 1)
+    private_key = nacl.signing.SigningKey(private_key_bytes, encoder=nacl.encoding.URLSafeBase64Encoder)
+
     results = json.dumps({'test': 12345})
     results_bytes = base64.urlsafe_b64encode(results.encode('utf-8'))
-    private_key = nacl.signing.SigningKey.generate()  # retrieve from db or somewhere
+
     signed = private_key.sign(results_bytes, nacl.encoding.URLSafeBase64Encoder)
-    click.echo(f'POST {signed}')
+
+    resp = requests.post(urllib.parse.urljoin(url, '/submit'), headers={'Authorization': location_id}, data=signed)
+
+    click.echo(resp.status_code)
 
 
 if __name__ == '__main__':
