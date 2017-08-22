@@ -1,7 +1,7 @@
 Authors
 =======
 
-:code:`OCSPdash` is maintained by Scott Colby <scolby33@gmail.com>
+:code:`OCSPdash` is maintained by Scott Colby <scolby33@gmail.com> and `Charlie Hoyt <https://github.com/cthoyt>`_
 
 Contributors
 ------------
