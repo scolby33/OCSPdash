@@ -9,7 +9,7 @@ from collections import OrderedDict
 import click
 
 from .manager import Manager
-from .server_query import ServerQuery, check_ocsp_response
+from .server_query import ServerQuery, check_ocsp_response, ping
 from .web import create_application
 
 
@@ -55,7 +55,7 @@ def run(n, o, v):
             results['current'] = server_query.is_ocsp_url_current_for_issuer(issuer, url)
             # run ping test
             parse_result = urllib.parse.urlparse(url)
-            results['ping'] = server_query.ping(parse_result.netloc)
+            results['ping'] = ping(parse_result.netloc)
 
             # run OCSP response test
             # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller

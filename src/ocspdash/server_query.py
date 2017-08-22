@@ -68,19 +68,6 @@ class ServerQuery(RateLimitedCensysCertificates):
             return True
         return False
 
-    @staticmethod
-    def ping(host: str) -> bool:
-        """Returns True if host responds to ping request.
-
-                :param host: The hostname to ping
-
-                :returns: True if an ICMP echo is received, False otherwise
-                """
-        logger.debug(f'Pinging {host}')
-        parameters = ['-n', '1'] if platform.system().lower() == 'windows' else ['-c', '1']
-        results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
-        return results.returncode == 0
-
     def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
 
@@ -123,6 +110,19 @@ class ServerQuery(RateLimitedCensysCertificates):
             return None, None
 
         return base64.b64decode(subject_cert['raw']), resp.content
+
+
+def ping(host: str) -> bool:
+    """Returns True if host responds to ping request.
+
+            :param host: The hostname to ping
+
+            :returns: True if an ICMP echo is received, False otherwise
+            """
+    logger.debug(f'Pinging {host}')
+    parameters = ['-n', '1'] if platform.system().lower() == 'windows' else ['-c', '1']
+    results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
+    return results.returncode == 0
 
 
 def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bool:

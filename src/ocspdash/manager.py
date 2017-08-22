@@ -15,7 +15,7 @@ from .models import (
     User,
     Result
 )
-from .server_query import ServerQuery, check_ocsp_response
+from .server_query import ServerQuery, check_ocsp_response, ping
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +171,7 @@ class Manager(BaseCacheManager):
                     result.created = True
                     result.current = self.server_query.is_ocsp_url_current_for_issuer(authority.name, url)
                     parse_result = urllib.parse.urlparse(url)
-                    result.ping = self.server_query.ping(parse_result.netloc)
+                    result.ping = ping(parse_result.netloc)
                     result.ocsp = check_ocsp_response(chain.subject, chain.issuer, url)
 
                 self.session.add(result)
