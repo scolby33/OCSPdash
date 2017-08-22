@@ -208,7 +208,11 @@ class Manager(BaseCacheManager):
 
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result"""
-        return self.session.query(Location).all()  # TODO: actually ensure there are associated results
+        return [
+            location
+            for location in self.session.query(Location).all()
+            if location.results
+        ]
 
     def make_payload(self):
         locations = self.get_all_locations_with_test_results()
