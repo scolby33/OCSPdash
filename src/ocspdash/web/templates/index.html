@@ -21,10 +21,11 @@
             margin-bottom: 20px;
         }
 
-        .not-current>td {
+        .not-current > td {
             text-decoration: line-through;
             color: grey;
         }
+
         .not-current td {
             background-color: lightgrey;
         }
@@ -60,24 +61,24 @@
                         </td>
                     </tr>
                     {% for row in rows %}
-                    <tr {% if not row.current %}class="not-current"{% endif %}>
-                        <td>{{ row.url }}</td>
-                        {% for result in row[2:] %}
-                        <td class="text-center">
-                            {% if result is not none %}
-                                {% if result.status.value == 'good' %}
-                                    <span class="glyphicon glyphicon-ok-sign text-success"></span>
-                                {% elif result.status.value == 'questionable' %}
-                                    <span class="glyphicon glyphicon-warning-sign text-warning"></span>
-                                {% elif result.status.value == 'bad' %}
-                                    <span class="glyphicon glyphicon-remove-sign text-danger"></span>
-                                {% endif %}
-                            {% else %}
-                                <span class="glyphicon glyphicon-question-sign text-muted"></span>
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
+                        <tr {% if not row.current %}class="not-current"{% endif %}>
+                            <td>{{ row.url }}</td>
+                            {% for result in row[2:] %}
+                                <td class="text-center">
+                                    {% if result is not none %}
+                                        {% if result.status.value == 'good' %}
+                                            <span class="glyphicon glyphicon-ok-sign text-success"></span>
+                                        {% elif result.status.value == 'questionable' %}
+                                            <span class="glyphicon glyphicon-warning-sign text-warning"></span>
+                                        {% elif result.status.value == 'bad' %}
+                                            <span class="glyphicon glyphicon-remove-sign text-danger"></span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="glyphicon glyphicon-question-sign text-muted"></span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
                     {% endfor %}
                 {% endfor %}
                 </tbody>
