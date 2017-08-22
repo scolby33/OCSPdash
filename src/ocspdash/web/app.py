@@ -125,8 +125,8 @@ def home():
 
 def make_payload():
     locations: List[User] = current_app.manager.get_all_locations_with_test_results()
-    Row = namedtuple('Row', f'url {" ".join(user.location for user in locations)}')
-    Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 1)
+    Row = namedtuple('Row', f'url current {" ".join(user.location for user in locations)}')
+    Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 2)
 
     sections = OrderedDict()
     for authority, group in groupby(current_app.manager.get_most_recent_result_for_each_location(), itemgetter(0)):
@@ -136,7 +136,7 @@ def make_payload():
                 user.location: result
                 for _, _, result, user in group2
             }
-            row = Row(url=responder.url, **results)
+            row = Row(url=responder.url, current=responder.current, **results)
             sections[authority.name].append(row)
 
     return {

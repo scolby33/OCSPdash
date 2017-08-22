@@ -20,6 +20,14 @@
             font-size: 2.2em;
             margin-bottom: 20px;
         }
+
+        .not-current>td {
+            text-decoration: line-through;
+            color: grey;
+        }
+        .not-current td {
+            background-color: lightgrey;
+        }
     </style>
 {% endblock %}
 
@@ -52,9 +60,9 @@
                         </td>
                     </tr>
                     {% for row in rows %}
-                    <tr>
+                    <tr {% if not row.current %}class="not-current"{% endif %}>
                         <td>{{ row.url }}</td>
-                        {% for result in row[1:] %}
+                        {% for result in row[2:] %}
                         <td class="text-center">
                             {% if result is not none %}
                                 {% if result.status.value == 'good' %}
