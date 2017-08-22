@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
+from collections import namedtuple, OrderedDict
+from itertools import groupby
+from pprint import pformat
+from operator import itemgetter
+from typing import List
 
-from flask import Flask, Blueprint, render_template, jsonify, current_app
+from flask import Flask, Blueprint, render_template, jsonify, current_app, make_response
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
@@ -54,98 +59,18 @@ def create_application() -> Flask:
     return app
 
 
-example_payload = {
-    'locations': [
-        'CA, USA',
-        'NY, USA',
-        'NRW, DE',
-    ],
-    'data': [
-        {
-            'authority': "Let's Encrypt",
-            'endpoints': [
-                {
-                    'url': 'http://ocsp.int-x3.letsencrypt.org',
-                    'statuses': [
-                        'good',
-                        'questionable',
-                        'bad',
-                    ]
-                },
-                {
-                    'url': 'http://ocsp.int-x2.letsencrypt.org',
-                    'statuses': [
-                        'unknown',
-                        'unknown',
-                        'unknown',
-                    ]
-                },
-                {
-                    'url': 'http://ocsp.int-x1.letsencrypt.org',
-                    'statuses': [
-                        'unknown',
-                        'unknown',
-                        'unknown',
-                    ]
-                }
-            ]
-        },
-        {
-            'authority': "cPanel, Inc.",
-            'endpoints': [
-                {
-                    'url': 'http://ocsp.comodoca.com',
-                    'statuses': [
-                        'unknown',
-                        'unknown',
-                        'unknown',
-                    ]
-                }
-            ]
-        },
-        {
-            'authority': "COMODO CA Limited",
-            'endpoints': [
-                {
-                    'url': 'http://ocsp.comodoca4.com',
-                    'statuses': [
-                        'unknown',
-                        'unknown',
-                        'unknown',
-                    ]
-                },
-                {
-                    'url': 'http://ocsp.comodoca2.com',
-                    'statuses': [
-                        'unknown',
-                        'unknown',
-                        'unknown',
-                    ]
-                },
-                {
-                    'url': 'http://ocsp.comodoca3.com',
-                    'statuses': [
-                        'unknown',
-                        'unknown',
-                        'unknown',
-                    ]
-                }
-            ]
-        }
-    ]
-}
-
-
 @api.route('/status')
 def get_payload():
     """Spits back the current payload"""
-    return jsonify(example_payload)
+    return jsonify(make_payload())  # TODO: make JSON serializable
 
 
 @api.route('/recent')
 def get_recent():
     result = current_app.manager.get_most_recent_result_for_each_location()
-    return render_template('recent.html', payload=result)
+    f = pformat(result)
+    return make_response(f, {'Content-Type': 'text/plain'})
+    # return render_template('recent.html', payload=result)
 
 
 @api.route('/authority')
@@ -194,7 +119,30 @@ def get_responders():
 @ui.route('/')
 def home():
     """Shows the user the home view"""
-    return render_template('index.html', payload=example_payload)
+    payload = make_payload()
+    return render_template('index.html', payload=payload)
+
+
+def make_payload():
+    locations: List[User] = current_app.manager.get_all_locations_with_test_results()
+    Row = namedtuple('Row', f'url {" ".join(user.location for user in locations)}')
+    Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 1)
+
+    sections = OrderedDict()
+    for authority, group in groupby(current_app.manager.get_most_recent_result_for_each_location(), itemgetter(0)):
+        sections[authority.name] = []
+        for responder, group2 in groupby(group, itemgetter(1)):
+            results = {
+                user.location: result
+                for _, _, result, user in group2
+            }
+            row = Row(url=responder.url, **results)
+            sections[authority.name].append(row)
+
+    return {
+        'locations': locations,
+        'sections': sections
+    }
 
 
 if __name__ == '__main__':

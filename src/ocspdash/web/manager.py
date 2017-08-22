@@ -200,3 +200,7 @@ class Manager(BaseCacheManager):
             .order_by(Responder.cardinality.desc()) \
             .order_by(User.location) \
             .all()
+
+    def get_all_locations_with_test_results(self) -> List[User]:
+        """Return all the User objects that have at least one associated Result"""
+        return self.session.query(User).all()  # TODO: actually ensure there are associated results
