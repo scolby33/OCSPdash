@@ -15,6 +15,7 @@ api = Blueprint('api', __name__)
 
 @api.route('/recent')
 def get_recent():
+    """Get the most recent result set"""
     result = current_app.manager.get_most_recent_result_for_each_location()
     f = pformat(result)
     return make_response(f, {'Content-Type': 'text/plain'})
@@ -32,6 +33,14 @@ def get_authorities():
 @api.route('/authority/<int:authority_id>')
 def get_authority(authority_id):
     return jsonify(current_app.manager.session.query(Authority).get(authority_id).to_json())
+
+
+@api.route('/responder')
+def get_responders():
+    return jsonify([
+        responder.to_json()
+        for responder in current_app.manager.session.query(Responder).all()
+    ])
 
 
 @api.route('/responder/<int:responder_id>')
@@ -53,12 +62,4 @@ def get_responder_results(responder_id):
         result.to_json()
         for chain in current_app.manager.session.query(Responder).get(responder_id).chains
         for result in chain.results
-    ])
-
-
-@api.route('/responder')
-def get_responders():
-    return jsonify([
-        responder.to_json()
-        for responder in current_app.manager.session.query(Responder).all()
     ])
