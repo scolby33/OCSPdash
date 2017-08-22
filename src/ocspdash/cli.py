@@ -92,11 +92,12 @@ def web(host, port, flask_debug, verbose):
 @click.option('-n', default=2, type=int, help='Number of top authorities')
 @click.option('--connection')
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
-def update(n, connection, verbose):
+@click.option('-u', '--username', default='test', help='Username to use')
+def update(n, connection, verbose, username):
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     m = Manager(connection=connection)
-    user = m.get_or_create_user('test')
+    user = m.get_or_create_user(username)
     m.update(user, n=n)
 
 
