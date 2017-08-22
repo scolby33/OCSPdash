@@ -151,6 +151,9 @@ class Location(Base):
 
     name = Column(String(255), index=True, doc='the name of the location')
 
+    pubkey = Column(Binary, doc="the location's public signing key")
+    activated = Column(Boolean, default=False, nullable=False, doc='has the location been activated?')
+
     def __repr__(self):
         return self.name
 

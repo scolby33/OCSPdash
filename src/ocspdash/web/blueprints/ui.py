@@ -4,6 +4,9 @@ from operator import itemgetter
 from typing import List
 
 from flask import Blueprint, render_template, request, current_app
+import nacl.signing
+import nacl.encoding
+import nacl.exceptions
 
 from ...models import Location
 
@@ -20,11 +23,20 @@ def home():
 @ui.route('/submit', methods=['POST'])
 def submit():
     data = request.data
-    headers = request.headers
+    location_id = int(request.headers['authorization'])
 
+    location = current_app.manager.session.query(Location).get(location_id)
+    if not location.activated:
+        return '', 403
+
+    try:
+        pubkey = location.pubkey
+        verify_key = nacl.signing.VerifyKey(pubkey, encoder=nacl.encoding.URLSafeBase64Encoder)
+        verify_key.verify(data)
+    except nacl.exceptions.BadSignatureError:
+        return '', '403'
     print(data)
-    print(headers)
-    return ('', 204)
+    return '', 204
 
 
 def make_payload():

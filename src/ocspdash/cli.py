@@ -1,14 +1,19 @@
 """The CLI module for OCSPdash."""
+import base64
 import datetime
 import json
 import logging
 import os
+import secrets
 import urllib.parse
 from collections import OrderedDict
+import nacl.encoding
+import nacl.signing
 
 import click
 
 from .manager import Manager
+from .models import Location
 from .server_query import ServerQuery, check_ocsp_response, ping
 from .web import create_application
 
@@ -108,6 +113,39 @@ def nuke(connection):
     if click.confirm('Nuke the database?'):
         m = Manager(connection=connection, echo=True)
         m.drop_database()
+
+
+@main.command()
+@click.option('--connection')
+@click.argument('location_name')
+def newloc(connection, location_name):
+    m = Manager(connection)
+    registration_token = secrets.token_bytes()
+    new_location = Location(
+        name=location_name,
+        pubkey=registration_token,
+        activated=False
+    )
+    m.session.add(new_location)
+    m.session.commit()
+    click.echo(f'{new_location.id}:{base64.urlsafe_b64encode(registration_token).decode("utf-8")}')
+
+
+@main.command()
+@click.argument('registration_token')
+def register(registration_token):
+    private_key = nacl.signing.SigningKey.generate()
+    public_key = private_key.verify_key
+    click.echo(f'POST {registration_token}, {public_key.encode(encoder=nacl.encoding.URLSafeBase64Encoder)}')
+
+
+@main.command()
+def submit():
+    results = json.dumps({'test': 12345})
+    results_bytes = base64.urlsafe_b64encode(results.encode('utf-8'))
+    private_key = nacl.signing.SigningKey.generate()  # retrieve from db or somewhere
+    signed = private_key.sign(results_bytes, nacl.encoding.URLSafeBase64Encoder)
+    click.echo(f'POST {signed}')
 
 
 if __name__ == '__main__':

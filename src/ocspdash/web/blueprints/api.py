@@ -1,8 +1,10 @@
+import base64
+from hmac import compare_digest
 from pprint import pformat
 
-from flask import Blueprint, jsonify, current_app, make_response
+from flask import Blueprint, jsonify, current_app, make_response, request
 
-from ...models import Authority, Responder
+from ...models import Authority, Responder, Location
 
 api = Blueprint('api', __name__)
 
@@ -63,3 +65,18 @@ def get_responder_results(responder_id):
         for chain in current_app.manager.session.query(Responder).get(responder_id).chains
         for result in chain.results
     ])
+
+
+@api.route('/register', methods=['POST'])
+def register_location_key():
+    location_id, registration_token = request.headers['authorization'].split(':', 1)
+    registration_token_bytes = base64.urlsafe_b64decode(registration_token)
+    location = current_app.manager.session.query(Location).get(int(location_id))
+    if not location.activated and compare_digest(location.pubkey, registration_token_bytes):
+        pubkey = request.data
+        location.pubkey = pubkey
+        location.activated = True
+        current_app.manager.session.commit()
+        return str(location.id), 200
+    else:
+        return '', 401
