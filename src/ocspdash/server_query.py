@@ -114,6 +114,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         for issuer_url in issuer_urls:
             try:
                 resp = requests.get(issuer_url)
+                resp.raise_for_status()
                 if resp.content:
                     break
             except requests.RequestException:
