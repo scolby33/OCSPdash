@@ -1,6 +1,9 @@
 import logging
 import os
 import urllib.parse
+from collections import namedtuple, OrderedDict
+from itertools import groupby
+from operator import itemgetter
 from typing import Optional, List, Tuple
 
 from sqlalchemy import create_engine, func
@@ -206,3 +209,24 @@ class Manager(BaseCacheManager):
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result"""
         return self.session.query(Location).all()  # TODO: actually ensure there are associated results
+
+    def make_payload(self):
+        locations = self.get_all_locations_with_test_results()
+        Row = namedtuple('Row', f'url current {" ".join(location.name for location in locations)}')
+        Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 2)
+
+        sections = OrderedDict()
+        for authority, group in groupby(self.get_most_recent_result_for_each_location(), itemgetter(0)):
+            sections[authority.name] = []
+            for responder, group2 in groupby(group, itemgetter(1)):
+                results = {
+                    location.name: result
+                    for _, _, result, location in group2
+                }
+                row = Row(url=responder.url, current=responder.current, **results)
+                sections[authority.name].append(row)
+
+        return {
+            'locations': locations,
+            'sections': sections
+        }

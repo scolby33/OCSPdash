@@ -1,27 +1,25 @@
 import base64
 from hmac import compare_digest
-from pprint import pformat
 
-from flask import Blueprint, jsonify, current_app, make_response, request
+from flask import Blueprint, jsonify, current_app, request
 
 from ...models import Authority, Responder, Location
 
 api = Blueprint('api', __name__)
 
 
-# @api.route('/status')
-# def get_payload():
-#     """Spits back the current payload"""
-#     return jsonify(make_payload())  # TODO: make JSON serializable
+@api.route('/status')
+def get_payload():
+    """Spits back the current payload"""
+    payload = current_app.manager.make_payload()
+    return jsonify(payload)
 
 
 @api.route('/recent')
 def get_recent():
     """Get the most recent result set"""
     result = current_app.manager.get_most_recent_result_for_each_location()
-    f = pformat(result)
-    return make_response(f, {'Content-Type': 'text/plain'})
-    # return render_template('recent.html', payload=result)
+    return jsonify(result)
 
 
 @api.route('/authority')

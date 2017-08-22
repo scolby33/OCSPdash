@@ -157,6 +157,17 @@ class Location(Base):
     def __repr__(self):
         return self.name
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'pubkey': self.pubkey,
+            'activated': self.activated,
+            'results': [
+                result.id for result in self.results
+            ]
+        }
+
 
 class Result(Base):
     """The information about the result from a ping"""
