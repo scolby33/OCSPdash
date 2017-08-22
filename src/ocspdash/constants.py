@@ -1,5 +1,7 @@
 import os
 
+OCSPDASH_API_VERSION = 'v0'
+
 OCSPDASH_DIRECTORY = os.path.join(os.path.expanduser('~'), '.ocspdash')
 
 if not os.path.exists(OCSPDASH_DIRECTORY):

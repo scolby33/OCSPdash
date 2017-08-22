@@ -10,7 +10,7 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 
-from ..constants import OCSPDASH_DATABASE_CONNECTION
+from ..constants import OCSPDASH_DATABASE_CONNECTION, OCSPDASH_API_VERSION
 from ..manager import Manager
 from ..models import Authority, Responder, Chain, Result, User
 
@@ -53,7 +53,7 @@ def create_application() -> Flask:
 
     make_admin(app, app.manager.session)
 
-    app.register_blueprint(api)
+    app.register_blueprint(api, url_prefix=f'/api/{OCSPDASH_API_VERSION}')
     app.register_blueprint(ui)
 
     return app
