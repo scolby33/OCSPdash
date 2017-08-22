@@ -20,19 +20,6 @@
             font-size: 2.2em;
             margin-bottom: 20px;
         }
-
-        .good {
-            color: green;
-        }
-
-        .questionable {
-            color: orange;
-        }
-
-        .bad {
-            color: red;
-        }
-
     </style>
 {% endblock %}
 
@@ -58,29 +45,31 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for entry in payload['data'] %}
+                {% for section_name, rows in payload['sections'].items() %}
                     <tr>
                         <td colspan="{{ 1 + payload['locations']|length }}">
-                            {{ entry['authority'] }}
+                            {{ section_name }}
                         </td>
                     </tr>
-                    {% for endpoint in entry['endpoints'] %}
-                        <tr>
-                            <td>{{ endpoint['url'] }}</td>
-                            {% for status in endpoint['statuses'] %}
-                                <td class="text-center">
-                                    {% if status == 'good' %}
-                                        <span class="glyphicon glyphicon-ok-sign good"></span>
-                                    {% elif status == 'questionable' %}
-                                        <span class="glyphicon glyphicon-warning-sign questionable"></span>
-                                    {% elif status=='bad' %}
-                                        <span class="glyphicon glyphicon-remove-sign bad"></span>
-                                    {% else %}
-                                        <span class="glyphicon glyphicon-question-sign"></span>
-                                    {% endif %}
-                                </td>
-                            {% endfor %}
-                        </tr>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.url }}</td>
+                        {% for result in row[1:] %}
+                        <td class="text-center">
+                            {% if result is not none %}
+                                {% if result.status.value == 'good' %}
+                                    <span class="glyphicon glyphicon-ok-sign text-success"></span>
+                                {% elif result.status.value == 'questionable' %}
+                                    <span class="glyphicon glyphicon-warning-sign text-warning"></span>
+                                {% elif result.status.value == 'bad' %}
+                                    <span class="glyphicon glyphicon-remove-sign text-danger"></span>
+                                {% endif %}
+                            {% else %}
+                                <span class="glyphicon glyphicon-question-sign text-muted"></span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
                 {% endfor %}
                 </tbody>
