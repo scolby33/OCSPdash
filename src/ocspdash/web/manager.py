@@ -197,7 +197,9 @@ class Manager(BaseCacheManager):
             .group_by(Responder, User) \
             .having(func.max(Result.retrieved)) \
             .order_by(Authority.cardinality.desc()) \
+            .order_by(Authority.name) \
             .order_by(Responder.cardinality.desc()) \
+            .order_by(Responder.url) \
             .order_by(User.location) \
             .all()
 
