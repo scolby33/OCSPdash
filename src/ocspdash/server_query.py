@@ -1,30 +1,22 @@
 import base64
-from collections import OrderedDict
 import logging
-from operator import itemgetter
 import platform
 import subprocess
-from typing import MutableMapping, Tuple, Optional
+from collections import OrderedDict
+from operator import itemgetter
+from typing import MutableMapping, Tuple, Union
 
+import requests
 from asn1crypto.ocsp import OCSPResponse
 from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
-import requests
 
 from .util import RateLimitedCensysCertificates
 
 logger = logging.getLogger(__name__)
 
 
-class ServerQuery(object):
-    def __init__(self, api_id: str, api_secret: str) -> None:
-        """All the operations required to find the OCSP servers of the top certificate authorities and test them.
-
-        :param api_id: A valid `Censys <https://censys.io>`_ API ID
-        :param api_secret: The matching `Censys <https://censys.io>`_ API secret
-        """
-        self.censys_api = RateLimitedCensysCertificates(api_id, api_secret)
-
+class ServerQuery(RateLimitedCensysCertificates):
     def get_top_authorities(self, count: int = 10) -> MutableMapping[str, int]:
         """Retrieve the name and count of certificates for the top n certificate authorities by number of certs
 
@@ -32,8 +24,7 @@ class ServerQuery(object):
 
         :returns: A mapping of authority name to count of certificates, sorted in descending order by certificate count
         """
-        issuers_report = self.censys_api.report(query='valid_nss: true', field='parsed.issuer.organization',
-                                                buckets=count)
+        issuers_report = self.report(query='valid_nss: true', field='parsed.issuer.organization', buckets=count)
         issuers_and_counts = OrderedDict(sorted(
             ((result['key'], result['doc_count']) for result in issuers_report['results']),
             key=itemgetter(1),
@@ -48,7 +39,7 @@ class ServerQuery(object):
 
         :returns: A mapping of OCSP URLs to count of certificates, sorted in descending order by certificate count
         """
-        ocsp_urls_report = self.censys_api.report(
+        ocsp_urls_report = self.report(
             query=f'valid_nss: true AND parsed.issuer.organization: "{issuer}"',
             field='parsed.extensions.authority_info_access.ocsp_urls'
         )
@@ -68,7 +59,7 @@ class ServerQuery(object):
 
         :returns: True if the URL appears to be in use, False otherwise
         """
-        tags_report = self.censys_api.report(
+        tags_report = self.report(
             query=f'valid_nss: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND (tags: "unexpired" OR tags: "expired")',
             field='tags'
         )
@@ -77,19 +68,7 @@ class ServerQuery(object):
             return True
         return False
 
-    @staticmethod
-    def ping(host: str) -> bool:
-        """Returns True if host responds to ping request.
-
-                :param host: The hostname to ping
-
-                :returns: True if an ICMP echo is received, False otherwise
-                """
-        logger.debug(f'Pinging {host}')
-        parameters = '-n 1' if platform.system().lower() == 'windows' else '-c 1'
-        return subprocess.run(f'ping {parameters} {host}', stdout=subprocess.DEVNULL).returncode == 0
-
-    def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Optional[Tuple[bytes, bytes]]:
+    def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
 
         :param issuer: The name of the authority from which a certificate is sought
@@ -101,7 +80,7 @@ class ServerQuery(object):
 
         logger.debug(f'Getting example cert for {issuer}: {url}')
         base_query = f'valid_nss: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND parsed.extensions.authority_info_access.issuer_urls: /.+/'
-        search = self.censys_api.search(
+        search = self.search(
             query=f'{base_query} AND tags: "unexpired"',
             fields=['parsed.extensions.authority_info_access.issuer_urls', 'parsed.names', 'raw']
         )
@@ -109,51 +88,70 @@ class ServerQuery(object):
         if subject_cert is None:
             logger.info(f'No valid certificates remain using OCSP URL {url}')
             logger.info('Searching for an expired certificate instead')
-            search = self.censys_api.search(
+            search = self.search(
                 query=base_query,
                 fields=['parsed.extensions.authority_info_access.issuer_urls', 'parsed.names', 'raw']
             )
             subject_cert = next(search, None)
             if subject_cert is None:
-                return
+                return None, None
 
         logger.debug(f'Getting issuer cert for {issuer}: {url}')
         issuer_urls = subject_cert['parsed.extensions.authority_info_access.issuer_urls']
         for issuer_url in issuer_urls:
             try:
                 resp = requests.get(issuer_url)
+                resp.raise_for_status()
                 if resp.content:
                     break
             except requests.RequestException:
                 logger.warning(f'Failed to download issuer cert from {issuer_url}')
         else:
-            return
+            return None, None
 
         return base64.b64decode(subject_cert['raw']), resp.content
 
-    @staticmethod
-    def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bool:
-        """Create and send an OCSP request
 
-        :param subject_cert: The certificate that information is being requested about
-        :param issuer_cert: The issuer of the subject certificate
-        :param url: The URL of the OCSP responder to query
+def ping(host: str) -> bool:
+    """Returns True if host responds to ping request.
 
-        :returns: True if the request was successful, False otherwise
-        """
-        logger.debug(f'Checking OCSP response for {url}')
-        subject = asymmetric.load_certificate(subject_cert)
-        issuer = asymmetric.load_certificate(issuer_cert)
+            :param host: The hostname to ping
 
-        builder = OCSPRequestBuilder(subject, issuer)
-        ocsp_request = builder.build()
+            :returns: True if an ICMP echo is received, False otherwise
+            """
+    logger.debug(f'Pinging {host}')
+    parameters = ['-n', '1'] if platform.system().lower() == 'windows' else ['-c', '1']
+    results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
+    return results.returncode == 0
 
-        try:
-            ocsp_resp = requests.post(url, data=ocsp_request.dump(),
-                                      headers={'Content-Type': 'application/ocsp-request'})
-            parsed_ocsp_response = OCSPResponse.load(ocsp_resp.content)
-        except requests.RequestException:
-            logger.warning(f'Failed to make OCSP request for {issuer}: {url}')
-            return False
 
-        return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
+def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bool:
+    """Create and send an OCSP request
+
+    :param subject_cert: The certificate that information is being requested about
+    :param issuer_cert: The issuer of the subject certificate
+    :param url: The URL of the OCSP responder to query
+
+    :returns: True if the request was successful, False otherwise
+    """
+    logger.debug(f'Checking OCSP response for {url}')
+    subject = asymmetric.load_certificate(subject_cert)
+    issuer = asymmetric.load_certificate(issuer_cert)
+
+    builder = OCSPRequestBuilder(subject, issuer)
+    ocsp_request = builder.build()
+
+    try:
+        ocsp_resp = requests.post(url, data=ocsp_request.dump(),
+                                  headers={'Content-Type': 'application/ocsp-request'})
+
+    except requests.RequestException:
+        logger.warning(f'Failed to make OCSP request for {issuer}: {url}')
+        return False
+    try:
+        parsed_ocsp_response = OCSPResponse.load(ocsp_resp.content)
+    except ValueError:
+        logger.warning(f'Failed to parse OCSP response for {issuer}: {url}')
+        return False
+
+    return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'

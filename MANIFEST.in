@@ -1,8 +1,8 @@
 graft src
 
 include .bumpversion.cfg
-
 include tox.ini
+include requirements.txt
 
 include *.rst
 
