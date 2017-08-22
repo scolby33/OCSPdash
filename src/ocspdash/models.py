@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import operator
 from datetime import datetime, timedelta, timezone
 from enum import Enum

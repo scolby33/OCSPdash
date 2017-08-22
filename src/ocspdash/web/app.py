@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple, OrderedDict
 from itertools import groupby
-from pprint import pformat
 from operator import itemgetter
+from pprint import pformat
 from typing import List
 
 from flask import Flask, Blueprint, render_template, jsonify, current_app, make_response
@@ -10,9 +10,9 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 
-from ocspdash.constants import OCSPDASH_DATABASE_CONNECTION
-from ocspdash.web.manager import Manager
-from ocspdash.web.models import Authority, Responder, Chain, User, Result
+from ..constants import OCSPDASH_DATABASE_CONNECTION
+from ..manager import Manager
+from ..models import Authority, Responder, Chain, Result, User
 
 api = Blueprint('api', __name__)
 ui = Blueprint('ui', __name__)

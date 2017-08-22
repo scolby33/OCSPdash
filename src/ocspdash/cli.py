@@ -8,9 +8,9 @@ from collections import OrderedDict
 
 import click
 
+from .manager import Manager
 from .server_query import ServerQuery, check_ocsp_response
-from .web.app import create_application
-from .web.manager import Manager
+from .web import create_application
 
 
 @click.group()

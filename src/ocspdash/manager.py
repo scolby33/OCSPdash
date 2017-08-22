@@ -6,6 +6,7 @@ from typing import Optional, List, Tuple
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, scoped_session
 
+from .constants import OCSPDASH_DATABASE_CONNECTION
 from .models import (
     Base,
     Authority,
@@ -14,8 +15,7 @@ from .models import (
     User,
     Result
 )
-from ..constants import OCSPDASH_DATABASE_CONNECTION
-from ..server_query import ServerQuery, check_ocsp_response
+from .server_query import ServerQuery, check_ocsp_response
 
 logger = logging.getLogger(__name__)
 
