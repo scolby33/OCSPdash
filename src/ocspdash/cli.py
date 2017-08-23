@@ -16,16 +16,12 @@ from .manager import Manager
 from .models import Location
 from .server_query import ServerQuery, check_ocsp_response, ping
 from .util import requests_session
+from .web.app import create_application
 
 
 @click.group()
 def main():
     """Run OCSP Dashboard"""
-
-
-from .web.cli import web
-
-main.add_command(web)
 
 
 @main.command()
@@ -87,16 +83,16 @@ def run(n, o, v):
                     f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{"." if results["ocsp_response"] else "X"}')
 
 
-# @main.command()
-# @click.option('--host', default='0.0.0.0', help='Flask host. Defaults to localhost')
-# @click.option('--port', type=int, help='Flask port. Defaults to 5000')
-# @click.option('--flask-debug', is_flag=True)
-# @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
-# def web(host, port, flask_debug, verbose):
-#     """Run the Flask development server"""
-#     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
-#
-#     create_application().run(host=host, port=port, debug=flask_debug)
+@main.command()
+@click.option('--host', default='0.0.0.0', help='Flask host. Defaults to localhost')
+@click.option('--port', type=int, help='Flask port. Defaults to 5000')
+@click.option('--flask-debug', is_flag=True)
+@click.option('-v', '--verbose', is_flag=True, help='Verbose output')
+def web(host, port, flask_debug, verbose):
+    """Run the Flask development server"""
+    logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
+
+    create_application().run(host=host, port=port, debug=flask_debug)
 
 
 @main.command()
