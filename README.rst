@@ -13,7 +13,10 @@ At the moment, installation must be performed via GitHub:
 
 .. code-block:: sh
 
-    $ pip install git+https://github.com/scolby33/OCSPdash.git
+    $ pip install --process-dependency-links git+https://github.com/scolby33/OCSPdash.git
+
+The :code:`--process-dependency-links` option is required because one of our dependencies is installed from a specific commit on GitHub.
+:code:`pip` will emit a deprecation warning for this option, but it will work for the foreseeable future: the status of it and its possible replacements `is messy <https://github.com/pypa/pip/issues/3939>`_.
 
 :code:`OCSPdash` supports only Python 3.6 or later.
 

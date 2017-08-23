@@ -20,7 +20,7 @@ CLASSIFIERS = [
 ]
 INSTALL_REQUIRES = [
     'asn1crypto',
-    'censys',
+    'censys==0.0.7-dev1',
     'click',
     'flask',
     'flask-admin',
@@ -30,6 +30,9 @@ INSTALL_REQUIRES = [
     'pynacl',
     'requests',
     'sqlalchemy'
+]
+DEPENDENCY_LINKS = [
+    'git+https://github.com/Censys/censys-python.git@a687e215aa8bea5f26d403341d69fc06d240340e#egg=censys-0.0.7-dev1'
 ]
 EXTRAS_REQUIRE = {}
 TESTS_REQUIRE = ['tox']
@@ -84,5 +87,6 @@ if __name__ == '__main__':
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
         tests_require=TESTS_REQUIRE,
+        dependency_links=DEPENDENCY_LINKS,
         entry_points=ENTRY_POINTS
     )
