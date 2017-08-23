@@ -29,6 +29,7 @@ Changes as of 22 August 2017
 - Created a working webapp to display the results information and interact with the DB
 - Major updates to the CLI to allow it to run the webapp and local DB updates
 - Lots of small changes to get things working as a unified whole
+- Set a custom User-Agent for all usages of Requests via a custom :code:`Session` object
 
 
 Changes as of 16 August 2017

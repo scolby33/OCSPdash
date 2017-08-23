@@ -11,7 +11,7 @@ from asn1crypto.ocsp import OCSPResponse
 from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
 
-from .util import RateLimitedCensysCertificates
+from .util import RateLimitedCensysCertificates, requests_session
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         issuer_urls = subject_cert['parsed.extensions.authority_info_access.issuer_urls']
         for issuer_url in issuer_urls:
             try:
-                resp = requests.get(issuer_url)
+                resp = requests_session.get(issuer_url)
                 resp.raise_for_status()
                 if resp.content:
                     break
@@ -142,8 +142,8 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bo
     ocsp_request = builder.build()
 
     try:
-        ocsp_resp = requests.post(url, data=ocsp_request.dump(),
-                                  headers={'Content-Type': 'application/ocsp-request'})
+        ocsp_resp = requests_session.post(url, data=ocsp_request.dump(),
+                                          headers={'Content-Type': 'application/ocsp-request'})
 
     except requests.RequestException:
         logger.warning(f'Failed to make OCSP request for {issuer}: {url}')

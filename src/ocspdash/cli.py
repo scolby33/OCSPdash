@@ -11,12 +11,11 @@ from collections import OrderedDict
 import click
 import nacl.encoding
 import nacl.signing
-import requests
 
 from .manager import Manager
 from .models import Location
 from .server_query import ServerQuery, check_ocsp_response, ping
-from .web import create_application
+from .util import requests_session
 
 
 @click.group()
@@ -142,8 +141,9 @@ def register(url, registration_token):
     private_key = nacl.signing.SigningKey.generate()
     public_key = private_key.verify_key.encode(encoder=nacl.encoding.URLSafeBase64Encoder)
 
-    resp = requests.post(urllib.parse.urljoin(url, '/api/v0/register'), headers={'Authorization': registration_token},
-                         data=public_key)
+    resp = requests_session.post(urllib.parse.urljoin(url, '/api/v0/register'),
+                                 headers={'Authorization': registration_token},
+                                 data=public_key)
 
     click.echo(resp.content)
     click.echo(private_key.encode(nacl.encoding.URLSafeBase64Encoder))
@@ -161,7 +161,8 @@ def submit(url):
 
     signed = private_key.sign(results_bytes, nacl.encoding.URLSafeBase64Encoder)
 
-    resp = requests.post(urllib.parse.urljoin(url, '/submit'), headers={'Authorization': location_id}, data=signed)
+    resp = requests_session.post(urllib.parse.urljoin(url, '/submit'), headers={'Authorization': location_id},
+                                 data=signed)
 
     click.echo(resp.status_code)
 

@@ -5,10 +5,14 @@ from functools import wraps
 from typing import Callable, Union
 
 import censys.certificates
+from requests import Session
 
-from ocspdash.constants import CENSYS_RATE_LIMIT
+from .constants import CENSYS_RATE_LIMIT, OCSPDASH_USER_AGENT
 
 logger = logging.getLogger(__name__)
+
+requests_session = Session()
+requests_session.headers.update({'User-Agent': OCSPDASH_USER_AGENT})
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:
