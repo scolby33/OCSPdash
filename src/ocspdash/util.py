@@ -5,14 +5,14 @@ from functools import wraps
 from typing import Callable, Union
 
 import censys.certificates
-from requests import Session
+import requests
 
 from .constants import CENSYS_RATE_LIMIT, OCSPDASH_USER_AGENT
 
 logger = logging.getLogger(__name__)
 
-requests_session = Session()
-requests_session.headers.update({'User-Agent': OCSPDASH_USER_AGENT})
+requests_session = requests.Session()
+requests_session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), OCSPDASH_USER_AGENT])})
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:
@@ -58,6 +58,12 @@ class RateLimitedCensysCertificates(censys.certificates.CensysCertificates):
     """A :class:`censys.certificates.CensysCertificates` subclass with the :meth:`search` and :meth:`report`
     methods rate-limited to :data:`CENSYS_RATE_LIMIT` calls/sec
     """
+    def __init__(self, *args, user_agent_identifier=None, **kwargs):
+        super().__init__(
+            *args,
+            user_agent_identifier=user_agent_identifier or OCSPDASH_USER_AGENT,
+            **kwargs
+        )
 
     @censys_rate_limit
     def search(self, *args, **kwargs):
