@@ -1,5 +1,5 @@
 asn1crypto==0.22.0
-censys==0.0.7
+-e git+https://github.com/Censys/censys-python/.git@a687e215aa8bea5f26d403341d69fc06d240340e#egg=censys-0.0.7-dev1
 certifi==2017.7.27.1
 cffi==1.10.0
 chardet==3.0.4
