@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import operator
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -211,7 +212,10 @@ class Result(Base):
                 'location': self.location.name
             },
             'chain': {
-                'id': self.chain_id,
+                'id': self.chain.id,
+                'retrieved': str(self.chain.retrieved),
+                'expired': self.chain.expired,
+                'old': self.chain.old,
             },
             'retrieved': str(self.retrieved),
             'created': self.created,
