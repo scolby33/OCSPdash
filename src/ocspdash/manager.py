@@ -245,3 +245,8 @@ class Manager(BaseCacheManager):
 
     def get_authority_by_id(self, authority_id: int) -> Authority:
         return self.session.query(Authority).get(authority_id)
+
+    def get_results(self):
+        logger.warning('Get results method is not actually implemented')
+        return {'test': 12345}
+
