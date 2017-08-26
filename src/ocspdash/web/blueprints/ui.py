@@ -32,8 +32,9 @@ def submit():
     if not location.activated:
         abort(403, f'Not activated: {location}')
 
+    pubkey = location.pubkey
+
     try:
-        pubkey = location.pubkey
         verify_key = nacl.signing.VerifyKey(pubkey, encoder=nacl.encoding.URLSafeBase64Encoder)
         payload = verify_key.verify(data, encoder=nacl.encoding.URLSafeBase64Encoder)
     except nacl.exceptions.BadSignatureError:
