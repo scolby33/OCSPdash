@@ -234,3 +234,14 @@ class Manager(BaseCacheManager):
             'locations': locations,
             'sections': sections
         }
+
+    def get_location_by_id(self, location_id: int) -> Location:
+        """Gets a location"""
+        return self.session.query(Location).get(location_id)
+
+    def get_responder_by_id(self, responder_id: int) -> Responder:
+        """Gets a responder"""
+        return self.session.query(Responder).get(responder_id)
+
+    def get_authority_by_id(self, authority_id: int) -> Authority:
+        return self.session.query(Authority).get(authority_id)

@@ -27,7 +27,8 @@ def submit():
     data = request.data
     location_id = int(request.headers['authorization'])
 
-    location = current_app.manager.session.query(Location).get(location_id)
+    location = current_app.manager.get_location_by_id(location_id)
+
     if not location.activated:
         return '', 403
 
