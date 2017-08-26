@@ -250,3 +250,7 @@ class Manager(BaseCacheManager):
         logger.warning('Get results method is not actually implemented')
         return {'test': 12345}
 
+    def insert_payload(self, payload):
+        """Takes the payload submitted and returns it"""
+        logger.info('Submitted payload: %s', payload)
+        logger.warning('Submit method is not actually implemented')

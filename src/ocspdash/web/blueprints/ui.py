@@ -31,10 +31,11 @@ def submit():
     try:
         verify_key = nacl.signing.VerifyKey(pubkey, encoder=nacl.encoding.URLSafeBase64Encoder)
         payload = verify_key.verify(data, encoder=nacl.encoding.URLSafeBase64Encoder)
-    print(json.loads(base64.urlsafe_b64decode(payload).decode('utf-8')))
-    return '', 204
     except nacl.exceptions.BadSignatureError as e:
         abort(403, f'Bad Signature: {e}')
 
+    decoded_payload = json.loads(base64.urlsafe_b64decode(payload).decode('utf-8'))
 
+    current_app.manager.insert_payload(decoded_payload)
 
+    return '', 204
