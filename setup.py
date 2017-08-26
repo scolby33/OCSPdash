@@ -29,7 +29,8 @@ INSTALL_REQUIRES = [
     'oscrypto',
     'pynacl',
     'requests',
-    'sqlalchemy'
+    'sqlalchemy',
+    'flasgger',
 ]
 EXTRAS_REQUIRE = {}
 TESTS_REQUIRE = ['tox']

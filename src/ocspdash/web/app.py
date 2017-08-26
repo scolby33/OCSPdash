@@ -9,6 +9,7 @@ from flask import Flask, Blueprint, render_template, jsonify, current_app, make_
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
+from flasgger import Swagger
 
 from ..constants import OCSPDASH_DATABASE_CONNECTION, OCSPDASH_API_VERSION
 from ..manager import Manager
@@ -38,6 +39,7 @@ def create_application() -> Flask:
     app = Flask(__name__)
 
     Bootstrap(app)
+    Swagger(app) # Adds Swagger UI
 
     app.config.setdefault('OCSPDASH_CONNECTION')
 
