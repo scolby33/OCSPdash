@@ -30,7 +30,7 @@ def submit():
     location = current_app.manager.get_location_by_id(location_id)
 
     if not location.activated:
-        return '', 403
+        abort(403, f'Not activated: {location}')
 
     try:
         pubkey = location.pubkey
