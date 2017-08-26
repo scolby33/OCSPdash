@@ -6,10 +6,10 @@ from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 from flasgger import Swagger
 
-from .blueprints import api, ui
-from ..constants import OCSPDASH_DATABASE_CONNECTION, OCSPDASH_API_VERSION
-from ..manager import Manager
-from ..models import Authority, Responder, Chain, Result, Location
+from ocspdash.constants import OCSPDASH_DATABASE_CONNECTION, OCSPDASH_API_VERSION
+from ocspdash.manager import Manager
+from ocspdash.models import Authority, Responder, Chain, Result, Location
+from ocspdash.web.blueprints import api, ui
 
 
 def make_admin(app: Flask, session):

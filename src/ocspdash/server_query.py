@@ -11,7 +11,7 @@ from asn1crypto.ocsp import OCSPResponse
 from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
 
-from .util import RateLimitedCensysCertificates, requests_session
+from ocspdash.util import RateLimitedCensysCertificates, requests_session
 
 logger = logging.getLogger(__name__)
 

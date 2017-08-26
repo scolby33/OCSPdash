@@ -3,7 +3,7 @@ from hmac import compare_digest
 
 from flask import Blueprint, jsonify, current_app, request, abort
 
-from ...models import Authority, Responder
+from ocspdash.models import Authority, Responder
 
 api = Blueprint('api', __name__)
 

@@ -13,11 +13,11 @@ import nacl.encoding
 import nacl.signing
 from requests import Response
 
-from .manager import Manager
-from .models import Location
-from .server_query import ServerQuery, check_ocsp_response, ping
-from .util import requests_session
-from .web.app import create_application
+from ocspdash.manager import Manager
+from ocspdash.models import Location
+from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
+from ocspdash.util import requests_session
+from ocspdash.web.app import create_application
 
 
 @click.group()

@@ -9,8 +9,8 @@ from typing import Optional, List, Tuple
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from .constants import OCSPDASH_DATABASE_CONNECTION
-from .models import (
+from ocspdash.constants import OCSPDASH_DATABASE_CONNECTION
+from ocspdash.models import (
     Base,
     Authority,
     Responder,
@@ -18,7 +18,7 @@ from .models import (
     Location,
     Result
 )
-from .server_query import ServerQuery, check_ocsp_response, ping
+from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from typing import Callable, Union
 import censys.certificates
 from requests import Session
 
-from .constants import CENSYS_RATE_LIMIT, OCSPDASH_USER_AGENT
+from ocspdash.constants import CENSYS_RATE_LIMIT, OCSPDASH_USER_AGENT
 
 logger = logging.getLogger(__name__)
 
