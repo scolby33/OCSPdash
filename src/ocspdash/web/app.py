@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
-from collections import namedtuple, OrderedDict
-from itertools import groupby
-from operator import itemgetter
-from pprint import pformat
-from typing import List
 
-from flask import Flask, Blueprint, render_template, jsonify, current_app, make_response, request
+from flask import Flask
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 from flasgger import Swagger
 
+from .blueprints import api, ui
 from ..constants import OCSPDASH_DATABASE_CONNECTION, OCSPDASH_API_VERSION
 from ..manager import Manager
 from ..models import Authority, Responder, Chain, Result, Location
-from .blueprints import api, ui
 
 
 def make_admin(app: Flask, session):
@@ -57,6 +52,7 @@ def create_application() -> Flask:
     app.register_blueprint(ui)
 
     return app
+
 
 if __name__ == '__main__':
     create_application().run(debug=True)
