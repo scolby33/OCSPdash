@@ -3,7 +3,7 @@ from hmac import compare_digest
 
 from flask import Blueprint, jsonify, current_app, request
 
-from ...models import Authority, Responder, Location
+from ...models import Authority, Responder
 
 api = Blueprint('api', __name__)
 
@@ -79,7 +79,6 @@ def get_responder_results(responder_id):
 def register_location_key():
     location_id, registration_token = request.headers['authorization'].split(':', 1)
     registration_token_bytes = base64.urlsafe_b64decode(registration_token)
-    location = current_app.manager.session.query(Location).get(int(location_id))
     if not location.activated and compare_digest(location.pubkey, registration_token_bytes):
         pubkey = request.data
         location.pubkey = pubkey
@@ -88,3 +87,4 @@ def register_location_key():
         return str(location.id), 200
     else:
         return '', 401
+    location = current_app.manager.get_location_by_id(int(location_id))
