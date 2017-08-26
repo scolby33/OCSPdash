@@ -86,7 +86,7 @@ def run(n, o, v):
 
 @main.command()
 @click.option('--host', default='0.0.0.0', help='Flask host. Defaults to localhost')
-@click.option('--port', type=int, help='Flask port. Defaults to 5000')
+@click.option('--port', type=int, default=8000, help='Flask port.')
 @click.option('--flask-debug', is_flag=True)
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
 def web(host, port, flask_debug, verbose):
