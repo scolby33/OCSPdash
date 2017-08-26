@@ -1,16 +1,10 @@
 import base64
-from collections import namedtuple, OrderedDict
-from itertools import groupby
 import json
-from operator import itemgetter
-from typing import List
 
-from flask import Blueprint, render_template, request, current_app
-import nacl.signing
 import nacl.encoding
 import nacl.exceptions
-
-from ...models import Location
+import nacl.signing
+from flask import Blueprint, render_template, request, current_app, abort
 
 ui = Blueprint('ui', __name__)
 
