@@ -11,6 +11,7 @@ from collections import OrderedDict
 import click
 import nacl.encoding
 import nacl.signing
+from requests import Response
 
 from .manager import Manager
 from .models import Location
@@ -150,23 +151,29 @@ def register(url, registration_token):
     click.echo(private_key.encode(nacl.encoding.URLSafeBase64Encoder))
 
 
+def make_submission(url: str, location_id, private_key_bytes, results) -> Response:
+    private_key = nacl.signing.SigningKey(private_key_bytes, encoder=nacl.encoding.URLSafeBase64Encoder)
+
+    results_bytes = base64.urlsafe_b64encode(json.dumps(results).encode('utf-8'))
+
+    signed = private_key.sign(results_bytes, nacl.encoding.URLSafeBase64Encoder)
+
+    return requests_session.post(
+        urllib.parse.urljoin(url, '/submit'),
+        headers={'Authorization': location_id},
+        data=signed
+    )
+
+
 @main.command()
 @click.argument('url')
 @click.option('--connection')
 def submit(url, connection):
     """Submit recent updates to the sever"""
     location_id, private_key_bytes = os.environ.get('OCSPDASH_PRIVATE_KEY').split(':', 1)
-    private_key = nacl.signing.SigningKey(private_key_bytes, encoder=nacl.encoding.URLSafeBase64Encoder)
-
-    m = Manager(connection)
-    results = json.dumps(m.get_results())
-    results_bytes = base64.urlsafe_b64encode(results.encode('utf-8'))
-
-    signed = private_key.sign(results_bytes, nacl.encoding.URLSafeBase64Encoder)
-
-    resp = requests_session.post(urllib.parse.urljoin(url, '/submit'), headers={'Authorization': location_id},
-                                 data=signed)
-
+    manager = Manager(connection)
+    results = manager.get_results()
+    resp = make_submission(url, location_id, private_key_bytes, results)
     click.echo(resp.status_code)
 
 
