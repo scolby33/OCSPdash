@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 from flasgger import Swagger
 from flask import Flask
 from flask_admin import Admin
@@ -36,7 +38,9 @@ def create_application() -> Flask:
     Bootstrap(app)
     Swagger(app)  # Adds Swagger UI
 
-    app.config.setdefault('OCSPDASH_CONNECTION')
+    if 'OCSPDASH_BUILD_DOCKER' in os.environ:
+        app.config.from_object('ocspdash.web.config.DockerConfig')
+
     app.config.setdefault('OCSPDASH_CONNECTION', OCSPDASH_DATABASE_CONNECTION)
 
     app.manager = Manager(
