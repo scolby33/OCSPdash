@@ -6,7 +6,7 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install gunicorn
+RUN pip install gunicorn psycopg2
 RUN pip install .
 
 # This is the stuff that should go in Docker-compose after

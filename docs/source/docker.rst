@@ -15,6 +15,7 @@ this:
     OCSPDASH_DB_PASS=postgres
     OCSPDASH_DB_SERVICE=postgres
     OCSPDASH_DB_PORT=5432
-
+    CENSYS_API_ID=asfasfafasfsafasfasf
+    CENSYS_API_SECRET=asdsadasdasadsda
 
 Reference: https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/

@@ -14,6 +14,8 @@ services:
       - /usr/src/app/static
     env_file: .env
     command: gunicorn -b :8000 ocspdash.web.run:app
+    depends_on:
+     - postgres
 
   # add -w 2 to the gunicorn line to add extra workers
 

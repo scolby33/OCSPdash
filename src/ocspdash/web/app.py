@@ -35,13 +35,13 @@ def create_application() -> Flask:
     """Creates the OCSPdash Flask application"""
     app = Flask(__name__)
 
-    Bootstrap(app)
-    Swagger(app)  # Adds Swagger UI
-
-    if 'OCSPDASH_BUILD_DOCKER' in os.environ:
-        app.config.from_object('ocspdash.web.config.DockerConfig')
+    if 'OCSPDASH_CONFIG' in os.environ:
+        app.config.from_object(os.environ['OCSPDASH_CONFIG'])
 
     app.config.setdefault('OCSPDASH_CONNECTION', OCSPDASH_DATABASE_CONNECTION)
+
+    Bootstrap(app)
+    Swagger(app)  # Adds Swagger UI
 
     app.manager = Manager(
         connection=app.config['OCSPDASH_CONNECTION'],
