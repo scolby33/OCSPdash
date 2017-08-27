@@ -37,11 +37,12 @@ def create_application() -> Flask:
     Swagger(app)  # Adds Swagger UI
 
     app.config.setdefault('OCSPDASH_CONNECTION')
+    app.config.setdefault('OCSPDASH_CONNECTION', OCSPDASH_DATABASE_CONNECTION)
 
     app.manager = Manager(
-        connection=app.config.get('OCSPDASH_CONNECTION', OCSPDASH_DATABASE_CONNECTION),
-        user=app.config.get('CENSYS_API_ID'),
-        password=app.config.get('CENSYS_API_SECRET'),
+        connection=app.config['OCSPDASH_CONNECTION'],
+        user=app.config['CENSYS_API_ID'],
+        password=app.config['CENSYS_API_SECRET'],
     )
 
     app.manager.create_all()
