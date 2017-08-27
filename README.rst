@@ -1,11 +1,14 @@
-OCSPdash |python_versions| |license|
-====================================
+OCSPdash |python_versions| |license| |develop_build|
+====================================================
 A dashboard for the status of the top certificate authorities' OCSP responders.
 
 .. |python_versions| image:: https://img.shields.io/badge/python->%3D3.6-blue.svg?style=flat-square
     :alt: Supports Python 3.6
 .. |license| image:: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
     :alt: MIT License
+.. |develop_build| image:: https://travis-ci.org/scolby33/OCSPDash.svg?branch=develop
+    :target: https://travis-ci.org/scolby33/OCSPDash
+    :alt: Development Build Status
 
 Installation
 ------------
