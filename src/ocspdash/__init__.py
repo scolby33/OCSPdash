@@ -13,14 +13,5 @@ __email__ = 'scolby33@gmail.com'
 __license__ = 'MIT'
 __copyright__ = 'Copyright (c) 2017 Scott Colby'
 
-from json import JSONEncoder
-
-from ocspdash import server_query
-
-
-def _default(self, obj):
-    return getattr(obj.__class__, "to_json", _default.default)(obj)
-
-
-_default.default = JSONEncoder().default
-JSONEncoder.default = _default
+from .util import install_custom_json_encoder
+install_custom_json_encoder()

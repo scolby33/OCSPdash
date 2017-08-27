@@ -2,6 +2,7 @@ import logging
 import threading
 import time
 from functools import wraps
+from json import JSONEncoder
 from typing import Callable, Union
 
 import censys.certificates
@@ -13,6 +14,16 @@ logger = logging.getLogger(__name__)
 
 requests_session = Session()
 requests_session.headers.update({'User-Agent': OCSPDASH_USER_AGENT})
+
+
+def install_custom_json_encoder():
+    logger.info('Installing custom JSONEncoder')
+
+    def custom_encoder(self, obj):
+        return getattr(obj.__class__, 'to_json', custom_encoder.default_encoder)(obj)
+
+    install_custom_json_encoder.default_encoder = JSONEncoder().default
+    JSONEncoder.default = custom_encoder
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:
