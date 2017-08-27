@@ -9,9 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install gunicorn
 RUN pip install .
 
-EXPOSE 8000
-
-# This works, and doesn't need GUnicorn
-# CMD ["python3", "-m", "ocspdash", "web"]
-
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "ocspdash.web.run:app"]
+# This is the stuff that should go in Docker-compose after
+# EXPOSE 8000
+# CMD ["gunicorn", "-b", "0.0.0.0:8000", "ocspdash.web.run:app"]

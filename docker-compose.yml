@@ -1,0 +1,32 @@
+# Follow guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/
+
+version: '2'
+
+services:
+  web:
+    restart: always
+    build: .
+    expose:
+      - "8000"
+    links:
+      - postgres:postgres
+    volumes:
+      - /usr/src/app/static
+    env_file: .env
+    command: gunicorn -b :8000 ocspdash.web.run:app
+
+  # add -w 2 to the gunicorn line to add extra workers
+
+  data:
+    image: postgres:latest
+    volumes:
+      - /var/lib/postgresql
+    command: "true"
+
+  postgres:
+    restart: always
+    image: postgres:latest
+    volumes_from:
+      - data
+    ports:
+      - "5432:5432"
