@@ -22,7 +22,7 @@ def install_custom_json_encoder():
     def custom_encoder(self, obj):
         return getattr(obj.__class__, 'to_json', custom_encoder.default_encoder)(obj)
 
-    install_custom_json_encoder.default_encoder = JSONEncoder().default
+    custom_encoder.default_encoder = JSONEncoder().default
     JSONEncoder.default = custom_encoder
 
 
