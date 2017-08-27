@@ -2,8 +2,6 @@ import os
 
 import requests.utils
 
-from . import __name__, __version__
-
 __all__ = [
     'OCSPDASH_API_VERSION',
     'OCSPDASH_DIRECTORY',
@@ -11,6 +9,8 @@ __all__ = [
     'CENSYS_RATE_LIMIT',
     'OCSPDASH_USER_AGENT',
 ]
+
+VERSION = '0.1.0-dev'
 
 OCSPDASH_API_VERSION = 'v0'
 
@@ -27,4 +27,4 @@ OCSPDASH_DATABASE_CONNECTION = 'sqlite:///' + os.path.join(OCSPDASH_DIRECTORY, '
 # to ``0.2``.
 CENSYS_RATE_LIMIT = float(os.environ.get('OCSPDASH_RATE', 0.2))  # max requests per second
 
-OCSPDASH_USER_AGENT = ' '.join([requests.utils.default_user_agent(), f'{__name__}/{__version__}'])
+OCSPDASH_USER_AGENT = ' '.join([requests.utils.default_user_agent(), f'OCSPdash/{VERSION}'])
