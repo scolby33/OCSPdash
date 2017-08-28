@@ -4,7 +4,7 @@ Docker
 To run on docker, you have to add a ``.env`` file in the top level directory of the folder that looks something like
 this:
 
-.. code-block::
+.. code-block:: shell
 
     # Add Environment Variables
 
