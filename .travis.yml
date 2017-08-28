@@ -5,6 +5,10 @@ language: python
 
 python:
     - 3.6
+env:
+    - TOXENV=manifest
+    - TOXENV=docs
+    - TOXENV=readme
 
 install:
     - pip install tox
