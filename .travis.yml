@@ -12,11 +12,18 @@ env:
 
 matrix:
     include:
-        - python: "3.6"
-          env: TOXENV=py36
+        - python: 3.6
+          env: TOXENV=py
+
+before_install:
+    - pip install codecov
 
 install:
     - pip install tox
 
 script:
     - tox
+
+after_success:
+    - tox -e coverage-report
+    - codecov
