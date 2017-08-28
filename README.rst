@@ -6,7 +6,7 @@ A dashboard for the status of the top certificate authorities' OCSP responders.
     :alt: Supports Python 3.6
 .. |license| image:: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
     :alt: MIT License
-.. |develop_build| image:: https://travis-ci.org/scolby33/OCSPdash.svg?branch=develop
+.. |develop_build| image:: https://img.shields.io/travis/scolby33/OCSPdash/develop.svg?style=flat-square
     :target: https://travis-ci.org/scolby33/OCSPdash
     :alt: Development Build Status
 
