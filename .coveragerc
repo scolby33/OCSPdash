@@ -1,0 +1,11 @@
+[run]
+branch = True
+source = ocspdash
+
+[paths]
+source =
+    src/ocspdash
+    .tox/*/lib/python*/site-packages/ocspdash
+
+[report]
+show_missing = True
