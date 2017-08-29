@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'OCSPdash'
-copyright = '2017, Scott Colby and Charles Tapley Hoyt'
+copyright = '2017 Scott Colby and Charles Tapley Hoyt'
 author = 'Scott Colby and Charles Tapley Hoyt'
 
 # The version info for the project you're documenting, acts as replacement for
