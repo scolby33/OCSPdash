@@ -58,7 +58,7 @@ source_encoding = 'utf-8-sig'
 master_doc = 'index'
 
 # General information about the project.
-project = 'OCSP Dashboard'
+project = 'OCSPdash'
 copyright = '2017, Scott Colby and Charles Tapley Hoyt'
 author = 'Scott Colby and Charles Tapley Hoyt'
 
