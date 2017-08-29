@@ -1,5 +1,5 @@
-OCSPdash |python_versions| |license| |develop_build|
-====================================================
+OCSPdash |python_versions| |license| |develop_build| |develop_coverage|
+=======================================================================
 A dashboard for the status of the top certificate authorities' OCSP responders.
 
 .. |python_versions| image:: https://img.shields.io/badge/python->%3D3.6-blue.svg?style=flat-square
@@ -9,6 +9,9 @@ A dashboard for the status of the top certificate authorities' OCSP responders.
 .. |develop_build| image:: https://img.shields.io/travis/scolby33/OCSPdash/develop.svg?style=flat-square
     :target: https://travis-ci.org/scolby33/OCSPdash
     :alt: Development Build Status
+.. |develop_coverage| image:: https://img.shields.io/codecov/c/github/scolby33/OCSPdash/develop.svg?style=flat-square
+    :target: https://codecov.io/gh/scolby33/OCSPdash/branch/develop
+    :alt: Development Test Coverage Status
 
 Installation
 ------------
