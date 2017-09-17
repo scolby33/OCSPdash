@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 
 This file should be used to run the flask app with something like Gunicorn. For example:
@@ -7,6 +9,6 @@ This file should NOT be imported anywhere, though, since it would instantiate th
 
 """
 
-from ocspdash.web.app import create_application
+from ocspdash.web import create_application
 
 app = create_application()

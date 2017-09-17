@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import base64
 from hmac import compare_digest
 

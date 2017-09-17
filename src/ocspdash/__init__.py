@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 """A dashboard for the status of the top certificate authorities' OCSP responders."""
+
 # metadata
 __version__ = '0.1.0-dev'
 

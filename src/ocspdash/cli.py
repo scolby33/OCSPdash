@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 """The CLI module for OCSPdash."""
+
 import base64
 import datetime
 import json
