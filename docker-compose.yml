@@ -1,34 +1,46 @@
 # Follow guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/
 
-version: '2'
+version: '3'
 
 services:
   web:
-    restart: always
     build: .
-    expose:
-      - "8000"
-    links:
-      - postgres:postgres
-    volumes:
-      - /usr/src/app/static
-    env_file: .env
-    command: gunicorn -b :8000 ocspdash.web.run:app
-    depends_on:
-     - postgres
-
-  # add -w 2 to the gunicorn line to add extra workers
-
-  data:
-    image: postgres:latest
-    volumes:
-      - /var/lib/postgresql
-    command: "true"
-
-  postgres:
-    restart: always
-    image: postgres:latest
-    volumes_from:
-      - data
     ports:
-      - "5432:5432"
+      - 5000:5000
+    command: gunicorn -b 0.0.0.0:5000 ocspdash.web.run:app --log-level=DEBUG
+    depends_on:
+     - db
+    environment:
+      OCSPDASH_CONFIG: ocspdash.web.config.DockerPostgresConfig
+      OCSPDASH_DB_USER: postgres
+      OCSPDASH_DB_PASSWORD: postgres
+      OCSPDASH_DB_HOST: db
+      OCSPDASH_DB_DATABASE: postgres
+      OCSPDASH_SECRET_KEY: ${SECRET_KEY}
+      CENSYS_API_ID: ${CENSYS_API_ID}
+      CENSYS_API_SECRET: ${CENSYS_API_SECRET}
+
+  db:
+    image: postgres:latest
+    volumes:
+      - db_data:/var/lib/postgres
+
+#  db:
+#    image: mysql:5.7
+#    volumes:
+#       - db_data:/var/lib/mysql
+#    environment:
+#      MYSQL_USER: ocspd
+#      MYSQL_PASSWORD: ocspd
+#      MYSQL_DATABASE: ocsp
+#      MYSQL_ROOT_PASSWORD: root
+#    ports:
+#        - 3306:3306
+#    command: mysqld \
+#      --character-set-server=utf8 \
+#      --collation-server=utf8_unicode_ci \
+#      --init-connect='SET NAMES UTF8;' \
+#      --innodb-flush-log-at-trx-commit=0
+
+volumes:
+  db_data:
