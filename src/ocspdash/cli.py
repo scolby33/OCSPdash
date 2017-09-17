@@ -20,7 +20,6 @@ from ocspdash.manager import Manager
 from ocspdash.models import Location
 from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 from ocspdash.util import requests_session
-from ocspdash.web.app import create_application
 
 
 @click.group()
@@ -96,7 +95,9 @@ def web(host, port, flask_debug, verbose):
     """Run the Flask development server"""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
-    create_application().run(host=host, port=port, debug=flask_debug)
+    from ocspdash.web import create_application
+    app = create_application()
+    app.run(host=host, port=port, debug=flask_debug)
 
 
 @main.command()
