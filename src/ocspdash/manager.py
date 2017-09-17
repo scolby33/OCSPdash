@@ -11,7 +11,7 @@ from typing import Optional, List, Tuple
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from ocspdash.constants import OCSPDASH_DATABASE_CONNECTION
+from ocspdash.constants import OCSPDASH_CONNECTION
 from ocspdash.models import (
     Base,
     Authority,
@@ -33,8 +33,8 @@ class BaseCacheManager(object):
             logger.info('using connection from environment: %s', os.environ['OCSPDASH_CONNECTION'])
             self.connection = os.environ['OCSPDASH_CONNECTION']
         else:
-            logger.info('using default connection: %s', OCSPDASH_DATABASE_CONNECTION)
-            self.connection = OCSPDASH_DATABASE_CONNECTION
+            logger.info('using default connection: %s', OCSPDASH_CONNECTION)
+            self.connection = OCSPDASH_CONNECTION
 
         self.engine = create_engine(self.connection, echo=echo)
 

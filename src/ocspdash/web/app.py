@@ -8,13 +8,13 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 
-from ocspdash.constants import OCSPDASH_DATABASE_CONNECTION, OCSPDASH_API_VERSION
+from ocspdash.constants import OCSPDASH_CONNECTION, OCSPDASH_API_VERSION
 from ocspdash.manager import Manager
 from ocspdash.models import Authority, Responder, Chain, Result, Location
 from ocspdash.web.blueprints import api, ui
 
 
-def make_admin(app: Flask, session):
+def make_admin(app: Flask, session) -> Admin:
     """Adds admin views to the app"""
     admin = Admin(app)
 
@@ -37,8 +37,10 @@ def create_application() -> Flask:
 
     if 'OCSPDASH_CONFIG' in os.environ:
         app.config.from_object(os.environ['OCSPDASH_CONFIG'])
+    else:
+        app.config.from_object('ocspdash.web.config.DefaultConfig')
 
-    app.config.setdefault('OCSPDASH_CONNECTION', OCSPDASH_DATABASE_CONNECTION)
+    app.config.setdefault('OCSPDASH_CONNECTION', OCSPDASH_CONNECTION)
 
     Bootstrap(app)
     Swagger(app)  # Adds Swagger UI
