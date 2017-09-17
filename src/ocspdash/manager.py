@@ -25,7 +25,7 @@ from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 logger = logging.getLogger(__name__)
 
 
-class BaseCacheManager(object):
+class BaseManager(object):
     def __init__(self, connection=None, echo=False):
         if connection:
             self.connection = connection
@@ -53,7 +53,7 @@ class BaseCacheManager(object):
         Base.metadata.drop_all(self.engine)
 
 
-class Manager(BaseCacheManager):
+class Manager(BaseManager):
     def __init__(self, connection=None, echo: bool = None, user: str = None, password: str = None):
         """All the operations required to find the OCSP servers of the top certificate authorities and test them.
 

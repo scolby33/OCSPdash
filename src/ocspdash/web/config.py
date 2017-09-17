@@ -16,16 +16,28 @@ class DefaultConfig(object):
 
 
 class DockerConfig(DefaultConfig):
-    """Follows format from guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/"""
     DB_DATABASE = os.environ.get('OCSPDASH_DB_DATABASE')
     DB_USER = os.environ.get('OCSPDASH_DB_USER')
     DB_PASSWORD = os.environ.get('OCSPDASH_DB_PASSWORD')
     DB_HOST = os.environ.get('OCSPDASH_DB_HOST')
 
+
+class DockerMySQLConfig(DockerConfig):
+    """Follows format from guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/"""
     OCSPDASH_CONNECTION = 'mysql+pymysql://{user}:{password}@{host}/{database}?charset={charset}'.format(
-        user=DB_USER,
-        host=DB_HOST,
-        password=DB_PASSWORD,
-        database=DB_DATABASE,
-        charset='utf8'
+        user=DockerConfig.DB_USER,
+        host=DockerConfig.DB_HOST,
+        password=DockerConfig.DB_PASSWORD,
+        database=DockerConfig.DB_DATABASE,
+        charset='utf8',
+    )
+
+
+class DockerPostgresConfig(DefaultConfig):
+    """Follows format from guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/"""
+    OCSPDASH_CONNECTION = 'postgresql://{user}:{password}@{host}:5432/{database}'.format(
+        user=DockerConfig.DB_USER,
+        host=DockerConfig.DB_HOST,
+        password=DockerConfig.DB_PASSWORD,
+        database=DockerConfig.DB_DATABASE,
     )

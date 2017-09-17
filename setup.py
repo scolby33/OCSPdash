@@ -30,6 +30,7 @@ INSTALL_REQUIRES = [
     'pynacl',
     'requests',
     'sqlalchemy',
+    'flask-sqlalchemy',
     'flasgger',
 ]
 EXTRAS_REQUIRE = {}

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import os
 
 from flasgger import Swagger
@@ -7,11 +8,14 @@ from flask import Flask
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
+from flask_sqlalchemy import SQLAlchemy
 
 from ocspdash.constants import OCSPDASH_CONNECTION, OCSPDASH_API_VERSION
-from ocspdash.manager import Manager
+from ocspdash.manager import Manager, BaseManager
 from ocspdash.models import Authority, Responder, Chain, Result, Location
 from ocspdash.web.blueprints import api, ui
+
+logger = logging.getLogger('web')
 
 
 def make_admin(app: Flask, session) -> Admin:
@@ -41,12 +45,22 @@ def create_application() -> Flask:
         app.config.from_object('ocspdash.web.config.DefaultConfig')
 
     app.config.setdefault('OCSPDASH_CONNECTION', OCSPDASH_CONNECTION)
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['OCSPDASH_CONNECTION']
+    app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 
+    db = SQLAlchemy(app=app)
     Bootstrap(app)
     Swagger(app)  # Adds Swagger UI
 
-    app.manager = Manager(
-        connection=app.config['OCSPDASH_CONNECTION'],
+    class WebBaseManager(BaseManager):
+        def __init__(self, *args, **kwargs):
+            self.session = db.session
+            self.engine = db.engine
+
+    class WebManager(WebBaseManager, Manager):
+        """Killin it with the MRO"""
+
+    app.manager = WebManager(
         user=app.config['CENSYS_API_ID'],
         password=app.config['CENSYS_API_SECRET'],
     )
@@ -57,6 +71,8 @@ def create_application() -> Flask:
 
     app.register_blueprint(api, url_prefix=f'/api/{OCSPDASH_API_VERSION}')
     app.register_blueprint(ui)
+
+    logger.info('created wsgi app')
 
     return app
 
