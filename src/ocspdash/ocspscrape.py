@@ -121,15 +121,14 @@ def extractkey(token: str, notrunc: bool = False):
     print(f'invite token:\t{claims["token"]}'.expandtabs(7))
 
 
-def scrape():
+def _scrape_helper(queries):
+    # TODO needs type hint for return
     requests_session = requests.Session()
     requests_session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
 
     payload = {RESULTS_JWT_CLAIM: []}
 
-    for line in tqdm(sys.stdin):
-        query = json.loads(line)
-
+    for query in queries:
         query_id = query['id']
 
         url = query['url']
@@ -154,6 +153,14 @@ def scrape():
     key_id = os.environ['OCSPSCRAPE_KEY_ID']
     payload['iat'] = datetime.utcnow()
     token = jwt.encode(payload, key, headers={'kid': key_id}, algorithm=JWT_ALGORITHM)
+    return token
+
+
+def scrape():
+    token = _scrape_helper(
+        json.loads(line)
+        for line in tqdm(sys.stdin)
+    )
     print(token)
 
 
