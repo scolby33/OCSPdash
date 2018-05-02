@@ -42,6 +42,7 @@ Examples:
         xargs ocspscrape extractkey
 
 """
+# TODO docstrings for new functions
 import json
 import os
 import platform
