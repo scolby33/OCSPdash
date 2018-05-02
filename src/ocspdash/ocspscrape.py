@@ -68,8 +68,6 @@ NAMESPACE_OCSPDASH_KID = uuid.UUID('c81dcfc6-2131-4d05-8ea4-4e5ad8123696')
 RESULTS_JWT_CLAIM = 'res'
 JWT_ALGORITHM = 'ES512'
 
-requests_session = requests.Session()
-requests_session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
 
 
 def main():
@@ -124,6 +122,9 @@ def extractkey(token: str, notrunc: bool=False):
 
 
 def scrape():
+    requests_session = requests.Session()
+    requests_session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
+
     payload = {RESULTS_JWT_CLAIM: []}
 
     for line in tqdm(sys.stdin):
@@ -139,7 +140,7 @@ def scrape():
 
         time = datetime.utcnow().strftime('%FT%TZ')
         ping_result = ping(netloc)
-        ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, url)
+        ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, url, requests_session)
 
         payload[RESULTS_JWT_CLAIM].append({
             'id': query_id,
@@ -168,15 +169,17 @@ def ping(host: str) -> bool:
     return results.returncode == 0
 
 
-def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bool:
+def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, session) -> bool:
     """Create and send an OCSP request
 
         :param subject_cert: The certificate that information is being requested about
         :param issuer_cert: The issuer of the subject certificate
         :param url: The URL of the OCSP responder to query
+        :param session: A requests session
 
         :returns: True if the request was successful, False otherwise
     """
+    # TODO better documentation/type hinting for the session parameter
     try:
         subject = asymmetric.load_certificate(subject_cert)
         issuer = asymmetric.load_certificate(issuer_cert)
@@ -187,7 +190,7 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bo
     ocsp_request = builder.build()
 
     try:
-        ocsp_resp = requests_session.post(url, data=ocsp_request.dump(),
+        ocsp_resp = session.post(url, data=ocsp_request.dump(),
                                   headers={'Content-Type': 'application/ocsp-request'})
     except requests.RequestException:
         return False
