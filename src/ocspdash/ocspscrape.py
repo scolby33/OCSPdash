@@ -169,7 +169,7 @@ def ping(host: str) -> bool:
     return results.returncode == 0
 
 
-def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, session) -> bool:
+def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, session: requests.Session) -> bool:
     """Create and send an OCSP request
 
         :param subject_cert: The certificate that information is being requested about
@@ -179,7 +179,6 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, sessi
 
         :returns: True if the request was successful, False otherwise
     """
-    # TODO better documentation/type hinting for the session parameter
     try:
         subject = asymmetric.load_certificate(subject_cert)
         issuer = asymmetric.load_certificate(issuer_cert)
