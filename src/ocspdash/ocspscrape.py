@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """OCSPscrape.
 
 Usage:
@@ -50,8 +51,7 @@ import subprocess
 import sys
 import urllib.parse
 import uuid
-from base64 import urlsafe_b64decode as b64decode
-from base64 import urlsafe_b64encode as b64encode
+from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 from datetime import datetime
 
 import requests
@@ -70,7 +70,6 @@ RESULTS_JWT_CLAIM = 'res'
 JWT_ALGORITHM = 'ES512'
 
 
-
 def main():
     arguments = docopt(__doc__, version='OCSPscrape 0.1.0')
     if arguments['genkey']:
@@ -81,7 +80,7 @@ def main():
         scrape()
 
 
-def genkey(invite_token: str, fish: bool=False):
+def genkey(invite_token: str, fish: bool = False):
     private_key = ec.generate_private_key(ec.SECP521R1, default_backend())
     serialized_private_key = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -110,7 +109,7 @@ def genkey(invite_token: str, fish: bool=False):
     print(token)
 
 
-def extractkey(token: str, notrunc: bool=False):
+def extractkey(token: str, notrunc: bool = False):
     unverified_claims = jwt.get_unverified_claims(token)
     public_key = b64decode(unverified_claims['pk']).decode('utf-8')
     claims = jwt.decode(token, public_key, algorithms=[JWT_ALGORITHM])
@@ -191,8 +190,7 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, sessi
     ocsp_request = builder.build()
 
     try:
-        ocsp_resp = session.post(url, data=ocsp_request.dump(),
-                                  headers={'Content-Type': 'application/ocsp-request'})
+        ocsp_resp = session.post(url, data=ocsp_request.dump(), headers={'Content-Type': 'application/ocsp-request'})
     except requests.RequestException:
         return False
 
