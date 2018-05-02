@@ -1,9 +1,12 @@
-"""Setup module for the OCSPdash package"""
+# -*- coding: utf-8 -*-
 
-import setuptools
+"""Setup module for the OCSPdash package."""
+
 import codecs  # To use a consistent encoding
 import os
 import re
+
+import setuptools
 
 #################################################################
 PACKAGES = setuptools.find_packages(where='src')
@@ -32,11 +35,18 @@ INSTALL_REQUIRES = [
     'sqlalchemy',
     'flask-sqlalchemy',
     'flasgger',
+    'cryptography',
+    'python-jose',
+    'tqdm',
+    'docopt',
 ]
 EXTRAS_REQUIRE = {}
 TESTS_REQUIRE = ['tox']
 ENTRY_POINTS = {
-    'console_scripts': ['ocspdash = ocspdash.cli:main']
+    'console_scripts': [
+        'ocspdash = ocspdash.cli:main',
+        'ocspscrape = ocspdash.ocspscrape:main',
+    ]
 }
 #################################################################
 
@@ -50,14 +60,14 @@ def read(*parts):
 
 
 def find_meta(meta):
-    """Extract __*meta*__ from META_FILE"""
+    """Extract __*meta*__ from META_FILE."""
     meta_match = re.search(
         r'^__{meta}__ = ["\']([^"\']*)["\']'.format(meta=meta),
         META_FILE, re.M
     )
     if meta_match:
         return meta_match.group(1)
-    raise RuntimeError('Unable to find __{meta}__ string'.format(meta=meta))
+    raise RuntimeError(f'Unable to find __{meta}__ string')
 
 
 def get_long_description():
@@ -65,6 +75,7 @@ def get_long_description():
     with codecs.open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
         long_description = f.read()
     return long_description
+
 
 META_FILE = read(META_PATH)
 
