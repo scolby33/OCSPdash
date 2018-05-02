@@ -105,7 +105,7 @@ def genkey(invite_token: str, fish: bool=False):
         print(f"export OCSPSCRAPE_KEY_ID='{key_id}'", file=sys.stderr)
         print(f"export OCSPSCRAPE_PRIVATE_KEY='{serialized_private_key}'", file=sys.stderr)
     else:
-        print(f"set -gx OCSPSCRAPE_KEY_ID='{key_id}'", file=sys.stderr)
+        print(f"set -gx OCSPSCRAPE_KEY_ID '{key_id}'", file=sys.stderr)
         print(f"set -gx OCSPSCRAPE_PRIVATE_KEY '{serialized_private_key}'", file=sys.stderr)
     print(token)
 
