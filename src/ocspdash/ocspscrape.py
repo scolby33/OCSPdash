@@ -73,14 +73,31 @@ JWT_ALGORITHM = 'ES512'
 def main():
     arguments = docopt(__doc__, version='OCSPscrape 0.1.0')
     if arguments['genkey']:
-        genkey(arguments['<invite-token>'], arguments['--fish'])
+        token, key_id, private_key = genkey(arguments['<invite-token>'])
+        if not arguments['--fish']:
+            print(f"export OCSPSCRAPE_KEY_ID='{key_id}'", file=sys.stderr)
+            print(f"export OCSPSCRAPE_PRIVATE_KEY='{private_key}'", file=sys.stderr)
+        else:
+            print(f"set -gx OCSPSCRAPE_KEY_ID '{key_id}'", file=sys.stderr)
+            print(f"set -gx OCSPSCRAPE_PRIVATE_KEY '{private_key}'", file=sys.stderr)
+        print(token)
     elif arguments['extractkey']:
-        extractkey(arguments['<token>'], arguments['--notrunc'])
+        claims = extract_claims(arguments['<token>'])
+        if arguments['--notrunc']:
+            print(f'public key:\t{claims["pk"]}'.expandtabs(7))
+        else:
+            print(f'public key:\t{claims["pk"]}'.expandtabs(7)[:78] + '..')
+        print(f'key id:\t{claims["kid"]}'.expandtabs(7))
+        print(f'invite token:\t{claims["token"]}'.expandtabs(7))
     else:
-        scrape()
+        token = scrape(
+            json.loads(line)
+            for line in tqdm(sys.stdin)
+        )
+        print(token)
 
 
-def genkey(invite_token: str, fish: bool = False):
+def genkey(invite_token: str):
     private_key = ec.generate_private_key(ec.SECP521R1, default_backend())
     serialized_private_key = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -100,28 +117,17 @@ def genkey(invite_token: str, fish: bool = False):
     }
     token = jwt.encode(payload, private_key, algorithm=JWT_ALGORITHM)
 
-    if not fish:
-        print(f"export OCSPSCRAPE_KEY_ID='{key_id}'", file=sys.stderr)
-        print(f"export OCSPSCRAPE_PRIVATE_KEY='{serialized_private_key}'", file=sys.stderr)
-    else:
-        print(f"set -gx OCSPSCRAPE_KEY_ID '{key_id}'", file=sys.stderr)
-        print(f"set -gx OCSPSCRAPE_PRIVATE_KEY '{serialized_private_key}'", file=sys.stderr)
-    print(token)
+    return token, key_id, serialized_private_key
 
 
-def extractkey(token: str, notrunc: bool = False):
+def extract_claims(token: str):
     unverified_claims = jwt.get_unverified_claims(token)
     public_key = b64decode(unverified_claims['pk']).decode('utf-8')
     claims = jwt.decode(token, public_key, algorithms=[JWT_ALGORITHM])
-    if notrunc:
-        print(f'public key:\t{claims["pk"]}'.expandtabs(7))
-    else:
-        print(f'public key:\t{claims["pk"]}'.expandtabs(7)[:78] + '..')
-    print(f'key id:\t{claims["kid"]}'.expandtabs(7))
-    print(f'invite token:\t{claims["token"]}'.expandtabs(7))
+    return claims
 
 
-def _scrape_helper(queries):
+def scrape(queries):
     # TODO needs type hint for return
     requests_session = requests.Session()
     requests_session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
@@ -154,14 +160,6 @@ def _scrape_helper(queries):
     payload['iat'] = datetime.utcnow()
     token = jwt.encode(payload, key, headers={'kid': key_id}, algorithm=JWT_ALGORITHM)
     return token
-
-
-def scrape():
-    token = _scrape_helper(
-        json.loads(line)
-        for line in tqdm(sys.stdin)
-    )
-    print(token)
 
 
 def ping(host: str) -> bool:
