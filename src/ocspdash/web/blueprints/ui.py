@@ -3,10 +3,15 @@
 import base64
 import json
 
-import nacl.encoding
+from nacl.encoding import URLSafeBase64Encoder
 import nacl.exceptions
 import nacl.signing
-from flask import Blueprint, render_template, request, current_app, abort
+from flask import Blueprint, abort, current_app, render_template, request
+from nacl.signing import VerifyKey
+
+__all__ = [
+    'ui',
+]
 
 ui = Blueprint('ui', __name__)
 
@@ -26,20 +31,18 @@ def submit():
     location = current_app.manager.get_location_by_id(location_id)
 
     if not location.activated:
-        abort(403, f'Not activated: {location}')
+        return abort(403, f'Not activated: {location}')
 
-    pubkey = location.pubkey
+    key = location.pubkey
 
     try:
-        verify_key = nacl.signing.VerifyKey(pubkey, encoder=nacl.encoding.URLSafeBase64Encoder)
-        payload = verify_key.verify(request.data, encoder=nacl.encoding.URLSafeBase64Encoder)
+        verify_key = VerifyKey(key=key, encoder=URLSafeBase64Encoder)
+        payload = verify_key.verify(request.data, encoder=URLSafeBase64Encoder)
 
     except nacl.exceptions.BadSignatureError as e:
-        abort(403, f'Bad Signature: {e}')
+        return abort(403, f'Bad Signature: {e}')
 
-    else:
+    decoded_payload = json.loads(base64.urlsafe_b64decode(payload).decode('utf-8'))
+    current_app.manager.insert_payload(decoded_payload)
 
-        decoded_payload = json.loads(base64.urlsafe_b64decode(payload).decode('utf-8'))
-        current_app.manager.insert_payload(decoded_payload)
-
-        return '', 204
+    return '', 204

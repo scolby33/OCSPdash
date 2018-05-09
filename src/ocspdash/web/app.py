@@ -10,9 +10,9 @@ from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 
-from ocspdash.constants import OCSPDASH_CONNECTION, OCSPDASH_API_VERSION
-from ocspdash.manager import Manager, BaseManager
-from ocspdash.models import Authority, Responder, Chain, Result, Location
+from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_CONNECTION
+from ocspdash.manager import BaseManager, Manager
+from ocspdash.models import Authority, Chain, Location, Responder, Result
 from ocspdash.web.blueprints import api, ui
 
 logger = logging.getLogger('web')

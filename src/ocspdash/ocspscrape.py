@@ -165,9 +165,9 @@ def scrape(queries):
 def ping(host: str) -> bool:
     """Returns True if host responds to ping request.
 
-        :param host: The hostname to ping
+    :param host: The hostname to ping
 
-        :returns: True if an ICMP echo is received, False otherwise
+    :returns: True if an ICMP echo is received, False otherwise
     """
     parameters = ['-n', '1'] if platform.system().lower() == 'windows' else ['-c', '1']
     results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
@@ -177,12 +177,12 @@ def ping(host: str) -> bool:
 def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, session: requests.Session) -> bool:
     """Create and send an OCSP request
 
-        :param subject_cert: The certificate that information is being requested about
-        :param issuer_cert: The issuer of the subject certificate
-        :param url: The URL of the OCSP responder to query
-        :param session: A requests session
+    :param subject_cert: The certificate that information is being requested about
+    :param issuer_cert: The issuer of the subject certificate
+    :param url: The URL of the OCSP responder to query
+    :param session: A requests session
 
-        :returns: True if the request was successful, False otherwise
+    :returns: True if the request was successful, False otherwise
     """
     try:
         subject = asymmetric.load_certificate(subject_cert)
