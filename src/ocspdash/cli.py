@@ -28,18 +28,15 @@ def main():
 
 
 @main.command()
-@click.option('-n', default=2, type=int, help='Number of top authorities')
+@click.option('-n', '--buckets', default=2, type=int, help='Number of top authorities')
 @click.option('-o', is_flag=True, help='Output as JSON')
-@click.option('-v', is_flag=True, help='Verbose output')
-def run(n, o, v):
-    if v:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
+@click.option('-v', '--verbose', is_flag=True, help='Verbose output')
+def run(buckets, o, verbose):
+    logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     server_query = ServerQuery(os.environ.get('UID'), os.environ.get('SECRET'))
 
-    issuers = server_query.get_top_authorities(n)  # TODO: cache this result for 24 hours
+    issuers = server_query.get_top_authorities(buckets=buckets)  # TODO: cache this result for 24 hours
 
     ocsp_reports = OrderedDict(  # TODO: cache this result for 24 hours
         (issuer, server_query.get_ocsp_urls_for_issuer(issuer))
@@ -68,21 +65,20 @@ def run(n, o, v):
 
             # run OCSP response test
             # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
-            certs = server_query.get_certs_for_issuer_and_url(issuer, url)
+            subject_cert, issuer_cert = server_query.get_certs_for_issuer_and_url(issuer, url)
 
-            if certs is None:
+            if subject_cert is None and issuer_cert is None:
                 results['ocsp_response'] = False
             else:
-                subject_cert, issuer_cert = certs
                 results['ocsp_response'] = check_ocsp_response(subject_cert, issuer_cert, url)
 
     if o:
-        print(json.dumps(test_results, indent=2))
+        click.echo(json.dumps(test_results, indent=2))
     else:
         for issuer, urls in test_results.items():
-            print(issuer)
+            click.echo(issuer)
             for url, results in urls.items():
-                print(
+                click.echo(
                     f'>>> {url}: {"." if results["current"] else "X"}{"." if results["ping"] else "X"}{"." if results["ocsp_response"] else "X"}')
 
 
@@ -101,17 +97,17 @@ def web(host, port, flask_debug, verbose):
 
 
 @main.command()
-@click.option('-n', default=2, type=int, help='Number of top authorities')
+@click.option('-n', '--buckets', default=2, type=int, help='Number of top authorities')
 @click.option('--connection')
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
 @click.option('-u', '--username', default='test', help='Username to use')
-def update(n, connection, verbose, username):
+def update(buckets, connection, verbose, username):
     """Update the local db"""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     m = Manager(connection=connection)
-    user = m.get_or_create_location(username)
-    m.update(user, n=n)
+    location = m.get_or_create_location(name=username)
+    m.update(location, buckets=buckets)
 
 
 @main.command()

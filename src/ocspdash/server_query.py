@@ -18,21 +18,39 @@ from ocspdash.util import RateLimitedCensysCertificates, requests_session
 logger = logging.getLogger(__name__)
 
 
-class ServerQuery(RateLimitedCensysCertificates):
-    def get_top_authorities(self, count: int = 10) -> MutableMapping[str, int]:
-        """Retrieve the name and count of certificates for the top n certificate authorities by number of certs
+def _get_results(report):
+    return sorted(
+        report['results'],
+        key=itemgetter('doc_count'),
+        reverse=True
+    )
 
-        :param count: The number of top authorities to retrieve
+
+def _get_results_as_dict(report):
+    results = _get_results(report)
+
+    return OrderedDict([
+        (result['key'], result['doc_count'])
+        for result in results
+    ])
+
+
+class ServerQuery(RateLimitedCensysCertificates):
+
+    def get_top_authorities(self, buckets: int = 10) -> MutableMapping[str, int]:
+        """Retrieve the name and count of certificates for the top n certificate authorities by number of certs.
+
+        :param buckets: The number of top authorities to retrieve
 
         :returns: A mapping of authority name to count of certificates, sorted in descending order by certificate count
         """
-        issuers_report = self.report(query='valid_nss: true', field='parsed.issuer.organization', buckets=count)
-        issuers_and_counts = OrderedDict(sorted(
-            ((result['key'], result['doc_count']) for result in issuers_report['results']),
-            key=itemgetter(1),
-            reverse=True
-        ))
-        return issuers_and_counts
+        report = self.report(
+            query='valid_nss: true',
+            field='parsed.issuer.organization',
+            buckets=buckets
+        )
+
+        return _get_results_as_dict(report)
 
     def get_ocsp_urls_for_issuer(self, issuer: str) -> MutableMapping[str, int]:
         """Retrieve all the OCSP URLs used by the authority in the wild
@@ -41,16 +59,12 @@ class ServerQuery(RateLimitedCensysCertificates):
 
         :returns: A mapping of OCSP URLs to count of certificates, sorted in descending order by certificate count
         """
-        ocsp_urls_report = self.report(
+        report = self.report(
             query=f'valid_nss: true AND parsed.issuer.organization: "{issuer}"',
             field='parsed.extensions.authority_info_access.ocsp_urls'
         )
-        ocsp_urls_and_counts = OrderedDict(sorted(
-            ((result['key'], result['doc_count']) for result in ocsp_urls_report['results']),
-            key=itemgetter(1),
-            reverse=True
-        ))
-        return ocsp_urls_and_counts
+
+        return _get_results_as_dict(report)
 
     def is_ocsp_url_current_for_issuer(self, issuer: str, url: str) -> bool:
         """Determine if an issuer is currently using a particular OCSP URL.
@@ -66,9 +80,8 @@ class ServerQuery(RateLimitedCensysCertificates):
             field='tags'
         )
         results = {result['key']: result['doc_count'] for result in tags_report['results']}
-        if results.get('unexpired', 0) > 0:
-            return True
-        return False
+
+        return results.get('unexpired', 0) > 0  # turn this return to a function to document implicitly
 
     def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
@@ -117,14 +130,18 @@ class ServerQuery(RateLimitedCensysCertificates):
 def ping(host: str) -> bool:
     """Returns True if host responds to ping request.
 
-            :param host: The hostname to ping
+    :param host: The hostname to ping
 
-            :returns: True if an ICMP echo is received, False otherwise
-            """
+    :returns: True if an ICMP echo is received, False otherwise
+    """
     logger.debug(f'Pinging {host}')
     parameters = ['-n', '1'] if platform.system().lower() == 'windows' else ['-c', '1']
     results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
     return results.returncode == 0
+
+
+def _is_ocsp_request_successful(parsed_ocsp_response):
+    return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
 
 
 def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bool:
@@ -150,10 +167,11 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bo
     except requests.RequestException:
         logger.warning(f'Failed to make OCSP request for {issuer}: {url}')
         return False
+
     try:
         parsed_ocsp_response = OCSPResponse.load(ocsp_resp.content)
     except ValueError:
         logger.warning(f'Failed to parse OCSP response for {issuer}: {url}')
         return False
 
-    return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
+    return _is_ocsp_request_successful(parsed_ocsp_response)

@@ -1,40 +1,47 @@
 # -*- coding: utf-8 -*-
 
+"""Manager for OCSPDash."""
+
 import logging
 import os
 import urllib.parse
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 from itertools import groupby
 from operator import itemgetter
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
-from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import and_, create_engine, func
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.constants import OCSPDASH_CONNECTION
-from ocspdash.models import (
-    Base,
-    Authority,
-    Responder,
-    Chain,
-    Location,
-    Result
-)
+from ocspdash.models import (Authority, Base, Chain, Location, Responder, Result)
 from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
+
+__all__ = [
+    'BaseManager',
+    'Manager',
+]
 
 logger = logging.getLogger(__name__)
 
 
+def _get_connection(connection=None):
+    if connection is not None:
+        return connection
+
+    connection = os.environ.get('OCSPDASH_CONNECTION')
+
+    if connection is not None:
+        logger.info('using connection from environment: %s', connection)
+        return connection
+
+    logger.info('using default connection: %s', OCSPDASH_CONNECTION)
+    return OCSPDASH_CONNECTION
+
+
 class BaseManager(object):
     def __init__(self, connection=None, echo=False):
-        if connection:
-            self.connection = connection
-        elif 'OCSPDASH_CONNECTION' in os.environ:
-            logger.info('using connection from environment: %s', os.environ['OCSPDASH_CONNECTION'])
-            self.connection = os.environ['OCSPDASH_CONNECTION']
-        else:
-            logger.info('using default connection: %s', OCSPDASH_CONNECTION)
-            self.connection = OCSPDASH_CONNECTION
+        self.connection = _get_connection(connection=connection)
 
         self.engine = create_engine(self.connection, echo=echo)
 
@@ -73,8 +80,15 @@ class Manager(BaseManager):
         else:
             self.server_query = ServerQuery(user, password)
 
+    def get_authority_by_name(self, name: str) -> Optional[Authority]:
+        """Get an authority by name if it exists.
+
+        :param name: the name of the authority
+        """
+        return self.session.query(Authority).filter(Authority.name == name).one_or_none()
+
     def ensure_authority(self, name: str, rank: int, cardinality: int) -> Authority:
-        authority = self.session.query(Authority).filter(Authority.name == name).one_or_none()
+        authority = self.get_authority_by_name(name)
 
         if authority is None:
             authority = Authority(
@@ -92,9 +106,13 @@ class Manager(BaseManager):
 
         return authority
 
+    def get_responder(self, authority: Authority, url: str) -> Optional[Responder]:
+        """Get a responder by the authority and URL."""
+        f = and_(Responder.authority_id == authority.id, Responder.url == url)
+        return self.session.query(Responder).filter(f).one_or_none()
+
     def ensure_responder(self, authority: Authority, url: str, cardinality: int) -> Responder:
-        responder = self.session.query(Responder).filter(Responder.authority_id == authority.id,
-                                                         Responder.url == url).one_or_none()
+        responder = self.get_responder(authority=authority, url=url)
 
         if responder is None:
             responder = Responder(
@@ -111,9 +129,12 @@ class Manager(BaseManager):
 
         return responder
 
-    def ensure_chain(self, responder: Responder) -> Optional[Chain]:
-        most_recent = self.session.query(Chain).filter(Chain.responder_id == responder.id).order_by(
+    def get_most_recent_chain_by_responder(self, responder: Responder) -> Optional[Chain]:
+        return self.session.query(Chain).filter(Chain.responder_id == responder.id).order_by(
             Chain.retrieved.desc()).first()
+
+    def ensure_chain(self, responder: Responder) -> Optional[Chain]:
+        most_recent = self.get_most_recent_chain_by_responder(responder)
 
         if most_recent and not most_recent.old:
             if not most_recent.expired:
@@ -137,8 +158,11 @@ class Manager(BaseManager):
 
         return chain
 
+    def get_location_by_name(self, name: str) -> Optional[Location]:
+        return self.session.query(Location).filter(Location.name == name).one_or_none()
+
     def get_or_create_location(self, name: str) -> Location:
-        location = self.session.query(Location).filter(Location.name == name).one_or_none()
+        location = self.get_location_by_name(name)
 
         if location is None:
             location = Location(name=name)
@@ -146,16 +170,16 @@ class Manager(BaseManager):
 
         return location
 
-    def update(self, location: Location, n: int = 10):
+    def update(self, location: Location, buckets: int = 10):
         """Runs the update
 
         :param location: The location from which the update function is run
-        :param n: The number of top authorities to query
+        :param buckets: The number of top authorities to query
         """
         if self.server_query is None:
             raise RuntimeError('No username and password for Censys supplied')
 
-        issuers = self.server_query.get_top_authorities(n)
+        issuers = self.server_query.get_top_authorities(buckets=buckets)
 
         for rank, (issuer_name, issuer_cardinality) in enumerate(issuers.items()):
             authority = self.ensure_authority(issuer_name, rank, issuer_cardinality)
@@ -238,14 +262,15 @@ class Manager(BaseManager):
         }
 
     def get_location_by_id(self, location_id: int) -> Location:
-        """Gets a location"""
+        """Get a location."""
         return self.session.query(Location).get(location_id)
 
     def get_responder_by_id(self, responder_id: int) -> Responder:
-        """Gets a responder"""
+        """Get a responder."""
         return self.session.query(Responder).get(responder_id)
 
     def get_authority_by_id(self, authority_id: int) -> Authority:
+        """Get an authority."""
         return self.session.query(Authority).get(authority_id)
 
     def get_results(self):

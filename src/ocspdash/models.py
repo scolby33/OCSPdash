@@ -1,22 +1,15 @@
 # -*- coding: utf-8 -*-
 
+"""SQLAlchemy models for OCSPdash."""
+
 import operator
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from oscrypto import asymmetric
-from sqlalchemy import (
-    Binary,
-    Column,
-    ForeignKey,
-    Boolean,
-    Integer,
-    String,
-    DateTime,
-    Text
-)
+from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import backref, relationship
 
 Base = declarative_base()
 
@@ -29,7 +22,7 @@ class OCSPResponderStatus(Enum):
 
 
 class Authority(Base):
-    """Represents the authority that issues certificates"""
+    """Represents the authority that issues certificates."""
     __tablename__ = 'authority'
 
     id = Column(Integer, primary_key=True)
@@ -64,7 +57,7 @@ class Authority(Base):
 
 
 class Responder(Base):
-    """Represents the unique pair of authority/endpoint"""
+    """Represents the unique pair of authority/endpoint."""
     __tablename__ = 'responder'
 
     id = Column(Integer, primary_key=True)
@@ -108,7 +101,7 @@ class Responder(Base):
 
 
 class Chain(Base):
-    """Represents a certificate and its issuing certificate"""
+    """Represents a certificate and its issuing certificate."""
     __tablename__ = 'chain'
 
     id = Column(Integer, primary_key=True)
@@ -145,7 +138,7 @@ class Chain(Base):
 
 
 class Location(Base):
-    """References a testing location"""
+    """References a testing location."""
     __tablename__ = 'location'
 
     id = Column(Integer, primary_key=True)
@@ -171,7 +164,7 @@ class Location(Base):
 
 
 class Result(Base):
-    """The information about the result from a ping"""
+    """The information about the result from a ping."""
     __tablename__ = 'result'
 
     id = Column(Integer, primary_key=True)
@@ -192,7 +185,7 @@ class Result(Base):
 
     @property
     def status(self) -> OCSPResponderStatus:  # relates to the glyphicon displayed
-        """Gets the status"""
+        """Gets the status."""
         if not self.ocsp:
             return OCSPResponderStatus.bad
 
