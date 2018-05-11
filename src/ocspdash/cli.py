@@ -67,7 +67,7 @@ def run(buckets, o, verbose):
             # TODO: cache this for the validity time of subject_cert or 7 days, whichever is smaller
             subject_cert, issuer_cert = server_query.get_certs_for_issuer_and_url(issuer, url)
 
-            if subject_cert is None and issuer_cert is None:
+            if subject_cert is None or issuer_cert is None:
                 results['ocsp_response'] = False
             else:
                 results['ocsp_response'] = check_ocsp_response(subject_cert, issuer_cert, url)
