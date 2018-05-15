@@ -2,6 +2,7 @@
 
 """SQLAlchemy models for OCSPdash."""
 
+from base64 import urlsafe_b64encode as b64encode
 import operator
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -10,6 +11,8 @@ from oscrypto import asymmetric
 from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
+
+from ocspdash.custom_columns import UUID
 
 Base = declarative_base()
 
@@ -143,10 +146,9 @@ class Location(Base):
 
     id = Column(Integer, primary_key=True)
 
-    name = Column(String(255), index=True, doc='the name of the location')
-
+    name = Column(String(255), index=True, doc='the name of the location', unique=True)
     pubkey = Column(Binary, doc="the location's public signing key")
-    activated = Column(Boolean, default=False, nullable=False, doc='has the location been activated?')
+    key_id = Column(UUID, doc="the UUID of the location's public key")
 
     def __repr__(self):
         return self.name
@@ -155,8 +157,8 @@ class Location(Base):
         return {
             'id': self.id,
             'name': self.name,
-            'pubkey': self.pubkey,
-            'activated': self.activated,
+            'pubkey': b64encode(self.pubkey).decode('utf-8'),
+            'key_id': self.key_id,
             'results': [
                 result.id for result in self.results
             ]
