@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
+import uuid
 
 import requests.utils
 
 __all__ = [
+    'NAMESPACE_OCSPDASH_KID',
     'OCSPDASH_API_VERSION',
     'OCSPDASH_DIRECTORY',
     'OCSPDASH_CONNECTION',
@@ -13,6 +15,8 @@ __all__ = [
 ]
 
 VERSION = '0.1.0-dev'
+
+NAMESPACE_OCSPDASH_KID = uuid.UUID('c81dcfc6-2131-4d05-8ea4-4e5ad8123696')
 
 OCSPDASH_API_VERSION = 'v0'
 
