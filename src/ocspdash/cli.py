@@ -14,10 +14,11 @@ from collections import OrderedDict
 import click
 import nacl.encoding
 import nacl.signing
+from argon2 import PasswordHasher  # TODO: use passlib for upgradability?
 from requests import Response
 
 from ocspdash.manager import Manager
-from ocspdash.models import Location
+from ocspdash.models import Invite
 from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 from ocspdash.util import requests_session
 
@@ -124,15 +125,20 @@ def nuke(connection):
 @click.argument('location_name')
 def newloc(connection, location_name):
     m = Manager(connection)
-    registration_token = secrets.token_bytes()
-    new_location = Location(
+    invite_id = secrets.token_bytes(16)
+    invite_validator = secrets.token_bytes(16)
+    ph = PasswordHasher()
+    invite_validator_hash = ph.hash(invite_validator)
+
+    new_invite = Invite(
         name=location_name,
-        pubkey=registration_token,
-        activated=False
+        invite_id=invite_id,
+        invite_validator=invite_validator_hash
     )
-    m.session.add(new_location)
+    m.session.add(new_invite)
     m.session.commit()
-    click.echo(f'{new_location.id}:{base64.urlsafe_b64encode(registration_token).decode("utf-8")}')
+
+    click.echo(f'{new_invite.id}:{base64.urlsafe_b64encode(invite_id+invite_validator).decode("utf-8")}')
 
 
 @main.command()
