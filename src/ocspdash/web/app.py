@@ -12,7 +12,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_CONNECTION
 from ocspdash.manager import BaseManager, Manager
-from ocspdash.models import Authority, Chain, Location, Responder, Result
+from ocspdash.models import Authority, Chain, Location, Responder, Result, Invite
 from ocspdash.web.blueprints import api, ui
 
 logger = logging.getLogger('web')
@@ -31,6 +31,7 @@ def make_admin(app: Flask, session) -> Admin:
     admin.add_view(ChainView(Chain, session))
     admin.add_view(ModelView(Location, session))
     admin.add_view(ModelView(Result, session))
+    admin.add_view(ModelView(Invite, session))
 
     return admin
 
