@@ -1,31 +1,72 @@
 # -*- coding: utf-8 -*-
 
-import base64
-from hmac import compare_digest
+import logging
+import uuid
+from base64 import urlsafe_b64decode as b64decode
 
-from flask import Blueprint, jsonify, current_app, request, abort
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from flask import Blueprint, jsonify, current_app, request
+from jose import jwt
+from jose.exceptions import JWTError
 
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID
 # from ocspdash.models import Authority, Responder
+from ocspdash.models import Location
+
+logger = logging.getLogger(__name__)
 
 api = Blueprint('api', __name__)
 
 
 @api.route('/register', methods=['POST'])
 def register_location_key():
-    location_id, registration_token = request.headers['authorization'].split(':', 1)
-    registration_token_bytes = base64.urlsafe_b64decode(registration_token)
-    location = current_app.manager.get_location_by_id(int(location_id))
+    # TODO: error handling (what if no invite, what if duplicate name, etc.)
+    # TODO: what type do I really want pubkey to be? Binary, bytes but including ----BEGIN----, etc?)
+    unverified_claims = jwt.get_unverified_claims(request.data)
 
-    digest_comparison = compare_digest(location.pubkey, registration_token_bytes)
+    unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
+    try:
+        claims = jwt.decode(request.data, unverified_public_key, 'ES512')  # todo move the algorithm into a constant
+    except JWTError:
+        return 400  # bad input
 
-    if not (not location.activated and digest_comparison):
-        abort(401, f'Not activated: {location} and wrong key')
+    # todo get this in a form for cryptography to use?--bytes for jwt?
+    public_key = claims['pk']
 
-    location.pubkey = request.data
-    location.activated = True
+    invite_token = b64decode(claims['token'])
+    if len(invite_token) != 32:
+        return 400  # bad input
+
+    invite_id = invite_token[:16]
+    invite_validator = invite_token[16:]
+
+    # select the token with invite_id
+    invite = current_app.manager.get_invite_by_selector(invite_id)
+
+    ph = PasswordHasher()
+    try:
+        ph.verify(invite.invite_validator, invite_validator)
+    except VerifyMismatchError:
+        return 400  # todo better response
+
+    # now that we know the invite is valid, verify keyid
+    key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
+    if str(key_id) != claims['kid']:
+        return 400
+
+    new_location = Location(
+        name=invite.name,
+        pubkey=b64decode(public_key),
+        key_id=key_id
+    )
+    current_app.manager.session.add(new_location)
+    current_app.manager.session.delete(invite)
     current_app.manager.session.commit()
 
-    return jsonify(location.to_json())
+    logger.debug(new_location.to_json())
+
+    return jsonify(new_location.to_json())
 
 # @api.route('/status')
 # def get_payload():
