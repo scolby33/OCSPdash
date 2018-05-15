@@ -170,6 +170,7 @@ class Manager(BaseManager):
 
         return location
 
+    # TODO remove this--it should only be in OCSPscrape?
     def update(self, location: Location, buckets: int = 10):
         """Runs the update
 
