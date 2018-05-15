@@ -65,6 +65,7 @@ from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
 from tqdm import tqdm
 
+# TODO: should this be from constants.py or kept separate to have this module be freestanding/a separate package?
 NAMESPACE_OCSPDASH_KID = uuid.UUID('c81dcfc6-2131-4d05-8ea4-4e5ad8123696')
 RESULTS_JWT_CLAIM = 'res'
 JWT_ALGORITHM = 'ES512'
@@ -110,6 +111,7 @@ def genkey(invite_token: str):
     )).decode('utf-8')
     key_id = str(uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key))
 
+    # todo remove all the KID stuff since it can be regenerated on demand
     payload = {
         'pk': public_key,
         'kid': key_id,
