@@ -14,7 +14,7 @@ from sqlalchemy import and_, create_engine, func
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.constants import OCSPDASH_CONNECTION
-from ocspdash.models import (Authority, Base, Chain, Location, Responder, Result)
+from ocspdash.models import Authority, Base, Chain, Location, Responder, Result, Invite
 from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 
 __all__ = [
@@ -273,6 +273,14 @@ class Manager(BaseManager):
     def get_authority_by_id(self, authority_id: int) -> Authority:
         """Get an authority."""
         return self.session.query(Authority).get(authority_id)
+
+    def get_invite_by_id(self, invite_id: int) -> Invite:
+        """Get an invite."""
+        return self.session.query(Invite).get(invite_id)
+
+    def get_invite_by_selector(self, selector: bytes) -> Invite:
+        """Get an invite by its binary selector."""
+        return self.session.query(Invite).filter_by(invite_id=selector).first()
 
     def get_results(self):
         logger.warning('Get results method is not actually implemented')
