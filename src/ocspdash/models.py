@@ -163,6 +163,27 @@ class Location(Base):
         }
 
 
+class Invite(Base):
+    """An invite for a new testing location."""
+    __tablename__ = 'invite'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), doc='the name of the invited location')
+    invite_id = Column(Binary(16), nullable=False, index=True, doc='')
+    invite_validator = Column(String(255), nullable=False, doc='')
+
+    def __repr__(self):
+        return f'Invite for {self.name}'
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'invite_id': self.invite_id,
+            'invite_token': self.invite_validator
+        }
+
+
 class Result(Base):
     """The information about the result from a ping."""
     __tablename__ = 'result'
