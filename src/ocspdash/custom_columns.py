@@ -24,22 +24,27 @@ class UUID(TypeDecorator):
     def load_dialect_impl(self, dialect):
         if dialect.name == 'postgresql':
             return dialect.type_descriptor(sqlalchemy.dialects.postgresql.UUID())
-        else:
-            return dialect.type_descriptor(BINARY)
+
+        return dialect.type_descriptor(BINARY)
 
     def process_bind_param(self, value, dialect):
         if value is None:
-            return value
-        elif dialect.name == 'postgresql':
+            return
+
+        if dialect.name == 'postgresql':
             return str(value)
-        elif not isinstance(value, uuid.UUID):
+
+        if not isinstance(value, uuid.UUID):
             return uuid.UUID(value).bytes
-        else:
+
+        if isinstance(value, uuid.UUID):
             # hex string
             return value.bytes
 
+        raise ValueError(f'can not handle {value}')
+
     def process_result_value(self, value, dialect):
         if value is None:
-            return value
-        else:
-            return uuid.UUID(bytes=value)
+            return
+
+        return uuid.UUID(bytes=value)
