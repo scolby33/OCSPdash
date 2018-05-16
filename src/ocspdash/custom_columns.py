@@ -1,6 +1,15 @@
-from sqlalchemy.types import TypeDecorator, BINARY
-from sqlalchemy.dialects.postgresql import UUID
+# -*- coding: utf-8 -*-
+
+"""Implements custom SQLAlchemy TypeDecorators."""
+
 import uuid
+
+import sqlalchemy.dialects.postgresql
+from sqlalchemy.types import BINARY, TypeDecorator
+
+__all__ = [
+    'UUID',
+]
 
 
 class UUID(TypeDecorator):
@@ -14,7 +23,7 @@ class UUID(TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         if dialect.name == 'postgresql':
-            return dialect.type_descriptor(UUID())
+            return dialect.type_descriptor(sqlalchemy.dialects.postgresql.UUID())
         else:
             return dialect.type_descriptor(BINARY)
 
@@ -23,12 +32,11 @@ class UUID(TypeDecorator):
             return value
         elif dialect.name == 'postgresql':
             return str(value)
+        elif not isinstance(value, uuid.UUID):
+            return uuid.UUID(value).bytes
         else:
-            if not isinstance(value, uuid.UUID):
-                return uuid.UUID(value).bytes
-            else:
-                # hex string
-                return value.bytes
+            # hex string
+            return value.bytes
 
     def process_result_value(self, value, dialect):
         if value is None:
