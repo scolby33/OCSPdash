@@ -36,6 +36,7 @@ def _get_connection(connection=None):
     followed by a value from an environment variable, and finally the default.
     """
     if connection is not None:
+        logger.info('using passed-in connection: %s', connection)
         return connection
 
     connection = os.environ.get('OCSPDASH_CONNECTION')
@@ -174,14 +175,26 @@ class Manager(BaseManager):
             Chain.retrieved.desc()).first()
 
     def ensure_chain(self, responder: Responder) -> Optional[Chain]:
-        most_recent = self.get_most_recent_chain_by_responder(responder)
+        """Get or create a chain for a Responder.
+        If a Chain exists in the database and is not "old" as specified in the Chain model and the certificates it
+        contains are unexpired, returns that Chain.
+        If a Chain exists, is not "old", but its contents are expired, return the Chain if the responder has no
+        unexpired certificates in the wild.
+        If a Chain exists, is not "old", and its contents are unexpired, returns that Chain.
+        Otherwise, retrieves a new chain from Censys, adds it to the database, and returns the new Chain.
 
-        if most_recent and not most_recent.old:
-            if not most_recent.expired:
-                return most_recent
+        :param responder: the Responder whose chain we're seeking
+
+        returns: the Chain or None
+        """
+        most_recent_chain = self.get_most_recent_chain_by_responder(responder)
+
+        if most_recent_chain and not most_recent_chain.old:
+            if not most_recent_chain.expired:
+                return most_recent_chain
 
             if not responder.current:
-                return most_recent
+                return most_recent_chain
 
         subject, issuer = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
 
@@ -195,6 +208,7 @@ class Manager(BaseManager):
         )
 
         self.session.add(chain)
+        self.session.commit()
 
         return chain
 
@@ -219,6 +233,7 @@ class Manager(BaseManager):
         if location is None:
             location = Location(name=name)
             self.session.add(location)
+            self.session.commit()
 
         return location
 
@@ -273,12 +288,13 @@ class Manager(BaseManager):
                 self.session.commit()
 
             self.session.commit()
-
-        self.session.commit()
-
     def get_top_authorities(self, n: int = 10) -> List[Authority]:
-        """Retrieve the top (by cardinality) authorities from the database.
-        Will get up to n, but if there are fewer entries in the db, it will not create more.
+        """Retrieve the top authorities (as measured by cardinality) from the database.
+        Will retrieve up to n, but if there are fewer entries in the DB, it will not create more.
+
+        :param n: the number of top authorities to retrieve
+
+        :returns: a list of up to n Authorities
         """
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
