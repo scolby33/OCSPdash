@@ -235,8 +235,13 @@ class Manager(BaseManager):
 
         return location
 
-        """Runs the update
     def update(self, n: int = 10):
+        """Update the database of Authorities, Responders, and Chains from Censys.
+
+        If there are no Authorities in the DB or if any of the top n Authorities haven't been updated in the past
+        7 days, retrieves an all-new set of Authorities, Responders, and Chains from Censys.
+
+        Otherwise, it's a no-op.
 
         :param n: the number of top authorities to get information on
         """
