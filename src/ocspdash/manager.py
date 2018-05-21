@@ -2,25 +2,27 @@
 
 """Manager for OCSPDash."""
 
+from collections import OrderedDict, namedtuple
+
 import datetime
 import logging
 import os
 import urllib.parse
 import uuid
-from base64 import urlsafe_b64decode as b64decode
-from collections import OrderedDict, namedtuple
-from itertools import groupby
-from operator import itemgetter
-from typing import List, Optional, Tuple
-
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from base64 import urlsafe_b64decode as b64decode
+from itertools import groupby
+from operator import itemgetter
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.orm import scoped_session, sessionmaker
+from typing import List, Optional, Tuple
 
-from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_CONNECTION
-from ocspdash.models import (Authority, Base, Chain, Invite, Location,
-                             Responder, Result)
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_DEFAULT_CONNECTION
+from ocspdash.models import (
+    Authority, Base, Chain, Invite, Location,
+    Responder, Result,
+)
 from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 
 __all__ = [
@@ -41,8 +43,8 @@ def _get_connection(connection=None):
         logger.info('using connection from environment: %s', connection)
         return connection
 
-    logger.info('using default connection: %s', OCSPDASH_CONNECTION)
-    return OCSPDASH_CONNECTION
+    logger.info('using default connection: %s', OCSPDASH_DEFAULT_CONNECTION)
+    return OCSPDASH_DEFAULT_CONNECTION
 
 
 class BaseManager(object):
@@ -86,7 +88,6 @@ class Manager(BaseManager):
         else:
             self.server_query = ServerQuery(user, password)
 
-
     def get_authority_by_name(self, name: str) -> Optional[Authority]:
         """Get an authority by name if it exists.
 
@@ -112,7 +113,12 @@ class Manager(BaseManager):
         return authority
 
     def get_responder(self, authority: Authority, url: str) -> Optional[Responder]:
-        """Get a responder by the authority and URL."""
+        """Get a responder by the authority and URL.
+
+        :param authority:
+        :param url:
+        :returns:
+        """
         f = and_(Responder.authority_id == authority.id, Responder.url == url)
         return self.session.query(Responder).filter(f).one_or_none()
 
@@ -135,6 +141,7 @@ class Manager(BaseManager):
         return responder
 
     def get_most_recent_chain_by_responder(self, responder: Responder) -> Optional[Chain]:
+        """Get the most recent chain based on the responder"""
         return self.session.query(Chain).filter(Chain.responder_id == responder.id).order_by(
             Chain.retrieved.desc()).first()
 
@@ -191,7 +198,8 @@ class Manager(BaseManager):
 
         authorities = self.get_top_authorities(buckets)
         # TODO: make this timedelta configurable/a constant
-        if any(authority.last_updated < datetime.datetime.now() - datetime.timedelta(days=7) for authority in authorities):
+        if any(authority.last_updated < datetime.datetime.now() - datetime.timedelta(days=7) for authority in
+               authorities):
             issuers = self.server_query.get_top_authorities(buckets=buckets)
             for issuer_name, issuer_cardinality in issuers.items():
                 self.ensure_authority(issuer_name, issuer_cardinality)

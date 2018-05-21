@@ -3,10 +3,9 @@
 """The CLI module for OCSPdash."""
 
 import base64
+import click
 import logging
 import secrets
-
-import click
 from argon2 import PasswordHasher  # TODO: use passlib for upgradability?
 
 from ocspdash.manager import Manager
@@ -15,7 +14,7 @@ from ocspdash.models import Invite
 
 @click.group()
 def main():
-    """Run OCSP Dashboard"""
+    """Run the OCSP Dashboard."""
 
 
 @main.command()
@@ -24,7 +23,7 @@ def main():
 @click.option('--flask-debug', is_flag=True)
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
 def web(host, port, flask_debug, verbose):
-    """Run the Flask development server"""
+    """Run the Flask development server."""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     from ocspdash.web import create_application
@@ -37,7 +36,7 @@ def web(host, port, flask_debug, verbose):
 @click.option('--connection')
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
 def update(buckets, connection, verbose):
-    """Update the local db"""
+    """Update the local database."""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     m = Manager(connection=connection)
@@ -46,9 +45,10 @@ def update(buckets, connection, verbose):
 
 @main.command()
 @click.option('--connection')
-def nuke(connection):
-    """Nukes the database"""
-    if click.confirm('Nuke the database?'):
+@click.option('-y', '--yes', is_flag=True)
+def nuke(connection, yes):
+    """Nuke the database."""
+    if yes or click.confirm('Nuke the database?'):
         m = Manager(connection=connection, echo=True)
         m.drop_database()
 
@@ -57,6 +57,7 @@ def nuke(connection):
 @click.option('--connection')
 @click.argument('location_name')
 def new_location(connection, location_name):
+    """Register a new location."""
     m = Manager(connection)
     invite_id = secrets.token_bytes(16)
     invite_validator = secrets.token_bytes(16)
@@ -71,7 +72,7 @@ def new_location(connection, location_name):
     m.session.add(new_invite)
     m.session.commit()
 
-    click.echo(base64.urlsafe_b64encode(invite_id+invite_validator).decode("utf-8"))
+    click.echo(base64.urlsafe_b64encode(invite_id + invite_validator).decode("utf-8"))
 
 
 if __name__ == '__main__':

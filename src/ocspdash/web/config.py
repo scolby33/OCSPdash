@@ -2,7 +2,7 @@
 
 import os
 
-from ocspdash.constants import OCSPDASH_CONNECTION
+from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION
 
 
 class DefaultConfig(object):
@@ -12,7 +12,7 @@ class DefaultConfig(object):
     CENSYS_API_ID = os.environ.get('CENSYS_API_ID')
     CENSYS_API_SECRET = os.environ.get('CENSYS_API_SECRET')
 
-    OCSPDASH_CONNECTION = OCSPDASH_CONNECTION
+    OCSPDASH_CONNECTION = OCSPDASH_DEFAULT_CONNECTION
 
 
 class DockerConfig(DefaultConfig):
