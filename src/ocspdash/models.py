@@ -2,8 +2,8 @@
 
 """SQLAlchemy models for OCSPdash."""
 
-from base64 import urlsafe_b64encode as b64encode
 import operator
+from base64 import urlsafe_b64encode as b64encode
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 
@@ -11,6 +11,7 @@ from oscrypto import asymmetric
 from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
+from sqlalchemy.sql import functions as func
 
 from ocspdash.custom_columns import UUID
 
@@ -35,8 +36,7 @@ class Authority(Base):
     cardinality = Column(Integer, doc="The number of certs observed from this authority in the wild. Update this "
                                       "when rankings change. From the Censys crawler.")
 
-    rank = Column(Integer, doc=("Update this when rankings change. Don't delete formerly-high-ranked "
-                                "authorities as that would mess up relations to old test results"))
+    last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         return self.name
@@ -46,7 +46,6 @@ class Authority(Base):
             'id': self.id,
             'name': self.name,
             'cardinality': self.cardinality,
-            'rank': self.rank,
             'responders': [
                 {
                     'id': responder.id,
@@ -95,7 +94,6 @@ class Responder(Base):
                 'id': self.authority.id,
                 'name': self.authority.name,
                 'cardinality': self.authority.cardinality,
-                'rank': self.authority.rank
             },
             'url': self.url,
             'cardinality': self.cardinality,

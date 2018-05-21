@@ -36,14 +36,12 @@ def web(host, port, flask_debug, verbose):
 @click.option('-n', '--buckets', default=2, type=int, help='Number of top authorities')
 @click.option('--connection')
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
-@click.option('-u', '--username', default='test', help='Username to use')
-def update(buckets, connection, verbose, username):
+def update(buckets, connection, verbose):
     """Update the local db"""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     m = Manager(connection=connection)
-    location = m.get_or_create_location(name=username)
-    m.update(location, buckets=buckets)
+    m.update(buckets=buckets)
 
 
 @main.command()

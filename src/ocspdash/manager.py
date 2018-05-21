@@ -2,15 +2,16 @@
 
 """Manager for OCSPDash."""
 
-from base64 import urlsafe_b64decode as b64decode
+import datetime
 import logging
 import os
 import urllib.parse
+import uuid
+from base64 import urlsafe_b64decode as b64decode
 from collections import OrderedDict, namedtuple
 from itertools import groupby
 from operator import itemgetter
 from typing import List, Optional, Tuple
-import uuid
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -92,19 +93,17 @@ class Manager(BaseManager):
         """
         return self.session.query(Authority).filter(Authority.name == name).one_or_none()
 
-    def ensure_authority(self, name: str, rank: int, cardinality: int) -> Authority:
+    def ensure_authority(self, name: str, cardinality: int) -> Authority:
         authority = self.get_authority_by_name(name)
 
         if authority is None:
             authority = Authority(
                 name=name,
                 cardinality=cardinality,
-                rank=rank
             )
             self.session.add(authority)
 
         else:
-            authority.rank = rank
             authority.cardinality = cardinality
 
         self.session.commit()
@@ -175,20 +174,33 @@ class Manager(BaseManager):
 
         return location
 
-    # TODO remove this--it should only be in OCSPscrape?
-    def update(self, location: Location, buckets: int = 10):
+    def update(self, buckets: int = 10):
         """Runs the update
 
-        :param location: The location from which the update function is run
         :param buckets: The number of top authorities to query
         """
         if self.server_query is None:
             raise RuntimeError('No username and password for Censys supplied')
 
-        issuers = self.server_query.get_top_authorities(buckets=buckets)
+        authorities = self.get_top_authorities(buckets)
+        if not authorities:
+            issuers = self.server_query.get_top_authorities(buckets=buckets)
+            for issuer_name, issuer_cardinality in issuers.items():
+                self.ensure_authority(issuer_name, issuer_cardinality)
 
-        for rank, (issuer_name, issuer_cardinality) in enumerate(issuers.items()):
-            authority = self.ensure_authority(issuer_name, rank, issuer_cardinality)
+        authorities = self.get_top_authorities(buckets)
+        # TODO: make this timedelta configurable/a constant
+        if any(authority.last_updated < datetime.datetime.now() - datetime.timedelta(days=7) for authority in authorities):
+            issuers = self.server_query.get_top_authorities(buckets=buckets)
+            for issuer_name, issuer_cardinality in issuers.items():
+                self.ensure_authority(issuer_name, issuer_cardinality)
+
+        authorities = self.get_top_authorities(buckets)
+        for authority in authorities:
+            pass
+
+        for issuer_name, issuer_cardinality in issuers.items():
+            authority = self.ensure_authority(issuer_name, issuer_cardinality)
 
             ocsp_urls = self.server_query.get_ocsp_urls_for_issuer(authority.name)
 
