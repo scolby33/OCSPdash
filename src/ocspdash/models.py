@@ -171,7 +171,7 @@ class Invite(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), doc='the name of the invited location')
-    invite_id = Column(Binary(16), nullable=False, index=True, doc='')
+    invite_id = Column(Binary(16), nullable=False, unique=True, index=True, doc='')
     invite_validator = Column(String(255), nullable=False, doc='')
 
     def __repr__(self):
