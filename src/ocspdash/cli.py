@@ -41,7 +41,7 @@ def update(buckets, connection, verbose):
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     m = Manager(connection=connection)
-    m.update(buckets=buckets)
+    m.update(n=buckets)
 
 
 @main.command()

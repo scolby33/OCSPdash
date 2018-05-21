@@ -235,18 +235,18 @@ class Manager(BaseManager):
 
         return location
 
-    def update(self, buckets: int = 10):
         """Runs the update
+    def update(self, n: int = 10):
 
-        :param buckets: The number of top authorities to query
+        :param n: the number of top authorities to get information on
         """
         if self.server_query is None:
             raise RuntimeError('No username and password for Censys supplied')
 
-        authorities = self.get_top_authorities(buckets)
+        authorities = self.get_top_authorities(n)
         if (not authorities  # probably a first run with a clean DB
                 or any(authority.old for authority in authorities)):
-            issuers = self.server_query.get_top_authorities(buckets=buckets)
+            issuers = self.server_query.get_top_authorities(buckets=n)
             for issuer_name, issuer_cardinality in issuers.items():
                 authority = self.ensure_authority(issuer_name, issuer_cardinality)
 
