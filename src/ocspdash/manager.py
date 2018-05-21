@@ -2,10 +2,8 @@
 
 """Manager for OCSPDash."""
 
-import datetime
 import logging
 import os
-import urllib.parse
 import uuid
 from base64 import urlsafe_b64decode as b64decode
 from collections import OrderedDict, namedtuple
@@ -21,7 +19,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_CONNECTION
 from ocspdash.models import (Authority, Base, Chain, Invite, Location,
                              Responder, Result)
-from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
+from ocspdash.server_query import ServerQuery
 
 __all__ = [
     'BaseManager',
@@ -246,48 +244,18 @@ class Manager(BaseManager):
             raise RuntimeError('No username and password for Censys supplied')
 
         authorities = self.get_top_authorities(buckets)
-        if not authorities:
+        if (not authorities  # probably a first run with a clean DB
+                or any(authority.old for authority in authorities)):
             issuers = self.server_query.get_top_authorities(buckets=buckets)
             for issuer_name, issuer_cardinality in issuers.items():
-                self.ensure_authority(issuer_name, issuer_cardinality)
+                authority = self.ensure_authority(issuer_name, issuer_cardinality)
 
-        authorities = self.get_top_authorities(buckets)
-        # TODO: make this timedelta configurable/a constant
-        if any(authority.last_updated < datetime.datetime.now() - datetime.timedelta(days=7) for authority in authorities):
-            issuers = self.server_query.get_top_authorities(buckets=buckets)
-            for issuer_name, issuer_cardinality in issuers.items():
-                self.ensure_authority(issuer_name, issuer_cardinality)
+                ocsp_urls = self.server_query.get_ocsp_urls_for_issuer(authority.name)
 
-        authorities = self.get_top_authorities(buckets)
-        for authority in authorities:
-            pass
+                for url, responder_cardinality in ocsp_urls.items():
+                    responder = self.ensure_responder(authority, url, responder_cardinality)
+                    self.ensure_chain(responder)
 
-        for issuer_name, issuer_cardinality in issuers.items():
-            authority = self.ensure_authority(issuer_name, issuer_cardinality)
-
-            ocsp_urls = self.server_query.get_ocsp_urls_for_issuer(authority.name)
-
-            for url, responder_cardinality in ocsp_urls.items():
-                responder = self.ensure_responder(authority, url, responder_cardinality)
-
-                chain = self.ensure_chain(responder)
-
-                result = Result(
-                    chain=chain,
-                    location=location
-                )
-
-                if chain is not None:
-                    result.created = True
-                    result.current = self.server_query.is_ocsp_url_current_for_issuer(authority.name, url)
-                    parse_result = urllib.parse.urlparse(url)
-                    result.ping = ping(parse_result.netloc)
-                    result.ocsp = check_ocsp_response(chain.subject, chain.issuer, url)
-
-                self.session.add(result)
-                self.session.commit()
-
-            self.session.commit()
     def get_top_authorities(self, n: int = 10) -> List[Authority]:
         """Retrieve the top authorities (as measured by cardinality) from the database.
         Will retrieve up to n, but if there are fewer entries in the DB, it will not create more.
