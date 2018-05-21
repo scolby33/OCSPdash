@@ -2,7 +2,6 @@
 
 import logging
 import os
-
 from flasgger import Swagger
 from flask import Flask
 from flask_admin import Admin
@@ -10,13 +9,18 @@ from flask_admin.contrib.sqla import ModelView
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 
-from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_CONNECTION
+from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_DEFAULT_CONNECTION
 from ocspdash.manager import BaseManager, Manager
-from ocspdash.models import (Authority, Chain, Invite, Location, Responder,
-                             Result)
+from ocspdash.models import (
+    Authority, Chain, Invite, Location, Responder,
+    Result,
+)
 from ocspdash.web.blueprints import api, ui
 
 logger = logging.getLogger('web')
+
+OCSPDASH_CONFIG = 'OCSPDASH_CONFIG'
+OCSPDASH_CONNECTION = 'OCSPDASH_CONNECTION'
 
 
 def make_admin(app: Flask, session) -> Admin:
@@ -41,13 +45,14 @@ def create_application() -> Flask:
     """Creates the OCSPdash Flask application."""
     app = Flask(__name__)
 
-    if 'OCSPDASH_CONFIG' in os.environ:
-        app.config.from_object(os.environ['OCSPDASH_CONFIG'])
+    ocspdash_config = os.environ.get(OCSPDASH_CONFIG)
+    if ocspdash_config is not None:
+        app.config.from_object(ocspdash_config)
     else:
         app.config.from_object('ocspdash.web.config.DefaultConfig')
 
-    app.config.setdefault('OCSPDASH_CONNECTION', OCSPDASH_CONNECTION)
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['OCSPDASH_CONNECTION']
+    app.config.setdefault(OCSPDASH_CONNECTION, OCSPDASH_DEFAULT_CONNECTION)
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config[OCSPDASH_CONNECTION]
     app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 
     db = SQLAlchemy(app=app)

@@ -2,21 +2,20 @@
 
 """Manager for OCSPDash."""
 
+from collections import OrderedDict, namedtuple
 import logging
 import os
 import uuid
-from base64 import urlsafe_b64decode as b64decode
-from collections import OrderedDict, namedtuple
-from itertools import groupby
-from operator import itemgetter
-from typing import List, Optional, Tuple
-
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from base64 import urlsafe_b64decode as b64decode
+from itertools import groupby
+from operator import itemgetter
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.orm import scoped_session, sessionmaker
+from typing import List, Optional, Tuple
 
-from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_CONNECTION
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_DEFAULT_CONNECTION
 from ocspdash.models import (Authority, Base, Chain, Invite, Location,
                              Responder, Result)
 from ocspdash.server_query import ServerQuery
@@ -43,8 +42,8 @@ def _get_connection(connection=None):
         logger.info('using connection from environment: %s', connection)
         return connection
 
-    logger.info('using default connection: %s', OCSPDASH_CONNECTION)
-    return OCSPDASH_CONNECTION
+    logger.info('using default connection: %s', OCSPDASH_DEFAULT_CONNECTION)
+    return OCSPDASH_DEFAULT_CONNECTION
 
 
 class BaseManager(object):
