@@ -45,9 +45,8 @@ def rate_limited(max_per_second: Union[int, float]) -> Callable:
 
         @wraps(func)
         def rate_limited_function(*args, **kwargs):
-            lock.acquire()
-            nonlocal last_time_called
-            try:
+            with lock:
+                nonlocal last_time_called
                 elapsed = time.perf_counter() - last_time_called
                 left_to_wait = min_interval - elapsed
                 if left_to_wait > 0:
@@ -56,8 +55,6 @@ def rate_limited(max_per_second: Union[int, float]) -> Callable:
 
                 last_time_called = time.perf_counter()
                 return func(*args, **kwargs)
-            finally:
-                lock.release()
 
         return rate_limited_function
 
