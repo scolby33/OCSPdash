@@ -14,7 +14,6 @@ include Pipfile
 include Pipfile.lock
 include tox.ini
 include requirements.txt
-include Pipfile Pipfile.lock
 
 include *.rst
 
