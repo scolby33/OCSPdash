@@ -22,23 +22,23 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.6',
 ]
 INSTALL_REQUIRES = [
+    'argon2-cffi',
     'asn1crypto',
     'censys',
     'click',
+    'cryptography',
+    'docopt',
+    'flasgger',
     'flask',
     'flask-admin',
     'flask-bootstrap',
+    'flask-sqlalchemy',
     'ocspbuilder',
     'oscrypto',
-    'pynacl',
+    'python-jose',
     'requests',
     'sqlalchemy',
-    'flask-sqlalchemy',
-    'flasgger',
-    'cryptography',
-    'python-jose',
     'tqdm',
-    'docopt',
 ]
 EXTRAS_REQUIRE = {}
 TESTS_REQUIRE = ['tox']
