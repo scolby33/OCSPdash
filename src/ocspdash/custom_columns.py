@@ -35,7 +35,7 @@ class UUID(TypeDecorator):
             return str(value)
 
         if isinstance(value, uuid.UUID):
-            # hex string
+            # raw UUID bytes
             return value.bytes
 
         value_uuid = uuid.UUID(value)
@@ -44,5 +44,8 @@ class UUID(TypeDecorator):
     def process_result_value(self, value, dialect):
         if value is None:
             return
+
+        if dialect.name == 'postgresql':
+            return uuid.UUID(value)
 
         return uuid.UUID(bytes=value)
