@@ -238,8 +238,12 @@ class Manager(BaseManager):
     def update(self, n: int = 10):
         """Update the database of Authorities, Responders, and Chains from Censys.
 
-        If there are no Authorities in the DB or if any of the top n Authorities haven't been updated in the past
-        7 days, retrieves an all-new set of Authorities, Responders, and Chains from Censys.
+        If there are no Authorities in the DB or if any of the top n Authorities are "old" as defined by that property,
+        retrieves an all-new set of Authorities, Responders, and Chains from Censys.
+
+        If any Responder is "old", update all the Responders for the old Responder's Authority.
+
+        If any Chain is "old", update the Chain for the corresponding Responder.
 
         Otherwise, it's a no-op.
 
@@ -260,6 +264,15 @@ class Manager(BaseManager):
                 for url, responder_cardinality in ocsp_urls.items():
                     responder = self.ensure_responder(authority, url, responder_cardinality)
                     self.ensure_chain(responder)
+
+        authorities = self.get_top_authorities(n)
+        for authority in authorities:
+            if any(responder.old for responder in authority.responders):
+                ocsp_urls = self.server_query.get_ocsp_urls_for_issuer(authority.name)
+                for url, responder_cardinality in ocsp_urls.items():
+                    self.ensure_responder(authority, url, responder_cardinality)
+            for responder in authority.responders:
+                self.ensure_chain(responder)
 
     def get_top_authorities(self, n: int = 10) -> List[Authority]:
         """Retrieve the top authorities (as measured by cardinality) from the database.
