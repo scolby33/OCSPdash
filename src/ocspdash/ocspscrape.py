@@ -74,12 +74,10 @@ JWT_ALGORITHM = 'ES512'
 def main():
     arguments = docopt(__doc__, version='OCSPscrape 0.1.0')
     if arguments['genkey']:
-        token, key_id, private_key = genkey(arguments['<invite-token>'])
+        token, private_key = genkey(arguments['<invite-token>'])
         if not arguments['--fish']:
-            print(f"export OCSPSCRAPE_KEY_ID='{key_id}'", file=sys.stderr)
             print(f"export OCSPSCRAPE_PRIVATE_KEY='{private_key}'", file=sys.stderr)
         else:
-            print(f"set -gx OCSPSCRAPE_KEY_ID '{key_id}'", file=sys.stderr)
             print(f"set -gx OCSPSCRAPE_PRIVATE_KEY '{private_key}'", file=sys.stderr)
         print(token)
     elif arguments['extractkey']:
@@ -88,7 +86,6 @@ def main():
             print(f'public key:\t{claims["pk"]}'.expandtabs(7))
         else:
             print(f'public key:\t{claims["pk"]}'.expandtabs(7)[:78] + '..')
-        print(f'key id:\t{claims["kid"]}'.expandtabs(7))
         print(f'invite token:\t{claims["token"]}'.expandtabs(7))
     else:
         token = scrape(
@@ -109,17 +106,14 @@ def genkey(invite_token: str):
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )).decode('utf-8')
-    key_id = str(uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key))
 
-    # todo remove all the KID stuff since it can be regenerated on demand
     payload = {
         'pk': public_key,
-        'kid': key_id,
         'token': invite_token
     }
     token = jwt.encode(payload, private_key, algorithm=JWT_ALGORITHM)
 
-    return token, key_id, serialized_private_key
+    return token, serialized_private_key
 
 
 def extract_claims(token: str):
@@ -158,10 +152,24 @@ def scrape(queries):
 
     # TODO handle missing env vars more gracefully
     key = os.environ['OCSPSCRAPE_PRIVATE_KEY']
-    key_id = os.environ['OCSPSCRAPE_KEY_ID']
+    key_id = str(_keyid_from_private_key(key))
     payload['iat'] = datetime.utcnow()
     token = jwt.encode(payload, key, headers={'kid': key_id}, algorithm=JWT_ALGORITHM)
     return token
+
+
+def _keyid_from_private_key(private_key_data: str) -> uuid.UUID:
+    loaded_private_key = serialization.load_pem_private_key(
+        data=private_key_data.encode('utf-8'),
+        password=None,
+        backend=default_backend()
+    )
+    public_key = b64encode(loaded_private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )).decode('utf-8')
+    key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
+    return key_id
 
 
 def ping(host: str) -> bool:
