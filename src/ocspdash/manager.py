@@ -84,7 +84,6 @@ class Manager(BaseManager):
         else:
             self.server_query = ServerQuery(user, password)
 
-        self._password_hasher = PasswordHasher()
 
     def get_authority_by_name(self, name: str) -> Optional[Authority]:
         """Get an authority by name if it exists.
@@ -289,6 +288,8 @@ class Manager(BaseManager):
         return self.session.query(Invite).filter_by(invite_id=selector).one_or_none()
 
     def process_invite(self, invite_token: bytes, public_key: str) -> Optional[Location]:
+        _password_hasher = PasswordHasher()  # todo move this to be an instance or class variable once the manager inheritence/init situation is figured out
+
         if len(invite_token) != 32:
             return
         invite_id = invite_token[:16]
@@ -296,7 +297,7 @@ class Manager(BaseManager):
 
         invite = self.get_invite_by_selector(invite_id)
         try:
-            self._password_hasher.verify(invite.invite_validator, invite_validator)
+            _password_hasher.verify(invite.invite_validator, invite_validator)
         except VerifyMismatchError:
             return
 
