@@ -289,7 +289,7 @@ class Manager(BaseManager):
         return self.session.query(Invite).filter_by(invite_id=selector).one_or_none()
 
     def process_invite(self, invite_token: bytes, public_key: str) -> Optional[Location]:
-        if len(invite_token != 32):
+        if len(invite_token) != 32:
             return
         invite_id = invite_token[:16]
         invite_validator = invite_token[16:]
