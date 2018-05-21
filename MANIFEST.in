@@ -12,6 +12,7 @@ include docker-compose.yml
 include .dockerignore
 include tox.ini
 include requirements.txt
+include Pipfile Pipfile.lock
 
 include *.rst
 
