@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""OCSPscrape.
+r"""OCSPscrape.
 
 Usage:
     ocspscrape
@@ -30,16 +30,16 @@ Description:
 
 Examples:
     Scrape OCSP responders and submit results:
-        source ocspscrape.env ; \\
-        curl http://ocsp.dash/queries.jsonl | ocspscrape | \\
+        source ocspscrape.env ; \
+        curl http://ocsp.dash/queries.jsonl | ocspscrape | \
         curl -d @- http://ocsp.dash/results
 
     Generate a keypair and register with the server:
-        ocspscrape genkey 'my-invite-token' 2>ocspscrape.env | \\
+        ocspscrape genkey 'my-invite-token' 2>ocspscrape.env | \
         curl -d @- http://ocsp.dash/register
 
     Inspect the output from ocspscrape genkey:
-        ocspscrape genkey 'my-invite-token' | \\
+        ocspscrape genkey 'my-invite-token' | \
         xargs ocspscrape extractkey
 
 """
@@ -186,7 +186,7 @@ def ping(host: str) -> bool:
 
 
 def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, session: requests.Session) -> bool:
-    """Create and send an OCSP request
+    """Create and send an OCSP request.
 
     :param subject_cert: The certificate that information is being requested about
     :param issuer_cert: The issuer of the subject certificate

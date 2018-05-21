@@ -99,6 +99,7 @@ class Manager(BaseManager):
 
     def ensure_authority(self, name: str, cardinality: int) -> Authority:
         """Create or update an Authority in the DB.
+
         If an Authority with the given name exists, the cardinality is updated.
         Otherwise, a new Authority is created with the given name and cardinality.
 
@@ -136,6 +137,7 @@ class Manager(BaseManager):
 
     def ensure_responder(self, authority: Authority, url: str, cardinality: int) -> Responder:
         """Create or update a responder in the DB.
+
         If a responder with the given Authority and URL exists, the cardinality is updated.
         Otherwise, a new Responder is created with the given information.
 
@@ -174,6 +176,7 @@ class Manager(BaseManager):
 
     def ensure_chain(self, responder: Responder) -> Optional[Chain]:
         """Get or create a chain for a Responder.
+
         If a Chain exists in the database and is not "old" as specified in the Chain model and the certificates it
         contains are unexpired, returns that Chain.
         If a Chain exists, is not "old", but its contents are expired, return the Chain if the responder has no
@@ -253,8 +256,8 @@ class Manager(BaseManager):
             raise RuntimeError('No username and password for Censys supplied')
 
         authorities = self.get_top_authorities(n)
-        if (not authorities  # probably a first run with a clean DB
-                or any(authority.old for authority in authorities)):
+        if (not authorities or  # probably a first run with a clean DB
+                any(authority.old for authority in authorities)):
             issuers = self.server_query.get_top_authorities(buckets=n)
             for issuer_name, issuer_cardinality in issuers.items():
                 authority = self.ensure_authority(issuer_name, issuer_cardinality)
@@ -276,6 +279,7 @@ class Manager(BaseManager):
 
     def get_top_authorities(self, n: int = 10) -> List[Authority]:
         """Retrieve the top authorities (as measured by cardinality) from the database.
+
         Will retrieve up to n, but if there are fewer entries in the DB, it will not create more.
 
         :param n: the number of top authorities to retrieve
@@ -285,7 +289,7 @@ class Manager(BaseManager):
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
     def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, Location]]:
-        """Gets the most recent results for each location"""
+        """Gets the most recent results for each location."""
         return self.session.query(Authority, Responder, Result, Location) \
             .join(Responder) \
             .join(Chain) \
@@ -301,7 +305,7 @@ class Manager(BaseManager):
             .all()
 
     def get_all_locations_with_test_results(self) -> List[Location]:
-        """Return all the Location objects that have at least one associated Result"""
+        """Return all the Location objects that have at least one associated Result."""
         return [
             location
             for location in self.session.query(Location).all()
@@ -380,6 +384,6 @@ class Manager(BaseManager):
         return {'test': 12345}
 
     def insert_payload(self, payload):
-        """Takes the payload submitted and returns it"""
+        """Takes the payload submitted and returns it."""
         logger.info('Submitted payload: %s', payload)
         logger.warning('Submit method is not actually implemented')

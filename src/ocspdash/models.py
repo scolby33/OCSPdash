@@ -28,6 +28,7 @@ class OCSPResponderStatus(Enum):
 
 class Authority(Base):
     """Represents the authority that issues certificates."""
+
     __tablename__ = 'authority'
 
     id = Column(Integer, primary_key=True)
@@ -65,6 +66,7 @@ class Authority(Base):
 
 class Responder(Base):
     """Represents the unique pair of authority/endpoint."""
+
     __tablename__ = 'responder'
 
     id = Column(Integer, primary_key=True)
@@ -114,6 +116,7 @@ class Responder(Base):
 
 class Chain(Base):
     """Represents a certificate and its issuing certificate."""
+
     __tablename__ = 'chain'
 
     id = Column(Integer, primary_key=True)
@@ -151,6 +154,7 @@ class Chain(Base):
 
 class Location(Base):
     """References a testing location."""
+
     __tablename__ = 'location'
 
     id = Column(Integer, primary_key=True)
@@ -176,6 +180,7 @@ class Location(Base):
 
 class Invite(Base):
     """An invite for a new testing location."""
+
     __tablename__ = 'invite'
 
     id = Column(Integer, primary_key=True)
@@ -197,6 +202,7 @@ class Invite(Base):
 
 class Result(Base):
     """The information about the result from a ping."""
+
     __tablename__ = 'result'
 
     id = Column(Integer, primary_key=True)

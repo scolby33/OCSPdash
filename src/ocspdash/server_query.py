@@ -36,7 +36,6 @@ def _get_results_as_dict(report):
 
 
 class ServerQuery(RateLimitedCensysCertificates):
-
     def get_top_authorities(self, buckets: int = 10) -> MutableMapping[str, int]:
         """Retrieve the name and count of certificates for the top n certificate authorities by number of certs.
 
@@ -53,7 +52,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         return _get_results_as_dict(report)
 
     def get_ocsp_urls_for_issuer(self, issuer: str) -> MutableMapping[str, int]:
-        """Retrieve all the OCSP URLs used by the authority in the wild
+        """Retrieve all the OCSP URLs used by the authority in the wild.
 
         :param issuer: The name of the authority to get OCSP URLs for
 
@@ -68,6 +67,7 @@ class ServerQuery(RateLimitedCensysCertificates):
 
     def is_ocsp_url_current_for_issuer(self, issuer: str, url: str) -> bool:
         """Determine if an issuer is currently using a particular OCSP URL.
+
         A URL is deemed "current" if there is at least one non-expired, valid certificate that lists it.
 
         :param issuer: The name of the authority
@@ -84,7 +84,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         return results.get('unexpired', 0) > 0  # TODO: turn this return to a function to document implicitly
 
     def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
-        """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
+        """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url.
 
         :param issuer: The name of the authority from which a certificate is sought
         :param url: The OCSP URL that the certificate ought to have
@@ -145,7 +145,7 @@ def _is_ocsp_request_successful(parsed_ocsp_response):
 
 
 def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bool:
-    """Create and send an OCSP request
+    """Create and send an OCSP request.
 
     :param subject_cert: The certificate that information is being requested about
     :param issuer_cert: The issuer of the subject certificate

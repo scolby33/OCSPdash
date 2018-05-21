@@ -20,7 +20,7 @@ logger = logging.getLogger('web')
 
 
 def make_admin(app: Flask, session) -> Admin:
-    """Adds admin views to the app"""
+    """Adds admin views to the app."""
     admin = Admin(app)
 
     admin.add_view(ModelView(Authority, session))
@@ -38,7 +38,7 @@ def make_admin(app: Flask, session) -> Admin:
 
 
 def create_application() -> Flask:
-    """Creates the OCSPdash Flask application"""
+    """Creates the OCSPdash Flask application."""
     app = Flask(__name__)
 
     if 'OCSPDASH_CONFIG' in os.environ:
@@ -60,7 +60,7 @@ def create_application() -> Flask:
             self.engine = db.engine
 
     class WebManager(WebBaseManager, Manager):
-        """Killin it with the MRO"""
+        """Killin it with the MRO."""
 
     app.manager = WebManager(
         user=app.config['CENSYS_API_ID'],

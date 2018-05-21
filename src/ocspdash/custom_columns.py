@@ -19,6 +19,7 @@ class UUID(TypeDecorator):
     BINARY(16).
     Based on http://docs.sqlalchemy.org/en/rel_0_9/core/custom_types.html?highlight=guid#backend-agnostic-guid-type
     """
+
     impl = BINARY
 
     def load_dialect_impl(self, dialect):

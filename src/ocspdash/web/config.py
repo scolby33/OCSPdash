@@ -24,6 +24,7 @@ class DockerConfig(DefaultConfig):
 
 class DockerMySQLConfig(DockerConfig):
     """Follows format from guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/"""
+
     OCSPDASH_CONNECTION = 'mysql+pymysql://{user}:{password}@{host}/{database}?charset={charset}'.format(
         user=DockerConfig.DB_USER,
         host=DockerConfig.DB_HOST,
@@ -35,6 +36,7 @@ class DockerMySQLConfig(DockerConfig):
 
 class DockerPostgresConfig(DefaultConfig):
     """Follows format from guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/"""
+
     OCSPDASH_CONNECTION = 'postgresql://{user}:{password}@{host}:5432/{database}'.format(
         user=DockerConfig.DB_USER,
         host=DockerConfig.DB_HOST,

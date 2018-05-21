@@ -37,7 +37,7 @@ def rate_limited(max_per_second: Union[int, float]) -> Callable:
     min_interval = 1.0 / max_per_second
 
     def decorate(func: Callable) -> Callable:
-        """Decorate the function to rate limit it
+        """Decorate the function to rate limit it.
 
         :param func: The function being decorated
         """
