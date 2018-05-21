@@ -73,7 +73,7 @@ def new_location(connection, location_name):
     m.session.add(new_invite)
     m.session.commit()
 
-    click.echo(f'{new_invite.id}:{base64.urlsafe_b64encode(invite_id+invite_validator).decode("utf-8")}')
+    click.echo(base64.urlsafe_b64encode(invite_id+invite_validator).decode("utf-8"))
 
 
 if __name__ == '__main__':
