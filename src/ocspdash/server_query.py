@@ -154,8 +154,11 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bo
     :returns: True if the request was successful, False otherwise
     """
     logger.debug(f'Checking OCSP response for {url}')
-    subject = asymmetric.load_certificate(subject_cert)
-    issuer = asymmetric.load_certificate(issuer_cert)
+    try:
+        subject = asymmetric.load_certificate(subject_cert)
+        issuer = asymmetric.load_certificate(issuer_cert)
+    except TypeError:
+        return False
 
     builder = OCSPRequestBuilder(subject, issuer)
     ocsp_request = builder.build()
