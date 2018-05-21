@@ -32,6 +32,9 @@ logger = logging.getLogger(__name__)
 
 
 def _get_connection(connection=None):
+    """Get a connection from one of the various configuration locations, prioritizing a passed-in value,
+    followed by a value from an environment variable, and finally the default.
+    """
     if connection is not None:
         return connection
 
@@ -86,15 +89,25 @@ class Manager(BaseManager):
         else:
             self.server_query = ServerQuery(user, password)
 
-
     def get_authority_by_name(self, name: str) -> Optional[Authority]:
-        """Get an authority by name if it exists.
+        """Get an Authority from the DB by name if it exists.
 
         :param name: the name of the authority
+
+        :returns: The Authority or None
         """
         return self.session.query(Authority).filter(Authority.name == name).one_or_none()
 
     def ensure_authority(self, name: str, cardinality: int) -> Authority:
+        """Create or update an Authority in the DB.
+        If an Authority with the given name exists, the cardinality is updated.
+        Otherwise, a new Authority is created with the given name and cardinality.
+
+        :param name: the name of the authority
+        :param cardinality: the number of certificates observed from the authority in the wild
+
+        :returns: the new or updated Authority
+        """
         authority = self.get_authority_by_name(name)
 
         if authority is None:
@@ -112,11 +125,27 @@ class Manager(BaseManager):
         return authority
 
     def get_responder(self, authority: Authority, url: str) -> Optional[Responder]:
-        """Get a responder by the authority and URL."""
+        """Get a responder by the authority and URL.
+
+        :param authority: the Authority from the DB
+        :param url: the URL of the responder
+
+        :returns: the Responder or None
+        """
         f = and_(Responder.authority_id == authority.id, Responder.url == url)
         return self.session.query(Responder).filter(f).one_or_none()
 
     def ensure_responder(self, authority: Authority, url: str, cardinality: int) -> Responder:
+        """Create or update a responder in the DB.
+        If a responder with the given Authority and URL exists, the cardinality is updated.
+        Otherwise, a new Responder is created with the given information.
+
+        :param authority: the corresponding Authority for the responder
+        :param url: the URL of the responder
+        :param cardinality: the number of certificates observed using the responder in the wild
+
+        :returns: the new or updated Responder
+        """
         responder = self.get_responder(authority=authority, url=url)
 
         if responder is None:
@@ -135,6 +164,12 @@ class Manager(BaseManager):
         return responder
 
     def get_most_recent_chain_by_responder(self, responder: Responder) -> Optional[Chain]:
+        """Get the newest chain for a Responder.
+
+        :param responder: the Responder whose chain we're seeking
+
+        :returns: the Chain or None
+        """
         return self.session.query(Chain).filter(Chain.responder_id == responder.id).order_by(
             Chain.retrieved.desc()).first()
 
@@ -164,9 +199,21 @@ class Manager(BaseManager):
         return chain
 
     def get_location_by_name(self, name: str) -> Optional[Location]:
+        """Get a Location from the database by its name.
+
+        :param name: the name of the Location
+
+        :returns: the Location or None
+        """
         return self.session.query(Location).filter(Location.name == name).one_or_none()
 
     def get_or_create_location(self, name: str) -> Location:
+        """Get a Location from the database by name, or create a new one if none with that name exists.
+
+        :param name: the name of the Location
+
+        :returns: the Location
+        """
         location = self.get_location_by_name(name)
 
         if location is None:
