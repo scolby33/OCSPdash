@@ -75,7 +75,7 @@ class Manager(BaseManager):
         if password is None:
             password = os.environ.get('CENSYS_API_SECRET')
 
-        if user is None and password is None:
+        if user is None or password is None:
             self.server_query = None
         else:
             self.server_query = ServerQuery(user, password)
