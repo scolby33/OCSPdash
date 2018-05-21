@@ -45,7 +45,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         :returns: A mapping of authority name to count of certificates, sorted in descending order by certificate count
         """
         report = self.report(
-            query='valid_nss: true',
+            query='validation.nss.valid: true',
             field='parsed.issuer.organization',
             buckets=buckets
         )
@@ -60,7 +60,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         :returns: A mapping of OCSP URLs to count of certificates, sorted in descending order by certificate count
         """
         report = self.report(
-            query=f'valid_nss: true AND parsed.issuer.organization: "{issuer}"',
+            query=f'validation.nss.valid: true AND parsed.issuer.organization: "{issuer}"',
             field='parsed.extensions.authority_info_access.ocsp_urls'
         )
 
@@ -76,7 +76,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         :returns: True if the URL appears to be in use, False otherwise
         """
         tags_report = self.report(
-            query=f'valid_nss: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND (tags: "unexpired" OR tags: "expired")',
+            query=f'validation.nss.valid: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND (tags: "unexpired" OR tags: "expired")',
             field='tags'
         )
         results = {result['key']: result['doc_count'] for result in tags_report['results']}
@@ -94,7 +94,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         logger.debug(f'Getting raw certificates for {issuer}: {url}')
 
         logger.debug(f'Getting example cert for {issuer}: {url}')
-        base_query = f'valid_nss: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND parsed.extensions.authority_info_access.issuer_urls: /.+/'
+        base_query = f'validation.nss.valid: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND parsed.extensions.authority_info_access.issuer_urls: /.+/'
         search = self.search(
             query=f'{base_query} AND tags: "unexpired"',
             fields=['parsed.extensions.authority_info_access.issuer_urls', 'parsed.names', 'raw']
