@@ -58,7 +58,7 @@ def nuke(connection):
 @main.command()
 @click.option('--connection')
 @click.argument('location_name')
-def newloc(connection, location_name):
+def new_location(connection, location_name):
     m = Manager(connection)
     invite_id = secrets.token_bytes(16)
     invite_validator = secrets.token_bytes(16)
