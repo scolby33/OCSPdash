@@ -81,7 +81,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         )
         results = {result['key']: result['doc_count'] for result in tags_report['results']}
 
-        return results.get('unexpired', 0) > 0  # turn this return to a function to document implicitly
+        return results.get('unexpired', 0) > 0  # TODO: turn this return to a function to document implicitly
 
     def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url
