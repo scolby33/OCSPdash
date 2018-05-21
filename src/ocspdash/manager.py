@@ -2,6 +2,7 @@
 
 """Manager for OCSPDash."""
 
+from base64 import urlsafe_b64decode as b64decode
 import logging
 import os
 import urllib.parse
@@ -9,11 +10,14 @@ from collections import OrderedDict, namedtuple
 from itertools import groupby
 from operator import itemgetter
 from typing import List, Optional, Tuple
+import uuid
 
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from ocspdash.constants import OCSPDASH_CONNECTION
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_CONNECTION
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result, Invite
 from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 
@@ -79,6 +83,8 @@ class Manager(BaseManager):
             self.server_query = None
         else:
             self.server_query = ServerQuery(user, password)
+
+        self._password_hasher = PasswordHasher()
 
     def get_authority_by_name(self, name: str) -> Optional[Authority]:
         """Get an authority by name if it exists.
@@ -280,7 +286,31 @@ class Manager(BaseManager):
 
     def get_invite_by_selector(self, selector: bytes) -> Invite:
         """Get an invite by its binary selector."""
-        return self.session.query(Invite).filter_by(invite_id=selector).first()
+        return self.session.query(Invite).filter_by(invite_id=selector).one_or_none()
+
+    def process_invite(self, invite_token: bytes, public_key: str) -> Optional[Location]:
+        if len(invite_token != 32):
+            return
+        invite_id = invite_token[:16]
+        invite_validator = invite_token[16:]
+
+        invite = self.get_invite_by_selector(invite_id)
+        try:
+            self._password_hasher.verify(invite.invite_validator, invite_validator)
+        except VerifyMismatchError:
+            return
+
+        key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
+
+        new_location = Location(
+            name=invite.name,
+            pubkey=b64decode(public_key),
+            key_id=key_id
+        )
+        self.session.add(new_location)
+        self.session.delete(invite)
+        self.session.commit()
+        return new_location
 
     def get_results(self):
         logger.warning('Get results method is not actually implemented')
