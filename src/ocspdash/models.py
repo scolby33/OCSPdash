@@ -8,7 +8,8 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from oscrypto import asymmetric
-from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import (Binary, Boolean, Column, DateTime, ForeignKey, Integer,
+                        String, Text)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func

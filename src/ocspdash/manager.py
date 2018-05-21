@@ -19,7 +19,8 @@ from sqlalchemy import and_, create_engine, func
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_CONNECTION
-from ocspdash.models import Authority, Base, Chain, Location, Responder, Result, Invite
+from ocspdash.models import (Authority, Base, Chain, Invite, Location,
+                             Responder, Result)
 from ocspdash.server_query import ServerQuery, check_ocsp_response, ping
 
 __all__ = [

@@ -12,7 +12,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_CONNECTION
 from ocspdash.manager import BaseManager, Manager
-from ocspdash.models import Authority, Chain, Location, Responder, Result, Invite
+from ocspdash.models import (Authority, Chain, Invite, Location, Responder,
+                             Result)
 from ocspdash.web.blueprints import api, ui
 
 logger = logging.getLogger('web')

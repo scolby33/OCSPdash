@@ -3,7 +3,7 @@
 import logging
 from base64 import urlsafe_b64decode as b64decode
 
-from flask import Blueprint, jsonify, current_app, request
+from flask import Blueprint, current_app, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
 
