@@ -39,6 +39,10 @@ class Authority(Base):
 
     last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    @property
+    def old(self) -> bool:
+        return self.last_updated < datetime.utcnow() - timedelta(days=7)
+
     def __repr__(self):
         return self.name
 
@@ -73,6 +77,8 @@ class Responder(Base):
     cardinality = Column(Integer, doc="The number of certs observed using this authority/endpoint pair in the "
                                       "wild. Update this when rankings are updated.")
 
+    last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
     def __repr__(self):
         return f'{self.authority} at {self.url}'
 
@@ -87,6 +93,10 @@ class Responder(Base):
             ),
             key=operator.attrgetter('retrieved')
         ).current
+
+    @property
+    def old(self) -> bool:
+        return self.last_updated < datetime.utcnow() - timedelta(days=7)
 
     def to_json(self):
         return {
