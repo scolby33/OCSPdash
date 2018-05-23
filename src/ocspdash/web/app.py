@@ -15,6 +15,7 @@ from ocspdash.models import (
     Authority, Chain, Invite, Location, Responder,
     Result,
 )
+from ocspdash.util import ToJSONCustomEncoder
 from ocspdash.web.blueprints import api, ui
 
 logger = logging.getLogger('web')
@@ -73,6 +74,8 @@ def create_application() -> Flask:
     )
 
     app.manager.create_all()
+
+    app.json_encoder = ToJSONCustomEncoder
 
     make_admin(app, app.manager.session)
 

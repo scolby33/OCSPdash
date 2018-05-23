@@ -16,5 +16,5 @@ __email__ = 'scolby33@gmail.com'
 __license__ = 'MIT'
 __copyright__ = 'Copyright (c) 2017 Scott Colby and Charles Tapley Hoyt'
 
-from .util import install_custom_json_encoder
-install_custom_json_encoder()
+# from .util import install_custom_json_encoder
+# install_custom_json_encoder()

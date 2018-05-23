@@ -33,7 +33,7 @@ def register_location_key():
     if new_location is None:
         return 400
     else:
-        return jsonify(new_location.to_json())
+        return jsonify(new_location)
 
 
 # @api.route('/status')

@@ -18,6 +18,11 @@ requests_session = Session()
 requests_session.headers.update({'User-Agent': OCSPDASH_USER_AGENT})
 
 
+class ToJSONCustomEncoder(JSONEncoder):
+    def default(self, obj):
+        return getattr(obj, 'to_json', super().default)(obj)
+
+
 def install_custom_json_encoder():
     logger.info('Installing custom JSONEncoder')
 
