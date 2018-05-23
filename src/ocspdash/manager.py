@@ -89,12 +89,8 @@ class Manager(object):
     @classmethod
     def _get_server_query(cls, api_id: Optional[str] = None, api_secret: Optional[str] = None) -> Optional[ServerQuery]:
         api_id, api_secret = cls._get_credentials(user=api_id, password=api_secret)
-        if api_id is None or api_secret is None:
-            server_query = None
-        else:
-            server_query = ServerQuery(api_id, api_secret)
-
-        return server_query
+        if api_id is not None and api_secret is not None:
+            return ServerQuery(api_id, api_secret)
 
     def create_all(self, checkfirst=True):
         Base.metadata.create_all(self.engine, checkfirst=checkfirst)
