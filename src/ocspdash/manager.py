@@ -23,7 +23,6 @@ from ocspdash.models import (Authority, Base, Chain, Invite, Location,
 from ocspdash.server_query import ServerQuery
 
 __all__ = [
-    'BaseManager',
     'Manager',
 ]
 
