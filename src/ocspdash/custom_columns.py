@@ -2,8 +2,10 @@
 
 """Implements custom SQLAlchemy TypeDecorators."""
 
-import sqlalchemy.dialects.postgresql
 import uuid
+
+import sqlalchemy.dialects.postgresql
+from sqlalchemy.engine.default.interfaces import Dialect
 from sqlalchemy.types import BINARY, TypeDecorator
 
 __all__ = [
@@ -20,7 +22,7 @@ class UUID(TypeDecorator):
 
     impl = BINARY
 
-    def load_dialect_impl(self, dialect):
+    def load_dialect_impl(self, dialect: Dialect):
         """Load the implementation for a given dialect.
 
         :param dialect: The SQLAlchemy dialect (e.g., postgresql)
@@ -49,7 +51,7 @@ class UUID(TypeDecorator):
         value_uuid = uuid.UUID(value)
         return value_uuid.bytes
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value, dialect: Dialect):
         """Process the parameter to load from the column.
 
         :param value: The value from the column
