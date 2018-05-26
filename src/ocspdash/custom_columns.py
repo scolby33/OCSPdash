@@ -30,7 +30,7 @@ class UUID(TypeDecorator):
 
         return dialect.type_descriptor(BINARY)
 
-    def process_bind_param(self, value, dialect: str):
+    def process_bind_param(self, value, dialect):
         """Process the parameter to bind to the column.
 
         :param value: The value to bind
