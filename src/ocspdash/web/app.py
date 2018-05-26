@@ -2,6 +2,7 @@
 
 import logging
 import os
+
 from flasgger import Swagger
 from flask import Flask
 from flask_admin import Admin
@@ -10,7 +11,7 @@ from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 
 from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_DEFAULT_CONNECTION
-from ocspdash.manager import BaseManager, Manager
+from ocspdash.manager import Manager
 from ocspdash.models import (
     Authority, Chain, Invite, Location, Responder,
     Result,
@@ -60,20 +61,7 @@ def create_application() -> Flask:
     Bootstrap(app)
     Swagger(app)  # Adds Swagger UI
 
-    class WebBaseManager(BaseManager):
-        def __init__(self, *args, **kwargs):
-            self.session = db.session
-            self.engine = db.engine
-
-    class WebManager(WebBaseManager, Manager):
-        """Killin it with the MRO."""
-
-    app.manager = WebManager(
-        user=app.config['CENSYS_API_ID'],
-        password=app.config['CENSYS_API_SECRET'],
-    )
-
-    app.manager.create_all()
+    app.manager = Manager(engine=db.engine, session=db.session, server_query=None)
 
     app.json_encoder = ToJSONCustomEncoder
 

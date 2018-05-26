@@ -2,18 +2,20 @@
 
 """Manager for OCSPDash."""
 
-from collections import OrderedDict, namedtuple
 import logging
 import os
 import uuid
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
 from base64 import urlsafe_b64decode as b64decode
+from collections import OrderedDict, namedtuple
 from itertools import groupby
 from operator import itemgetter
-from sqlalchemy import and_, create_engine, func
-from sqlalchemy.orm import scoped_session, sessionmaker
 from typing import List, Optional, Tuple
+
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from sqlalchemy import and_, create_engine, func
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_DEFAULT_CONNECTION
 from ocspdash.models import (Authority, Base, Chain, Invite, Location,
@@ -21,71 +23,80 @@ from ocspdash.models import (Authority, Base, Chain, Invite, Location,
 from ocspdash.server_query import ServerQuery
 
 __all__ = [
-    'BaseManager',
     'Manager',
 ]
 
 logger = logging.getLogger(__name__)
 
 
-def _get_connection(connection=None):
-    """Get a connection from one of the various configuration locations, prioritizing a passed-in value,
-    followed by a value from an environment variable, and finally the default.
-    """
-    if connection is not None:
-        logger.info('using passed-in connection: %s', connection)
-        return connection
-
-    connection = os.environ.get('OCSPDASH_CONNECTION')
-
-    if connection is not None:
-        logger.info('using connection from environment: %s', connection)
-        return connection
-
-    logger.info('using default connection: %s', OCSPDASH_DEFAULT_CONNECTION)
-    return OCSPDASH_DEFAULT_CONNECTION
 
 
-class BaseManager(object):
-    def __init__(self, connection=None, echo=False):
-        self.connection = _get_connection(connection=connection)
-
-        self.engine = create_engine(self.connection, echo=echo)
-
-        #: A SQLAlchemy session maker
-        self.session_maker = sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
-
-        #: A SQLAlchemy session object
-        self.session = scoped_session(self.session_maker)
+class Manager(object):
+    def __init__(self, engine: Engine, session: scoped_session, server_query: ServerQuery):
+        self.engine = engine
+        self.session = session
+        self.server_query = server_query
 
         self.create_all()
 
-    def create_all(self, checkfirst=True):
-        Base.metadata.create_all(self.engine, checkfirst=checkfirst)
+    @classmethod
+    def from_args(cls, connection: Optional[str] = None, echo: bool = False, api_id: Optional[str] = None, api_secret: Optional[str] = None):
+        engine, session = cls._get_engine_from_connection(connection=connection, echo=echo)
 
-    def drop_database(self):
-        Base.metadata.drop_all(self.engine)
+        server_query = cls._get_server_query(api_id=api_id, api_secret=api_secret)
 
+        return cls(engine, session, server_query)
 
-class Manager(BaseManager):
-    def __init__(self, connection=None, echo: bool = None, user: str = None, password: str = None):
-        """All the operations required to find the OCSP servers of the top certificate authorities and test them.
-
-        :param user: A valid `Censys <https://censys.io>`_ API ID
-        :param password: The matching `Censys <https://censys.io>`_ API secret
+    @staticmethod
+    def _get_connection(connection=None):
+        """Get a connection from one of the various configuration locations, prioritizing a passed-in value,
+        followed by a value from an environment variable, and finally the default.
         """
-        super().__init__(connection=connection, echo=echo)
+        if connection is not None:
+            logger.info('using passed-in connection: %s', connection)
+            return connection
 
+        connection = os.environ.get('OCSPDASH_CONNECTION')
+
+        if connection is not None:
+            logger.info('using connection from environment: %s', connection)
+            return connection
+
+        logger.info('using default connection: %s', OCSPDASH_DEFAULT_CONNECTION)
+        return OCSPDASH_DEFAULT_CONNECTION
+
+    @staticmethod
+    def _get_credentials(user: Optional[str] = None, password: Optional[str] = None) -> Tuple[str, str]:
         if user is None:
             user = os.environ.get('CENSYS_API_ID')
 
         if password is None:
             password = os.environ.get('CENSYS_API_SECRET')
 
-        if user is None or password is None:
-            self.server_query = None
-        else:
-            self.server_query = ServerQuery(user, password)
+        return user, password
+
+    @classmethod
+    def _get_engine_from_connection(cls, connection: Optional[str] = None, echo: bool = False) -> Tuple[Engine, scoped_session]:
+        connection = cls._get_connection(connection)
+        engine = create_engine(connection, echo=echo)
+
+        session_maker = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+
+        session = scoped_session(session_maker)
+
+        return engine, session
+
+    @classmethod
+    def _get_server_query(cls, api_id: Optional[str] = None, api_secret: Optional[str] = None) -> Optional[ServerQuery]:
+        api_id, api_secret = cls._get_credentials(user=api_id, password=api_secret)
+        if api_id is not None and api_secret is not None:
+            return ServerQuery(api_id, api_secret)
+
+    def create_all(self, checkfirst=True):
+        Base.metadata.create_all(self.engine, checkfirst=checkfirst)
+
+    def drop_database(self):
+        Base.metadata.drop_all(self.engine)
 
     def get_authority_by_name(self, name: str) -> Optional[Authority]:
         """Get an Authority from the DB by name if it exists.

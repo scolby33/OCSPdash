@@ -39,7 +39,7 @@ def update(buckets, connection, verbose):
     """Update the local database."""
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
-    m = Manager(connection=connection)
+    m = Manager.from_args(connection=connection)
     m.update(n=buckets)
 
 
@@ -49,7 +49,7 @@ def update(buckets, connection, verbose):
 def nuke(connection, yes):
     """Nuke the database."""
     if yes or click.confirm('Nuke the database?'):
-        m = Manager(connection=connection, echo=True)
+        m = Manager.from_args(connection=connection, echo=True)
         m.drop_database()
 
 
@@ -58,7 +58,7 @@ def nuke(connection, yes):
 @click.argument('location_name')
 def new_location(connection, location_name):
     """Register a new location."""
-    m = Manager(connection)
+    m = Manager.from_args(connection=connection)
     invite_id = secrets.token_bytes(16)
     invite_validator = secrets.token_bytes(16)
     ph = PasswordHasher()
