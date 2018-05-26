@@ -35,6 +35,7 @@ INSTALL_REQUIRES = [
     'flask-sqlalchemy',
     'ocspbuilder',
     'oscrypto',
+    'passlib',
     'python-jose',
     'requests',
     'sqlalchemy',
