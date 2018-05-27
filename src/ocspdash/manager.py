@@ -396,6 +396,8 @@ class Manager(object):
         validator = invite_token[16:]
 
         location = self.get_location_by_selector(selector)
+        if location.pubkey:  # this invite has already been used
+            return
         if not location.verify(validator):
             return
 
