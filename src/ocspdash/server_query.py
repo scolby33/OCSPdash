@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Classes for querying Censys.io data on certificates."""
+
 import base64
 import logging
 from collections import OrderedDict
@@ -31,6 +33,8 @@ def _get_results_as_dict(report):
 
 
 class ServerQuery(RateLimitedCensysCertificates):
+    """An interface to Censys.io's REST API."""
+
     def get_top_authorities(self, buckets: int = 10) -> MutableMapping[str, int]:
         """Retrieve the name and count of certificates for the top n certificate authorities by number of certs.
 
