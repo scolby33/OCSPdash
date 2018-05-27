@@ -4,22 +4,20 @@
 
 import logging
 import os
-import uuid
-from base64 import urlsafe_b64decode as b64decode
+import secrets
 from collections import OrderedDict, namedtuple
 from itertools import groupby
 from operator import itemgetter
 from typing import List, Optional, Tuple
 
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPDASH_DEFAULT_CONNECTION
-from ocspdash.models import (Authority, Base, Chain, Invite, Location,
+from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION
+from ocspdash.models import (Authority, Base, Chain, Location,
                              Responder, Result)
+from ocspdash.security import pwd_context
 from ocspdash.server_query import ServerQuery
 
 __all__ = [
@@ -27,8 +25,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-
 
 
 class Manager(object):
@@ -232,22 +228,6 @@ class Manager(object):
         """
         return self.session.query(Location).filter(Location.name == name).one_or_none()
 
-    def get_or_create_location(self, name: str) -> Location:
-        """Get a Location from the database by name, or create a new one if none with that name exists.
-
-        :param name: the name of the Location
-
-        :returns: the Location
-        """
-        location = self.get_location_by_name(name)
-
-        if location is None:
-            location = Location(name=name)
-            self.session.add(location)
-            self.session.commit()
-
-        return location
-
     def update(self, n: int = 10):
         """Update the database of Authorities, Responders, and Chains from Censys.
 
@@ -316,6 +296,7 @@ class Manager(object):
 
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result."""
+        # TODO @cthoyt
         return [
             location
             for location in self.session.query(Location).all()
@@ -355,39 +336,39 @@ class Manager(object):
         """Get an authority."""
         return self.session.query(Authority).get(authority_id)
 
-    def get_invite_by_id(self, invite_id: int) -> Invite:
-        """Get an invite."""
-        return self.session.query(Invite).get(invite_id)
+    def create_location(self, location_name: str) -> Tuple[bytes, bytes]:
+        selector = secrets.token_bytes(16)
+        validator = secrets.token_bytes(16)
+        invite_validator_hash = pwd_context.hash(validator)
 
-    def get_invite_by_selector(self, selector: bytes) -> Invite:
-        """Get an invite by its binary selector."""
-        return self.session.query(Invite).filter_by(invite_id=selector).one_or_none()
-
-    def process_invite(self, invite_token: bytes, public_key: str) -> Optional[Location]:
-        _password_hasher = PasswordHasher()  # todo move this to be an instance or class variable once the manager inheritence/init situation is figured out
-
-        if len(invite_token) != 32:
-            return
-        invite_id = invite_token[:16]
-        invite_validator = invite_token[16:]
-
-        invite = self.get_invite_by_selector(invite_id)
-        try:
-            _password_hasher.verify(invite.invite_validator, invite_validator)
-        except VerifyMismatchError:
-            return
-
-        key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
-
-        new_location = Location(
-            name=invite.name,
-            pubkey=b64decode(public_key),
-            key_id=key_id
+        new_invite = Location(
+            name=location_name,
+            selector=selector,
+            validator_hash=invite_validator_hash
         )
-        self.session.add(new_location)
-        self.session.delete(invite)
+
+        self.session.add(new_invite)
         self.session.commit()
-        return new_location
+        return selector, validator
+
+    def get_location_by_selector(self, selector: bytes) -> Optional[Location]:
+        """Get an invite by its binary selector."""
+        return self.session.query(Location).filter(Location.selector==selector).one_or_none()
+
+    def process_location(self, invite_token: bytes, public_key: str) -> Optional[Location]:
+        if len(invite_token) != 32:
+            raise ValueError('invite_token of wrong length')
+        selector = invite_token[:16]
+        validator = invite_token[16:]
+
+        location = self.get_location_by_selector(selector)
+        if not location.verify(validator):
+            return
+
+        location.set_public_key(public_key)
+
+        self.session.commit()
+        return location
 
     def get_results(self):
         logger.warning('Get results method is not actually implemented')

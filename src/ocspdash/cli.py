@@ -3,13 +3,11 @@
 """The CLI module for OCSPdash."""
 
 import base64
-import click
 import logging
-import secrets
-from argon2 import PasswordHasher  # TODO: use passlib for upgradability?
+
+import click
 
 from ocspdash.manager import Manager
-from ocspdash.models import Invite
 
 
 @click.group()
@@ -59,20 +57,10 @@ def nuke(connection, yes):
 def new_location(connection, location_name):
     """Register a new location."""
     m = Manager.from_args(connection=connection)
-    invite_id = secrets.token_bytes(16)
-    invite_validator = secrets.token_bytes(16)
-    ph = PasswordHasher()
-    invite_validator_hash = ph.hash(invite_validator)
 
-    new_invite = Invite(
-        name=location_name,
-        invite_id=invite_id,
-        invite_validator=invite_validator_hash
-    )
-    m.session.add(new_invite)
-    m.session.commit()
+    invite_id, invite_validator = m.create_location(location_name)
 
-    click.echo(base64.urlsafe_b64encode(invite_id + invite_validator).decode("utf-8"))
+    click.echo(base64.urlsafe_b64encode(b''.join((invite_id, invite_validator))).decode("utf-8"))
 
 
 if __name__ == '__main__':

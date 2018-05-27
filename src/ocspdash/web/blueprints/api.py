@@ -28,7 +28,7 @@ def register_location_key():
 
     invite_token = b64decode(claims['token'])
 
-    new_location = current_app.manager.process_invite(invite_token, public_key)
+    new_location = current_app.manager.process_location(invite_token, public_key)
 
     if new_location is None:
         return 400

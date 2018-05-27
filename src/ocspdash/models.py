@@ -3,6 +3,8 @@
 """SQLAlchemy models for OCSPdash."""
 
 import operator
+import uuid
+from base64 import urlsafe_b64decode as b64decode
 from base64 import urlsafe_b64encode as b64encode
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -14,7 +16,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
 
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID
 from ocspdash.custom_columns import UUID
+from ocspdash.security import pwd_context
 
 Base = declarative_base()
 
@@ -153,40 +157,29 @@ class Chain(Base):
 
 
 class Location(Base):
-    """References a testing location."""
+    """An invite for a new testing location."""
 
     __tablename__ = 'location'
 
     id = Column(Integer, primary_key=True)
+    name = Column(String(255), doc='the name of the invited location')
 
-    name = Column(String(255), index=True, doc='the name of the location', unique=True)
+    selector = Column(Binary(16), nullable=False, unique=True, index=True, doc='')
+    validator_hash = Column(String(255), nullable=False, doc='')
+
     pubkey = Column(Binary, doc="the location's public signing key")
     key_id = Column(UUID, doc="the UUID of the location's public key")
 
-    def __repr__(self):
-        return self.name
+    def verify(self, validator: bytes) -> bool:
+        return pwd_context.verify(validator, self.validator_hash)
 
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'pubkey': b64encode(self.pubkey).decode('utf-8'),
-            'key_id': self.key_id,
-            'results': [
-                result.id for result in self.results
-            ]
-        }
+    def set_public_key(self, public_key: str):
+        self.pubkey = b64decode(public_key)
+        self.key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
 
-
-class Invite(Base):
-    """An invite for a new testing location."""
-
-    __tablename__ = 'invite'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), doc='the name of the invited location')
-    invite_id = Column(Binary(16), nullable=False, unique=True, index=True, doc='')
-    invite_validator = Column(String(255), nullable=False, doc='')
+    @property
+    def b64encoded_pubkey(self) -> str:
+        return b64encode(self.pubkey).decode('utf-8')
 
     def __repr__(self):
         return f'Invite for {self.name}'
@@ -195,8 +188,13 @@ class Invite(Base):
         return {
             'id': self.id,
             'name': self.name,
-            'invite_id': self.invite_id,
-            'invite_token': self.invite_validator
+            'selector': self.selector,
+            'validator_hash': self.validator_hash,
+            'pubkey': self.pubkey,
+            'key_id': str(self.key_id),
+            'results': [
+                result.id for result in self.results
+            ]
         }
 
 

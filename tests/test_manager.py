@@ -1,4 +1,9 @@
-def test_ensure_authority(manager_transaction):
+from ocspdash.manager import Manager
+
+from .constants import *
+
+
+def test_ensure_authority(manager_transaction: Manager):
     authority1 = manager_transaction.ensure_authority(
         name='Test Authority',
         cardinality=1234
@@ -13,3 +18,23 @@ def test_ensure_authority(manager_transaction):
     assert authority1 is authority2
     assert authority2.name == 'Test Authority'
     assert authority2.cardinality == 2345
+
+
+def test_invites(manager_transaction: Manager):
+    selector, validator = manager_transaction.create_location(TEST_LOCATION_NAME)
+
+    location = manager_transaction.get_location_by_selector(selector)
+    assert location.name == TEST_LOCATION_NAME
+    assert not location.verify(b'1235lkwjal;sn')
+    assert location.verify(validator)
+
+    assert location.pubkey is None
+    assert location.key_id is None
+
+    processed_location = manager_transaction.process_location(b''.join((selector, validator)), TEST_PUBLIC_KEY)
+    assert location is processed_location
+    assert isinstance(processed_location.b64encoded_pubkey, str)
+    assert processed_location.b64encoded_pubkey == TEST_PUBLIC_KEY
+    assert processed_location.key_id == TEST_KEY_ID
+
+
