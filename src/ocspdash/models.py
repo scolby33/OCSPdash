@@ -15,6 +15,7 @@ from sqlalchemy import (Binary, Boolean, Column, DateTime, ForeignKey, Integer,
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
+from sqlalchemy import UniqueConstraint
 
 from ocspdash.constants import NAMESPACE_OCSPDASH_KID
 from ocspdash.custom_columns import UUID
@@ -85,6 +86,10 @@ class Responder(Base):
 
     last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    __table_args__ = (
+        UniqueConstraint(authority_id, url),
+    )
+
     def __repr__(self):
         return f'{self.authority} at {self.url}'
 
@@ -99,6 +104,14 @@ class Responder(Base):
             ),
             key=operator.attrgetter('retrieved')
         ).current
+
+    @property
+    def most_recent_chain(self): # -> Optional[Chain] TODO
+        """Calculates if this responder is current by the status of its most recent result over all chains."""
+        try:
+            return max(self.chains, key=operator.attrgetter('retrieved'))
+        except ValueError:
+            return None
 
     @property
     def old(self) -> bool:
