@@ -73,6 +73,7 @@ JWT_ALGORITHM = 'ES512'
 
 
 def main():
+    """Run the OCSPscrape tool."""
     arguments = docopt(__doc__, version='OCSPscrape 0.1.0')
     if arguments['genkey']:
         token, private_key = genkey(arguments['<invite-token>'])
@@ -97,6 +98,7 @@ def main():
 
 
 def genkey(invite_token: str):
+    """Generate a new public/private keypair."""
     private_key = ec.generate_private_key(ec.SECP521R1, default_backend())
     serialized_private_key = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -118,6 +120,7 @@ def genkey(invite_token: str):
 
 
 def extract_claims(token: str):
+    """Extract the claims from a generate JWT and print them nicely."""
     unverified_claims = jwt.get_unverified_claims(token)
     public_key = b64decode(unverified_claims['pk']).decode('utf-8')
     claims = jwt.decode(token, public_key, algorithms=[JWT_ALGORITHM])
@@ -125,6 +128,7 @@ def extract_claims(token: str):
 
 
 def scrape(queries):
+    """Scrape the OCSP responders provided."""
     # TODO needs type hint for return
     requests_session = requests.Session()
     requests_session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
@@ -175,7 +179,7 @@ def _keyid_from_private_key(private_key_data: str) -> uuid.UUID:
 
 
 def ping(host: str) -> bool:
-    """Returns True if host responds to ping request.
+    """Return True if host responds to ping request.
 
     :param host: The hostname to ping
 
