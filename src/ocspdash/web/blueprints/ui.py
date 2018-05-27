@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# import nacl.exceptions
-# import nacl.signing
-from flask import Blueprint, current_app, render_template
 """The OCSPdash homepage UI blueprint."""
 
-# from nacl.encoding import URLSafeBase64Encoder
-# from nacl.signing import VerifyKey
+from flask import Blueprint, current_app, render_template
 
 __all__ = [
     'ui',
