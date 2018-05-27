@@ -12,10 +12,10 @@ from enum import Enum
 from oscrypto import asymmetric
 from sqlalchemy import (Binary, Boolean, Column, DateTime, ForeignKey, Integer,
                         String, Text)
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
-from sqlalchemy import UniqueConstraint
 
 from ocspdash.constants import NAMESPACE_OCSPDASH_KID
 from ocspdash.custom_columns import UUID

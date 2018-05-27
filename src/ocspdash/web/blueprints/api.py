@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import io
 import logging
 from base64 import urlsafe_b64decode as b64decode
 from base64 import urlsafe_b64encode as b64encode
-import io
 
+import jsonlines
 from flask import Blueprint, current_app, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
-import jsonlines
 
 logger = logging.getLogger(__name__)
 
