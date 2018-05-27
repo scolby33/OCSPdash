@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Factories for creating the OCSPdash web UI Flask app."""
+
 import logging
 import os
 
