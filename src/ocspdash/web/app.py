@@ -13,7 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_DEFAULT_CONNECTION
 from ocspdash.manager import Manager
 from ocspdash.models import (
-    Authority, Chain, Invite, Location, Responder,
+    Authority, Chain, Location, Responder,
     Result,
 )
 from ocspdash.util import ToJSONCustomEncoder
@@ -38,7 +38,6 @@ def make_admin(app: Flask, session) -> Admin:
     admin.add_view(ChainView(Chain, session))
     admin.add_view(ModelView(Location, session))
     admin.add_view(ModelView(Result, session))
-    admin.add_view(ModelView(Invite, session))
 
     return admin
 
