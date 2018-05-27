@@ -18,20 +18,9 @@ requests_session = Session()
 requests_session.headers.update({'User-Agent': OCSPDASH_USER_AGENT})
 
 
-# TODO custom encoder when not using Flask's jsonify?
 class ToJSONCustomEncoder(JSONEncoder):
     def default(self, obj):
         return getattr(obj, 'to_json', super().default)(obj)
-
-
-def install_custom_json_encoder():
-    logger.info('Installing custom JSONEncoder')
-
-    def custom_encoder(self, obj):
-        return getattr(obj.__class__, 'to_json', custom_encoder.default_encoder)(obj)
-
-    custom_encoder.default_encoder = JSONEncoder().default
-    JSONEncoder.default = custom_encoder
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:
