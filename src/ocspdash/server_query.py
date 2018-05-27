@@ -2,16 +2,11 @@
 
 import base64
 import logging
-import platform
-import subprocess
 from collections import OrderedDict
 from operator import itemgetter
 from typing import MutableMapping, Tuple, Union
 
 import requests
-from asn1crypto.ocsp import OCSPResponse
-from ocspbuilder import OCSPRequestBuilder
-from oscrypto import asymmetric
 
 from ocspdash.util import RateLimitedCensysCertificates, requests_session
 
@@ -126,55 +121,3 @@ class ServerQuery(RateLimitedCensysCertificates):
 
         return base64.b64decode(subject_cert['raw']), resp.content
 
-
-def ping(host: str) -> bool:
-    """Returns True if host responds to ping request.
-
-    :param host: The hostname to ping
-
-    :returns: True if an ICMP echo is received, False otherwise
-    """
-    logger.debug(f'Pinging {host}')
-    parameters = ['-n', '1'] if platform.system().lower() == 'windows' else ['-c', '1']
-    results = subprocess.run(['ping'] + parameters + [host], stdout=subprocess.DEVNULL)
-    return results.returncode == 0
-
-
-def _is_ocsp_request_successful(parsed_ocsp_response):
-    return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
-
-
-def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str) -> bool:
-    """Create and send an OCSP request.
-
-    :param subject_cert: The certificate that information is being requested about
-    :param issuer_cert: The issuer of the subject certificate
-    :param url: The URL of the OCSP responder to query
-
-    :returns: True if the request was successful, False otherwise
-    """
-    logger.debug(f'Checking OCSP response for {url}')
-    try:
-        subject = asymmetric.load_certificate(subject_cert)
-        issuer = asymmetric.load_certificate(issuer_cert)
-    except TypeError:
-        return False
-
-    builder = OCSPRequestBuilder(subject, issuer)
-    ocsp_request = builder.build()
-
-    try:
-        ocsp_resp = requests_session.post(url, data=ocsp_request.dump(),
-                                          headers={'Content-Type': 'application/ocsp-request'})
-
-    except requests.RequestException:
-        logger.warning(f'Failed to make OCSP request for {issuer}: {url}')
-        return False
-
-    try:
-        parsed_ocsp_response = OCSPResponse.load(ocsp_resp.content)
-    except ValueError:
-        logger.warning(f'Failed to parse OCSP response for {issuer}: {url}')
-        return False
-
-    return _is_ocsp_request_successful(parsed_ocsp_response)
