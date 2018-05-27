@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""The OCSPdash API blueprint."""
+
 import io
 import logging
 from base64 import urlsafe_b64decode as b64decode
@@ -17,6 +19,7 @@ api = Blueprint('api', __name__)
 
 @api.route('/register', methods=['POST'])
 def register_location_key():
+    """Register a public key for an invited location."""
     # TODO: error handling (what if no invite, what if duplicate name, etc.)
     unverified_claims = jwt.get_unverified_claims(request.data)
     unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
@@ -39,6 +42,7 @@ def register_location_key():
 
 @api.route('/manifest.jsonl')
 def get_manifest():
+    """Return the manifest of queries an OCSPscrape client should make."""
     manifest_data = current_app.manager.get_manifest()
 
     manifest_lines = io.StringIO()
