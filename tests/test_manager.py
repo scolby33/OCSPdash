@@ -1,9 +1,11 @@
-from ocspdash.manager import Manager
+"""Test the functionality of the Manager."""
 
-from .constants import *
+from ocspdash.manager import Manager
+from .constants import TEST_KEY_ID, TEST_LOCATION_NAME, TEST_PUBLIC_KEY
 
 
 def test_ensure_authority(manager_transaction: Manager):
+    """Test the creation of Authority objects."""
     authority1 = manager_transaction.ensure_authority(
         name='Test Authority',
         cardinality=1234
@@ -20,7 +22,8 @@ def test_ensure_authority(manager_transaction: Manager):
     assert authority2.cardinality == 2345
 
 
-def test_invites(manager_transaction: Manager):
+def test_location_invites(manager_transaction: Manager):
+    """Test the invite functionality of Location objects."""
     selector, validator = manager_transaction.create_location(TEST_LOCATION_NAME)
 
     location = manager_transaction.get_location_by_selector(selector)
@@ -36,5 +39,3 @@ def test_invites(manager_transaction: Manager):
     assert isinstance(processed_location.b64encoded_pubkey, str)
     assert processed_location.b64encoded_pubkey == TEST_PUBLIC_KEY
     assert processed_location.key_id == TEST_KEY_ID
-
-

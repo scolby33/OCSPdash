@@ -1,3 +1,5 @@
+"""Constants used in tests for OCSPdash."""
+
 import uuid
 
 __all__ = [
