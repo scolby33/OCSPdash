@@ -23,6 +23,7 @@ sqlalchemy = "*"
 tqdm = "*"
 "e1839a8" = {path = ".", editable = true}
 passlib = "*"
+jsonlines = "*"
 
 [dev-packages]
 tox = "*"

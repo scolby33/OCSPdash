@@ -33,6 +33,7 @@ INSTALL_REQUIRES = [
     'flask-admin',
     'flask-bootstrap',
     'flask-sqlalchemy',
+    'jsonlines',
     'ocspbuilder',
     'oscrypto',
     'passlib',
