@@ -353,7 +353,7 @@ class Manager(object):
 
     def get_location_by_selector(self, selector: bytes) -> Optional[Location]:
         """Get an invite by its binary selector."""
-        return self.session.query(Location).filter(Location.selector==selector).one_or_none()
+        return self.session.query(Location).filter(Location.selector == selector).one_or_none()
 
     def process_location(self, invite_token: bytes, public_key: str) -> Optional[Location]:
         if len(invite_token) != 32:

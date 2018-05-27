@@ -106,7 +106,7 @@ class Responder(Base):
         ).current
 
     @property
-    def most_recent_chain(self): # -> Optional[Chain] TODO
+    def most_recent_chain(self):  # -> Optional[Chain] TODO
         """Calculates if this responder is current by the status of its most recent result over all chains."""
         try:
             return max(self.chains, key=operator.attrgetter('retrieved'))

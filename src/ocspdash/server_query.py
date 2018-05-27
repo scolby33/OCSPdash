@@ -120,4 +120,3 @@ class ServerQuery(RateLimitedCensysCertificates):
             return None, None
 
         return base64.b64decode(subject_cert['raw']), resp.content
-
