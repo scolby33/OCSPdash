@@ -323,7 +323,7 @@ class Manager(object):
             if location.results
         ]
 
-    def make_payload(self):
+    def get_payload(self):
         """Get the current status payload for the index."""
         locations = self.get_all_locations_with_test_results()
         Row = namedtuple('Row', f'url current {" ".join(location.name for location in locations)}')

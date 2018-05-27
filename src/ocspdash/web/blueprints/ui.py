@@ -17,7 +17,7 @@ ui = Blueprint('ui', __name__)
 @ui.route('/')
 def home():
     """Show the user the home view."""
-    payload = current_app.manager.make_payload()
+    payload = current_app.manager.get_payload()
     return render_template('index.html', payload=payload)
 
 
