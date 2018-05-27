@@ -31,7 +31,7 @@ Description:
 Examples:
     Scrape OCSP responders and submit results:
         source ocspscrape.env ; \
-        curl http://ocsp.dash/queries.jsonl | ocspscrape | \
+        curl http://ocsp.dash/manifest.jsonl | ocspscrape | \
         curl -d @- http://ocsp.dash/results
 
     Generate a keypair and register with the server:
@@ -132,20 +132,21 @@ def scrape(queries):
     payload = {RESULTS_JWT_CLAIM: []}
 
     for query in queries:
-        query_id = query['id']
+        authority_name = query['authority_name']
 
-        url = query['url']
-        netloc = urllib.parse.urlparse(url).netloc
+        responder_url = query['responder_url']
+        netloc = urllib.parse.urlparse(responder_url).netloc
 
-        subject_bytes = b64decode(query['subject'])
-        issuer_bytes = b64decode(query['issuer'])
+        subject_bytes = b64decode(query['subject_certificate'])
+        issuer_bytes = b64decode(query['issuer_certificate'])
 
         time = datetime.utcnow().strftime('%FT%TZ')
         ping_result = ping(netloc)
-        ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, url, requests_session)
+        ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, responder_url, requests_session)
 
         payload[RESULTS_JWT_CLAIM].append({
-            'id': query_id,
+            'authority_name': authority_name,
+            'responder_url': responder_url,
             'time': time,
             'ping': ping_result,
             'ocsp': ocsp_result
