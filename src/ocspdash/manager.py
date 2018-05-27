@@ -28,7 +28,15 @@ logger = logging.getLogger(__name__)
 
 
 class Manager(object):
-    def __init__(self, engine: Engine, session: scoped_session, server_query: ServerQuery):
+    """Manager for interacting with the database."""
+
+    def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery]):
+        """Instantiate a Manager with instances of the objects it needs.
+
+        :param engine: The database engine.
+        :param session: The database session.
+        :param server_query: The server_query instance. If None, using server_query-related functionality will raise an error.
+        """
         self.engine = engine
         self.session = session
         self.server_query = server_query
@@ -36,7 +44,16 @@ class Manager(object):
         self.create_all()
 
     @classmethod
-    def from_args(cls, connection: Optional[str] = None, echo: bool = False, api_id: Optional[str] = None, api_secret: Optional[str] = None):
+    def from_args(cls, connection: Optional[str] = None, echo: bool = False, api_id: Optional[str] = None, api_secret: Optional[str] = None):  # TODO -> Manager
+        """Instantiate a Manager along with the objects it needs.
+
+        :param connection: An SQLalchemy-compatible connection string.
+        :param echo: True to echo SQL emitted by SQLalchemy.
+        :param api_id: The Censys API id. If None, the value will be obtained from configuration or the environment.
+        :param api_secret: The Censys API secret. If none, the value will be obtained from configuration or the environment.
+
+        :returns: An instance of Manager configured according to the arguments provided.
+        """
         engine, session = cls._get_engine_from_connection(connection=connection, echo=echo)
 
         server_query = cls._get_server_query(api_id=api_id, api_secret=api_secret)
@@ -45,9 +62,7 @@ class Manager(object):
 
     @staticmethod
     def _get_connection(connection=None):
-        """Get a connection from one of the various configuration locations, prioritizing a passed-in value,
-        followed by a value from an environment variable, and finally the default.
-        """
+        """Get a connection from one of the various configuration locations, prioritizing a passed-in value, followed by a value from an environment variable, and finally the default."""
         if connection is not None:
             logger.info('using passed-in connection: %s', connection)
             return connection
@@ -89,9 +104,14 @@ class Manager(object):
             return ServerQuery(api_id, api_secret)
 
     def create_all(self, checkfirst=True):
+        """Issue appropriate CREATE statements via SQLalchemy to create the database tables.
+
+        :param checkfirst: Don't issue CREATEs for tables already present in the target database if True.
+        """
         Base.metadata.create_all(self.engine, checkfirst=checkfirst)
 
     def drop_database(self):
+        """Drop all tables from the connected database."""
         Base.metadata.drop_all(self.engine)
 
     def get_authority_by_name(self, name: str) -> Optional[Authority]:
@@ -192,7 +212,7 @@ class Manager(object):
 
         :param responder: the Responder whose chain we're seeking
 
-        returns: the Chain or None
+        :returns: the Chain or None
         """
         most_recent_chain = self.get_most_recent_chain_by_responder(responder)
 
@@ -304,6 +324,7 @@ class Manager(object):
         ]
 
     def make_payload(self):
+        """Get the current status payload for the index."""
         locations = self.get_all_locations_with_test_results()
         Row = namedtuple('Row', f'url current {" ".join(location.name for location in locations)}')
         Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 2)
@@ -337,6 +358,12 @@ class Manager(object):
         return self.session.query(Authority).get(authority_id)
 
     def create_location(self, location_name: str) -> Tuple[bytes, bytes]:
+        """Create a new Location with an invite.
+
+        :param location_name: The name to be associated with the Location.
+
+        :returns: A 2-tuple containing a 16-byte string of the "selector" and a 16-byte string of the "validator".
+        """
         selector = secrets.token_bytes(16)
         validator = secrets.token_bytes(16)
         invite_validator_hash = pwd_context.hash(validator)
@@ -356,6 +383,13 @@ class Manager(object):
         return self.session.query(Location).filter(Location.selector == selector).one_or_none()
 
     def process_location(self, invite_token: bytes, public_key: str) -> Optional[Location]:
+        """Given an invite token and public key, check for a valid invite and associate the public key with the corresponding location.
+
+        :parameter invite_token: a 32-byte string corresponding to an invited Location.
+        :parameter public_key: The public key to be associated with the Location.
+
+        :returns: The Location if a valid invite was provided, otherwise None.
+        """
         if len(invite_token) != 32:
             raise ValueError('invite_token of wrong length')
         selector = invite_token[:16]
@@ -371,6 +405,7 @@ class Manager(object):
         return location
 
     def get_manifest(self):
+        """Get the list of queries to be made by an OCSPscrape client."""
         authorities = self.get_top_authorities()
         responders = []
         for authority in authorities:
@@ -391,10 +426,6 @@ class Manager(object):
             )
             for chain in chains if chain is not None
         ]
-
-    def get_results(self):
-        logger.warning('Get results method is not actually implemented')
-        return {'test': 12345}
 
     def insert_payload(self, payload):
         """Takes the payload submitted and returns it."""
