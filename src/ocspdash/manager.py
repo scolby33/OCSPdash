@@ -370,6 +370,28 @@ class Manager(object):
         self.session.commit()
         return location
 
+    def get_manifest(self):
+        authorities = self.get_top_authorities()
+        responders = []
+        for authority in authorities:
+            responders.extend(authority.responders)
+
+        # TODO @cthoyt SQL
+        chains = [responder.most_recent_chain for responder in responders]
+
+        assert len(responders) == len(chains)
+
+        ManifestEntry = namedtuple('ManifestEntry', 'authority_name responder_url subject_certificate issuer_certificate')
+        return [
+            ManifestEntry(
+                authority_name=chain.responder.authority.name,
+                responder_url=chain.responder.url,
+                subject_certificate=chain.subject,
+                issuer_certificate=chain.issuer
+            )
+            for chain in chains if chain is not None
+        ]
+
     def get_results(self):
         logger.warning('Get results method is not actually implemented')
         return {'test': 12345}

@@ -2,12 +2,13 @@
 
 import logging
 from base64 import urlsafe_b64decode as b64decode
+from base64 import urlsafe_b64encode as b64encode
+import io
 
 from flask import Blueprint, current_app, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
-
-# from ocspdash.models import Authority, Responder
+import jsonlines
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,24 @@ def register_location_key():
     else:
         return jsonify(new_location)
 
+
+@api.route('/manifest.jsonl')
+def get_manifest():
+    manifest_data = current_app.manager.get_manifest()
+
+    manifest_lines = io.StringIO()
+    with jsonlines.Writer(manifest_lines, sort_keys=True) as writer:
+        writer.write_all(
+            {
+                'authority_name': authority_name,
+                'responder_url': responder_url,
+                'subject_certificate': b64encode(subject_certificate).decode('utf-8'),
+                'issuer_certificate': b64encode(issuer_certificate).decode('utf-8')
+            }
+            for authority_name, responder_url, subject_certificate, issuer_certificate in manifest_data
+        )
+
+    return manifest_lines.getvalue(), {'Content-Type': 'application/json', 'Content-Disposition': 'inline; filename="manifest.jsonl"'}
 
 # @api.route('/status')
 # def get_payload():
