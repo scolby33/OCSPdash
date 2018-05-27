@@ -25,6 +25,8 @@ Base = declarative_base()
 
 
 class OCSPResponderStatus(Enum):
+    """The possible statuses of an OCSP responder."""
+
     good = 'good'
     questionable = 'questionable'
     bad = 'bad'
@@ -47,12 +49,14 @@ class Authority(Base):
 
     @property
     def old(self) -> bool:
+        """Returns True if the last_updated time is older than 7 days, False otherwise."""
         return self.last_updated < datetime.utcnow() - timedelta(days=7)
 
     def __repr__(self):
         return self.name
 
     def to_json(self):
+        """Returns a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'name': self.name,
@@ -115,9 +119,11 @@ class Responder(Base):
 
     @property
     def old(self) -> bool:
+        """Returns True if the last_updated time is older than 7 days, False otherwise."""
         return self.last_updated < datetime.utcnow() - timedelta(days=7)
 
     def to_json(self):
+        """Returns a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'authority': {
@@ -148,19 +154,21 @@ class Chain(Base):
 
     @property
     def expired(self) -> bool:
-        """Has this certificate expired?"""
+        """Returns True if the subject certificate has expired, False otherwise."""
         certificate = asymmetric.load_certificate(self.subject)
         expires_on = certificate.asn1['tbs_certificate']['validity']['not_after'].native
         return expires_on < datetime.utcnow().replace(tzinfo=timezone.utc)
 
     @property
     def old(self) -> bool:
+        """Returns True if the last_updated time is older than 7 days, False otherwise."""
         return self.retrieved < datetime.utcnow() - timedelta(days=7)
 
     def __repr__(self):
         return f'{self.responder} at {self.retrieved}'
 
     def to_json(self):
+        """Returns a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'retrieved': str(self.retrieved),
@@ -184,20 +192,35 @@ class Location(Base):
     key_id = Column(UUID, doc="the UUID of the location's public key")
 
     def verify(self, validator: bytes) -> bool:
+        """Verifies a validator against the Location's validator_hash.
+
+        :param validator: The validator to be verified.
+
+        :returns: True if the validator is valid, False otherwise.
+        """
         return pwd_context.verify(validator, self.validator_hash)
 
     def set_public_key(self, public_key: str):
+        """Set the pubkey and key_id for the Location based on an input public key.
+
+        :param public_key: The public key for the Location.
+        """
         self.pubkey = b64decode(public_key)
         self.key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
 
     @property
     def b64encoded_pubkey(self) -> str:
+        """A URL-safe Base64 string encoding of the Location's public key.
+
+        :returns: The encoded public key.
+        """
         return b64encode(self.pubkey).decode('utf-8')
 
     def __repr__(self):
         return f'Invite for {self.name}'
 
     def to_json(self):
+        """Returns a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'name': self.name,
@@ -247,6 +270,7 @@ class Result(Base):
         return f'<{self.__class__.__name__} created={self.created}, current={self.current}, ping={self.ping}, ocsp={self.ocsp}>'
 
     def to_json(self):
+        """Returns a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'location': {
