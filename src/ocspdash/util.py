@@ -23,13 +23,13 @@ requests_session.headers.update({'User-Agent': OCSPDASH_USER_AGENT})
 class ToJSONCustomEncoder(JSONEncoder):
     """A customized JSON encoder that first tries to use the `to_json` attribute to encode an object."""
 
-    def default(self, obj):
-        """The default encoder method--tries to use the `to_json` attribute."""
+    def default(self, obj):  # noqa: 401
+        """Try to use the `to_json` attribute to encode before trying the default."""
         return getattr(obj, 'to_json', super().default)(obj)
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:
-    """Decorator to rate-limit a function or method. Only one call will be allowed at a time.
+    """Create a decorator to rate-limit a function or method. Only one call will be allowed at a time.
 
     :param max_per_second: The maximum number of calls to the function that will be allowed per second
     """
@@ -69,10 +69,10 @@ class RateLimitedCensysCertificates(censys.certificates.CensysCertificates):
 
     @censys_rate_limit
     def search(self, *args, **kwargs):
-        """Calls the superclass' search method while remaining under the global rate limit."""
+        """Call the superclass' search method while remaining under the global rate limit."""
         return super().search(*args, **kwargs)
 
     @censys_rate_limit
     def report(self, *args, **kwargs):
-        """Calls the superclass' report method while remaining under the global rate limit."""
+        """Call the superclass' report method while remaining under the global rate limit."""
         return super().report(*args, **kwargs)

@@ -299,7 +299,7 @@ class Manager(object):
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
     def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, Location]]:
-        """Gets the most recent results for each location."""
+        """Get the most recent results for each location."""
         return self.session.query(Authority, Responder, Result, Location) \
             .join(Responder) \
             .join(Chain) \
@@ -430,6 +430,6 @@ class Manager(object):
         ]
 
     def insert_payload(self, payload):
-        """Takes the payload submitted and returns it."""
+        """Take the submitted payload and insert its results into the database."""
         logger.info('Submitted payload: %s', payload)
         logger.warning('Submit method is not actually implemented')

@@ -49,14 +49,14 @@ class Authority(Base):
 
     @property
     def old(self) -> bool:
-        """Returns True if the last_updated time is older than 7 days, False otherwise."""
+        """Return True if the last_updated time is older than 7 days, False otherwise."""
         return self.last_updated < datetime.utcnow() - timedelta(days=7)
 
     def __repr__(self):
         return self.name
 
     def to_json(self):
-        """Returns a representation of the instance suitable for passing in to JSON conversion."""
+        """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'name': self.name,
@@ -99,7 +99,7 @@ class Responder(Base):
 
     @property
     def current(self) -> bool:
-        """Calculates if this responder is current by the status of its most recent result over all chains."""
+        """Calculate if this responder is current by the status of its most recent result over all chains."""
         return max(
             (
                 result
@@ -111,7 +111,7 @@ class Responder(Base):
 
     @property
     def most_recent_chain(self):  # -> Optional[Chain] TODO
-        """Calculates if this responder is current by the status of its most recent result over all chains."""
+        """Calculate if this responder is current by the status of its most recent result over all chains."""
         try:
             return max(self.chains, key=operator.attrgetter('retrieved'))
         except ValueError:
@@ -119,11 +119,11 @@ class Responder(Base):
 
     @property
     def old(self) -> bool:
-        """Returns True if the last_updated time is older than 7 days, False otherwise."""
+        """Return True if the last_updated time is older than 7 days, False otherwise."""
         return self.last_updated < datetime.utcnow() - timedelta(days=7)
 
     def to_json(self):
-        """Returns a representation of the instance suitable for passing in to JSON conversion."""
+        """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'authority': {
@@ -154,21 +154,21 @@ class Chain(Base):
 
     @property
     def expired(self) -> bool:
-        """Returns True if the subject certificate has expired, False otherwise."""
+        """Return True if the subject certificate has expired, False otherwise."""
         certificate = asymmetric.load_certificate(self.subject)
         expires_on = certificate.asn1['tbs_certificate']['validity']['not_after'].native
         return expires_on < datetime.utcnow().replace(tzinfo=timezone.utc)
 
     @property
     def old(self) -> bool:
-        """Returns True if the last_updated time is older than 7 days, False otherwise."""
+        """Return True if the last_updated time is older than 7 days, False otherwise."""
         return self.retrieved < datetime.utcnow() - timedelta(days=7)
 
     def __repr__(self):
         return f'{self.responder} at {self.retrieved}'
 
     def to_json(self):
-        """Returns a representation of the instance suitable for passing in to JSON conversion."""
+        """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'retrieved': str(self.retrieved),
@@ -192,7 +192,7 @@ class Location(Base):
     key_id = Column(UUID, doc="the UUID of the location's public key")
 
     def verify(self, validator: bytes) -> bool:
-        """Verifies a validator against the Location's validator_hash.
+        """Verify a validator against the Location's validator_hash.
 
         :param validator: The validator to be verified.
 
@@ -209,7 +209,7 @@ class Location(Base):
         self.key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
 
     @property
-    def b64encoded_pubkey(self) -> str:
+    def b64encoded_pubkey(self) -> str:  # noqa: D401
         """A URL-safe Base64 string encoding of the Location's public key.
 
         :returns: The encoded public key.
@@ -220,7 +220,7 @@ class Location(Base):
         return f'Invite for {self.name}'
 
     def to_json(self):
-        """Returns a representation of the instance suitable for passing in to JSON conversion."""
+        """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'name': self.name,
@@ -257,7 +257,10 @@ class Result(Base):
 
     @property
     def status(self) -> OCSPResponderStatus:  # relates to the glyphicon displayed
-        """Gets the status."""
+        """Get the status of the responder.
+
+        Relates to the icon displayed in the web UI.
+        """
         if not self.ocsp:
             return OCSPResponderStatus.bad
 
@@ -270,7 +273,7 @@ class Result(Base):
         return f'<{self.__class__.__name__} created={self.created}, current={self.current}, ping={self.ping}, ocsp={self.ocsp}>'
 
     def to_json(self):
-        """Returns a representation of the instance suitable for passing in to JSON conversion."""
+        """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
             'location': {

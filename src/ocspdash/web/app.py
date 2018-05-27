@@ -28,7 +28,7 @@ OCSPDASH_CONNECTION = 'OCSPDASH_CONNECTION'
 
 
 def make_admin(app: Flask, session) -> Admin:
-    """Adds admin views to the app."""
+    """Add admin views to the app."""
     admin = Admin(app)
 
     admin.add_view(ModelView(Authority, session))
@@ -45,7 +45,7 @@ def make_admin(app: Flask, session) -> Admin:
 
 
 def create_application() -> Flask:
-    """Creates the OCSPdash Flask application."""
+    """Create the OCSPdash Flask application."""
     app = Flask(__name__)
 
     ocspdash_config = os.environ.get(OCSPDASH_CONFIG)
