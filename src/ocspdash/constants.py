@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Constants used by OCSPdash."""
+
 import os
 import uuid
 
