@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Miscellaneous utilities for OCSPdash."""
+
 import logging
 import threading
 import time
@@ -19,7 +21,10 @@ requests_session.headers.update({'User-Agent': OCSPDASH_USER_AGENT})
 
 
 class ToJSONCustomEncoder(JSONEncoder):
+    """A customized JSON encoder that first tries to use the `to_json` attribute to encode an object."""
+
     def default(self, obj):
+        """The default encoder method--tries to use the `to_json` attribute."""
         return getattr(obj, 'to_json', super().default)(obj)
 
 
@@ -60,14 +65,14 @@ censys_rate_limit = rate_limited(CENSYS_RATE_LIMIT)
 
 
 class RateLimitedCensysCertificates(censys.certificates.CensysCertificates):
-    """A :class:`censys.certificates.CensysCertificates` subclass with the :meth:`search` and :meth:`report`
-    methods rate-limited to :data:`CENSYS_RATE_LIMIT` calls/sec
-    """
+    """A :class:`censys.certificates.CensysCertificates` subclass with the :meth:`search` and :meth:`report` methods rate-limited to :data:`CENSYS_RATE_LIMIT` calls/sec."""
 
     @censys_rate_limit
     def search(self, *args, **kwargs):
+        """Calls the superclass' search method while remaining under the global rate limit."""
         return super().search(*args, **kwargs)
 
     @censys_rate_limit
     def report(self, *args, **kwargs):
+        """Calls the superclass' report method while remaining under the global rate limit."""
         return super().report(*args, **kwargs)
