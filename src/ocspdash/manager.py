@@ -26,6 +26,8 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+ManifestEntry = namedtuple('ManifestEntry', 'authority_name responder_url subject_certificate issuer_certificate')
+
 
 class Manager(object):
     """Manager for interacting with the database."""
@@ -405,7 +407,7 @@ class Manager(object):
         self.session.commit()
         return location
 
-    def get_manifest(self):
+    def get_manifest(self) -> List[ManifestEntry]:
         """Get the list of queries to be made by an OCSPscrape client."""
         authorities = self.get_top_authorities()
         responders = []
@@ -417,7 +419,6 @@ class Manager(object):
 
         assert len(responders) == len(chains)
 
-        ManifestEntry = namedtuple('ManifestEntry', 'authority_name responder_url subject_certificate issuer_certificate')
         return [
             ManifestEntry(
                 authority_name=chain.responder.authority.name,
