@@ -113,9 +113,6 @@ intersphinx_mapping = {
 }
 
 
-# -- Todo configuration ---------------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
 
@@ -216,6 +213,6 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'OCSPdash', 'OCSP Dashboard Documentation',
-     author, 'OCSPdash', 'One line description of project.',
+     author, 'OCSPdash', "A dashboard for the status of the top certificate authorities' OCSP responders.",
      'Miscellaneous'),
 ]
