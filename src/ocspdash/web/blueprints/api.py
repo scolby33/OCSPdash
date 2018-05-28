@@ -4,13 +4,14 @@
 
 import io
 import logging
-from base64 import urlsafe_b64decode as b64decode
-from base64 import urlsafe_b64encode as b64encode
+from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 
 import jsonlines
 from flask import Blueprint, current_app, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
+
+from ocspdash.constants import OCSP_JWT_ALGORITHM
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ def register_location_key():
     unverified_claims = jwt.get_unverified_claims(request.data)
     unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
     try:
-        claims = jwt.decode(request.data, unverified_public_key, 'ES512')  # todo move the algorithm into a constant
+        claims = jwt.decode(request.data, unverified_public_key, OCSP_JWT_ALGORITHM)
     except JWTError:
         return 400  # bad input
 
@@ -57,7 +58,9 @@ def get_manifest():
             for authority_name, responder_url, subject_certificate, issuer_certificate in manifest_data
         )
 
-    return manifest_lines.getvalue(), {'Content-Type': 'application/json', 'Content-Disposition': 'inline; filename="manifest.jsonl"'}
+    return manifest_lines.getvalue(), {
+        'Content-Type': 'application/json', 'Content-Disposition': 'inline; filename="manifest.jsonl"'
+    }
 
 # @api.route('/status')
 # def get_payload():

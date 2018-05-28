@@ -36,3 +36,5 @@ OCSPDASH_DEFAULT_CONNECTION = 'sqlite:///' + os.path.join(OCSPDASH_DIRECTORY, 'o
 CENSYS_RATE_LIMIT = float(os.environ.get('OCSPDASH_RATE', 0.2))  # max requests per second
 
 OCSPDASH_USER_AGENT = ' '.join([requests.utils.default_user_agent(), f'OCSPdash/{VERSION}'])
+
+OCSP_JWT_ALGORITHM = os.environ.get('OCSP_JWT_ALGORITHM', 'ES512')
