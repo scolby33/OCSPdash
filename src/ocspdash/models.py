@@ -4,15 +4,12 @@
 
 import operator
 import uuid
-from base64 import urlsafe_b64decode as b64decode
-from base64 import urlsafe_b64encode as b64encode
+from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from oscrypto import asymmetric
-from sqlalchemy import (Binary, Boolean, Column, DateTime, ForeignKey, Integer,
-                        String, Text)
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
@@ -191,6 +188,11 @@ class Location(Base):
     pubkey = Column(Binary, doc="the location's public signing key")
     key_id = Column(UUID, doc="the UUID of the location's public key")
 
+    @property
+    def accepted(self) -> bool:
+        """Check if this location has a public key and key identifier pair."""
+        return self.pubkey is not None and self.key_id is not None
+
     def verify(self, validator: bytes) -> bool:
         """Verify a validator against the Location's validator_hash.
 
@@ -217,6 +219,9 @@ class Location(Base):
         return b64encode(self.pubkey).decode('utf-8')
 
     def __repr__(self):
+        if self.accepted:
+            return f'Location {self.name}'
+
         return f'Invite for {self.name}'
 
     def to_json(self):
