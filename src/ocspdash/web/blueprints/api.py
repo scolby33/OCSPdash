@@ -7,7 +7,7 @@ import logging
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 
 import jsonlines
-from flask import Blueprint, current_app, jsonify, request, abort
+from flask import Blueprint, abort, current_app, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
 
