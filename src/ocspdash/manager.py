@@ -316,11 +316,10 @@ class Manager(object):
 
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result."""
-        # TODO @cthoyt
         return [
             location
-            for location in self.session.query(Location).all()
-            if location.results
+            for location in self.session.query(Location).join(Result).all()
+            if location.results.count()
         ]
 
     def get_payload(self):
