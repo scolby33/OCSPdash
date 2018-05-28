@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Test the functionality of the Manager."""
 
 from ocspdash.manager import Manager
