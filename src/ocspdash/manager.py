@@ -368,13 +368,13 @@ class Manager(object):
         validator = secrets.token_bytes(16)
         invite_validator_hash = pwd_context.hash(validator)
 
-        new_invite = Location(
+        new_location = Location(
             name=location_name,
             selector=selector,
             validator_hash=invite_validator_hash
         )
 
-        self.session.add(new_invite)
+        self.session.add(new_location)
         self.session.commit()
         return selector, validator
 
