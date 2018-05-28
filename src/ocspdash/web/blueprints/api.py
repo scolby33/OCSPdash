@@ -7,7 +7,7 @@ import logging
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 
 import jsonlines
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, abort
 from jose import jwt
 from jose.exceptions import JWTError
 
@@ -24,21 +24,21 @@ def register_location_key():
     # TODO: error handling (what if no invite, what if duplicate name, etc.)
     unverified_claims = jwt.get_unverified_claims(request.data)
     unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
+
     try:
         claims = jwt.decode(request.data, unverified_public_key, OCSP_JWT_ALGORITHM)
     except JWTError:
-        return 400  # bad input
+        return abort(400)  # bad input
 
     public_key = claims['pk']
-
     invite_token = b64decode(claims['token'])
 
     new_location = current_app.manager.process_location(invite_token, public_key)
 
     if new_location is None:
-        return 400
-    else:
-        return jsonify(new_location)
+        return abort(400)
+
+    return jsonify(new_location)
 
 
 @api.route('/manifest.jsonl')
