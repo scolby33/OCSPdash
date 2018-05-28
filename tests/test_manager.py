@@ -45,6 +45,7 @@ def test_location_invites(manager_function: Manager):
 
 
 def test_get_all_locations(manager_function: Manager):
+    """Test the retrieval of all locations (that have test results)."""
     manager_function.create_location('l1')
     manager_function.create_location('l2')
     manager_function.create_location('l3')
@@ -72,6 +73,7 @@ def test_get_all_locations(manager_function: Manager):
 
 
 def test_get_manifest(manager_function: Manager):
+    """Test the generation of the manifest."""
     a1 = manager_function.ensure_authority('a1', 5)
     assert a1 is not None
     a2 = manager_function.ensure_authority('a2', 5)
