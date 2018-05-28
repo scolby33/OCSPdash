@@ -85,19 +85,18 @@ def test_get_manifest(manager_function: Manager):
     r2 = manager_function.ensure_responder(a1, 'url2', 5)
     r3 = manager_function.ensure_responder(a2, 'url3', 5)
     r4 = manager_function.ensure_responder(a2, 'url4', 5)
-    manager_function.ensure_responder(a3, 'url5', 5)
 
-    assert 5 == manager_function.count_responders()
+    assert 4 == manager_function.count_responders()
 
-    c1 = Chain(responder=r1)
-    c2 = Chain(responder=r2)
-    c3 = Chain(responder=r3)
-    c4 = Chain(responder=r4)
+    c1 = Chain(responder=r1, subject=b'c1s', issuer=b'c1i')
+    c2 = Chain(responder=r2, subject=b'c2s', issuer=b'c2i')
+    c3 = Chain(responder=r3, subject=b'c3s', issuer=b'c3i')
+    c4 = Chain(responder=r4, subject=b'c4s', issuer=b'c4i')
 
     manager_function.session.add_all([c1, c2, c3, c4])
     manager_function.session.commit()
 
-    assert 4 == manager_function.count_responders()
+    assert 4 == manager_function.count_chains()
 
     chains = manager_function._get_manifest_chains()
     assert 4 == len(chains)
@@ -106,13 +105,13 @@ def test_get_manifest(manager_function: Manager):
     assert c3 in chains
     assert c4 in chains
 
-    c5 = Chain(responder=r1)
-    c6 = Chain(responder=r3)
+    c5 = Chain(responder=r1, subject=b'c5s', issuer=b'c5i')
+    c6 = Chain(responder=r3, subject=b'c5s', issuer=b'c5i')
 
     manager_function.session.add_all([c5, c6])
     manager_function.session.commit()
 
-    assert 6 == manager_function.count_responders()
+    assert 6 == manager_function.count_chains()
 
     chains = manager_function._get_manifest_chains()
     assert 4 == len(chains)
