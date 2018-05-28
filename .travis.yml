@@ -13,8 +13,6 @@ matrix:
     - env: TOXENV=manifest
     - env: TOXENV=rst-lint
     - env: TOXENV=flake8
-  allow_failures:
-    - env: TOXENV=flake8
 
 install:
     - pip install tox codecov coverage
