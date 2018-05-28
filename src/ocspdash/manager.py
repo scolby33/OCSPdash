@@ -116,6 +116,18 @@ class Manager(object):
         """Drop all tables from the connected database."""
         Base.metadata.drop_all(self.engine)
 
+    def count_authorities(self) -> int:
+        """Count the number of authorities in the local database."""
+        return self.session.query(Authority).count()
+
+    def count_responders(self) -> int:
+        """Count the number of responders in the local database."""
+        return self.session.query(Responder).count()
+
+    def count_chains(self) -> int:
+        """Count the number of chains in the local database."""
+        return self.session.query(Chain).count()
+
     def get_authority_by_name(self, name: str) -> Optional[Authority]:
         """Get an Authority from the DB by name if it exists.
 
