@@ -7,7 +7,7 @@ services:
     build: .
     ports:
       - 5000:5000
-    command: gunicorn -b 0.0.0.0:5000 ocspdash.web.run:app --log-level=DEBUG
+    command: gunicorn -b 0.0.0.0:5000 ocspdash.web.wsgi:app --log-level=DEBUG
     depends_on:
      - db
     environment:
