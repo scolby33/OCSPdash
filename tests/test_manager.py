@@ -41,3 +41,30 @@ def test_location_invites(manager_function: Manager):
     assert isinstance(processed_location.b64encoded_pubkey, str)
     assert processed_location.b64encoded_pubkey == TEST_PUBLIC_KEY
     assert processed_location.key_id == TEST_KEY_ID
+
+
+def test_get_all_locations(manager_function: Manager):
+    manager_function.create_location('l1')
+    manager_function.create_location('l2')
+    manager_function.create_location('l3')
+
+    l1 = manager_function.get_location_by_name('l1')
+    assert l1 is not None
+    l2 = manager_function.get_location_by_name('l2')
+    assert l2 is not None
+    l3 = manager_function.get_location_by_name('l3')
+    assert l3 is not None
+
+    r1 = Result(location=l1)
+    r2 = Result(location=l1)
+    r3 = Result(location=l1)
+    r4 = Result(location=l2)
+
+    manager_function.session.add_all([r1, r2, r3, r4])
+    manager_function.session.commit()
+
+    locations = manager_function.get_all_locations_with_test_results()
+
+    assert l1 in locations
+    assert l2 in locations
+    assert l3 not in locations
