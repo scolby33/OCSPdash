@@ -419,8 +419,7 @@ class Manager(object):
         self.session.commit()
         return location
 
-    def get_manifest(self) -> List[ManifestEntry]:
-        """Get the list of queries to be made by an OCSPscrape client."""
+    def _get_manifest_chains(self) -> List[Chain]:
         authorities = self.get_top_authorities()
         responders = []
         for authority in authorities:
@@ -431,6 +430,10 @@ class Manager(object):
 
         assert len(responders) == len(chains)
 
+        return chains
+
+    def get_manifest(self) -> List[ManifestEntry]:
+        """Get the list of queries to be made by an OCSPscrape client."""
         return [
             ManifestEntry(
                 authority_name=chain.responder.authority.name,
@@ -438,7 +441,8 @@ class Manager(object):
                 subject_certificate=chain.subject,
                 issuer_certificate=chain.issuer
             )
-            for chain in chains if chain is not None
+            for chain in self._get_manifest_chains()
+            if chain is not None
         ]
 
     def insert_payload(self, payload):

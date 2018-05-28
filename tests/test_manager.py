@@ -3,6 +3,7 @@
 """Test the functionality of the Manager."""
 
 from ocspdash.manager import Manager
+from ocspdash.models import Chain, Result
 from .constants import TEST_KEY_ID, TEST_LOCATION_NAME, TEST_PUBLIC_KEY
 
 
@@ -68,3 +69,54 @@ def test_get_all_locations(manager_function: Manager):
     assert l1 in locations
     assert l2 in locations
     assert l3 not in locations
+
+
+def test_get_manifest(manager_function: Manager):
+    a1 = manager_function.ensure_authority('a1', 5)
+    assert a1 is not None
+    a2 = manager_function.ensure_authority('a2', 5)
+    assert a2 is not None
+    a3 = manager_function.ensure_authority('a3', 5)
+    assert a3 is not None
+
+    assert 3 == manager_function.count_authorities()
+
+    r1 = manager_function.ensure_responder(a1, 'url1', 5)
+    r2 = manager_function.ensure_responder(a1, 'url2', 5)
+    r3 = manager_function.ensure_responder(a2, 'url3', 5)
+    r4 = manager_function.ensure_responder(a2, 'url4', 5)
+    manager_function.ensure_responder(a3, 'url5', 5)
+
+    assert 5 == manager_function.count_responders()
+
+    c1 = Chain(responder=r1)
+    c2 = Chain(responder=r2)
+    c3 = Chain(responder=r3)
+    c4 = Chain(responder=r4)
+
+    manager_function.session.add_all([c1, c2, c3, c4])
+    manager_function.session.commit()
+
+    assert 4 == manager_function.count_responders()
+
+    chains = manager_function._get_manifest_chains()
+    assert 4 == len(chains)
+    assert c1 in chains
+    assert c2 in chains
+    assert c3 in chains
+    assert c4 in chains
+
+    c5 = Chain(responder=r1)
+    c6 = Chain(responder=r3)
+
+    manager_function.session.add_all([c5, c6])
+    manager_function.session.commit()
+
+    assert 6 == manager_function.count_responders()
+
+    chains = manager_function._get_manifest_chains()
+    assert 4 == len(chains)
+    assert c5 in chains
+    assert c2 in chains
+    assert c6 in chains
+    assert c4 in chains
