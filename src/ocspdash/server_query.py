@@ -64,6 +64,10 @@ class ServerQuery(RateLimitedCensysCertificates):
 
         return _get_results_as_dict(report)
 
+    @staticmethod
+    def _url_not_expired(results):
+        return results.get('unexpired', 0) > 0
+
     def is_ocsp_url_current_for_issuer(self, issuer: str, url: str) -> bool:
         """Determine if an issuer is currently using a particular OCSP URL.
 
@@ -78,9 +82,13 @@ class ServerQuery(RateLimitedCensysCertificates):
             query=f'validation.nss.valid: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND (tags: "unexpired" OR tags: "expired")',
             field='tags'
         )
-        results = {result['key']: result['doc_count'] for result in tags_report['results']}
 
-        return results.get('unexpired', 0) > 0  # TODO: turn this return to a function to document implicitly
+        results = {
+            result['key']: result['doc_count']
+            for result in tags_report['results']
+        }
+
+        return self._url_not_expired(results)  # TODO: turn this return to a function to document implicitly
 
     def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url.
