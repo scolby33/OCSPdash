@@ -2,15 +2,38 @@
 
 """Test configuration module for OCSPdash."""
 
+import logging
+
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.manager import Manager
+from ocspdash.models import Base
+
+logger = logging.getLogger(__name__)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 @pytest.fixture(scope='session')
-def manager_session(tmpdir_factory):
+def created_database_path(tmpdir_factory):
+    """Create a temporary SQlite database and create the tables from the SQLalchemy metadata.
+
+    :yields: a string path to the temporary DB
+    """
+    db_path = tmpdir_factory.mktemp('ocspdash').join('ocspdash.db')
+    logger.warning(db_path)
+
+    engine = create_engine(f'sqlite:///{db_path}')
+
+    logger.debug('creating schema')
+    Base.metadata.create_all(engine)
+
+    yield db_path
+
+
+@pytest.fixture(scope='session')
+def manager_session(created_database_path):
     """Create a Manager test fixture with a temporary SQLite database for a test session.
 
     All DB operations will be rolled back upon the end of the test session.
@@ -20,37 +43,54 @@ def manager_session(tmpdir_factory):
 
     :yields: a 2-tuple of a Manager and a Connection
     """
-    db_path = tmpdir_factory.mktemp('ocspdash').join('ocspdash.db')
+    logger.debug('creating engine')
+    engine = create_engine(f'sqlite:///{created_database_path}')
 
-    engine = create_engine(f'sqlite:///{db_path}')
+    logger.debug('creating connection')
     connection = engine.connect()
 
+    logger.debug('creating sessionmaker')
     session_maker = sessionmaker(bind=connection)
+    logger.debug('creating scoped_session')
     session = scoped_session(session_maker)
 
     @event.listens_for(session, 'after_transaction_end')
     def restart_savepoint(session, transaction):
+        logger.debug('called restart_savepoint')
         if transaction.nested and not transaction._parent.nested:
+            logger.debug('restarting savepoint')
             # ensure that state is expired the way
             # session.commit() normally does
+            logger.debug('expiring')
             session.expire_all()
 
+            logger.debug('beginning nested in restart_savepoint')
             session.begin_nested()
+            logger.debug('end of restart_savepoint if statement')
+        logger.debug('end of restart_savepoint')
 
+    logger.debug('beginning transaction in session')
     transaction = connection.begin()
+
+    logger.debug('beginning nested in session')
     session.begin_nested()
 
+    logger.debug('create Manager')
     manager = Manager(
         engine=engine,
         session=session,
         server_query=None
     )
 
+    logger.debug('yielding from session')
     yield manager, connection
 
+    logger.debug('closing session from session')
     session.close()
+    logger.debug('rolling back transaction from session')
     transaction.rollback()
 
+    logger.debug('closing connection')
     connection.close()
 
 
@@ -62,17 +102,23 @@ def manager_function(manager_session):
 
     :yields: a Manager
     """
+    logger.debug('unpacking manager and connection')
     manager: Manager = manager_session[0]
     connection = manager_session[1]
 
+    logger.debug('beginning transaction in function')
     transaction = connection.begin()
+    logger.debug('beginning nested in function')
     manager.session.begin_nested()
 
+    logger.debug('yielding manager')
     yield manager
 
+    logger.debug('closing session from function')
     manager.session.close()
 
     # rollback - everything that happened with the
     # Session above (including all calls to commit())
     # is rolled back
+    logger.debug('rolling back transaction from function')
     transaction.rollback()

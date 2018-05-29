@@ -29,6 +29,38 @@ logger = logging.getLogger(__name__)
 ManifestEntry = namedtuple('ManifestEntry', 'authority_name responder_url subject_certificate issuer_certificate')
 
 
+def _workaround_pysqlite_transaction_bug():
+    """Work around pysqlite transaction bug.
+
+    https://groups.google.com/forum/#!topic/sqlalchemy/lmdW0Vf3z8g
+    http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#serializable-isolation-savepoints-transactional-ddl
+    """
+    logger.debug('registering workarounds for pysqlite transactional bugs')
+
+    from sqlite3 import Connection as _sqlite3_Connection
+
+    from sqlalchemy import event as _event
+    from sqlalchemy.engine import Engine as _Engine
+
+    @_event.listens_for(_Engine, 'connect')
+    def do_connect(dbapi_connection, connection_record):
+        if isinstance(dbapi_connection, _sqlite3_Connection):
+            # disable pysqlite's emitting of the BEGIN statement entirely.
+            # also stops it from emitting COMMIT before any DDL.
+            logger.debug('setting connection isolation level to `None` to work around pysqlite bug')
+            dbapi_connection.isolation_level = None
+
+    @_event.listens_for(_Engine, 'begin')
+    def do_begin(connection):
+        if isinstance(connection._Connection__connection.connection, _sqlite3_Connection):
+            # emit our own BEGIN
+            logger.debug('emitting our own BEGIN to work around pysqlite bug')
+            connection.execute('BEGIN')
+
+
+_workaround_pysqlite_transaction_bug()
+
+
 class Manager(object):
     """Manager for interacting with the database."""
 
