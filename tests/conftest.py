@@ -10,30 +10,39 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.manager import Manager
 from ocspdash.models import Base
+from .constants import TEST_CONNECTION
 
 logger = logging.getLogger(__name__)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 @pytest.fixture(scope='session')
-def created_database_path(tmpdir_factory):
-    """Create a temporary SQlite database and create the tables from the SQLalchemy metadata.
+def rfc(tmpdir_factory):
+    """Create a temporary SQLite database and create the tables from the SQLAlchemy metadata.
 
-    :yields: a string path to the temporary DB
+    If the environment variable ``OCSPDASH_TEST_CONNECTION`` is set, that gets used instead of creating a temporary
+    database.
+
+    :yields: a RFC connection string to the database to use
     """
-    db_path = tmpdir_factory.mktemp('ocspdash').join('ocspdash.db')
-    logger.warning(db_path)
+    if TEST_CONNECTION:
+        db_connection = TEST_CONNECTION
 
-    engine = create_engine(f'sqlite:///{db_path}')
+    else:
+        db_path = tmpdir_factory.mktemp('ocspdash').join('ocspdash.db')
+        logger.warning(db_path)
+        db_connection = f'sqlite:///{db_path}'
+
+    engine = create_engine(db_connection)
 
     logger.debug('creating schema')
     Base.metadata.create_all(engine)
 
-    yield db_path
+    yield db_connection
 
 
 @pytest.fixture(scope='session')
-def manager_session(created_database_path):
+def manager_session(rfc):
     """Create a Manager test fixture with a temporary SQLite database for a test session.
 
     All DB operations will be rolled back upon the end of the test session.
@@ -44,7 +53,7 @@ def manager_session(created_database_path):
     :yields: a 2-tuple of a Manager and a Connection
     """
     logger.debug('creating engine')
-    engine = create_engine(f'sqlite:///{created_database_path}')
+    engine = create_engine(rfc)
 
     logger.debug('creating connection')
     connection = engine.connect()
