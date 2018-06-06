@@ -4,8 +4,11 @@
 
 import io
 import logging
-from functools import partial
+import uuid
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
+from datetime import datetime
+from functools import partial
+from http import HTTPStatus
 
 import jsonlines
 from flask import Blueprint, abort, current_app, jsonify, request
@@ -13,6 +16,8 @@ from jose import jwt
 from jose.exceptions import JWTError
 
 from ocspdash.constants import OCSP_JWT_ALGORITHM
+from ocspdash.models import Result
+
 jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
 
 logger = logging.getLogger(__name__)
@@ -63,6 +68,40 @@ def get_manifest():
     return manifest_lines.getvalue(), {
         'Content-Type': 'application/json', 'Content-Disposition': 'inline; filename="manifest.jsonl"'
     }
+
+
+@api.route('/submit', methods=['POST'])
+def submit():
+    """Submit scrape results."""
+    submitted_token_header = jwt.get_unverified_header(request.data)
+
+    key_id = uuid.UUID(submitted_token_header['kid'])
+    submitting_location = current_app.manager.get_location_by_key_id(key_id)
+
+    try:
+        claims = jwt.decode(request.data, submitting_location.pubkey.decode('utf-8'))
+    except JWTError:
+        return abort(400)
+
+    results = []
+    for result in claims['res']:  # TODO: I know this should be a function on the manager
+        authority = current_app.manager.get_authority_by_name(result['authority_name'])
+        responder = current_app.manager.get_responder(authority, result['responder_url'])
+        chain = responder.most_recent_chain  # TODO: this is a possibly-invalid assumption about which chain the result is for
+        result = Result(
+            chain=chain,
+            location=submitting_location,
+            retrieved=datetime.strptime(result['time'], '%Y-%m-%dT%H:%M:%SZ'),
+            ping=result['ping'],
+            ocsp=result['ocsp']
+        )
+        results.append(result)
+        current_app.manager.session.add(result)
+
+    current_app.manager.session.commit()
+
+    return ('', HTTPStatus.NO_CONTENT)
+
 
 # @api.route('/status')
 # def get_payload():
