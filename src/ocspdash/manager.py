@@ -5,6 +5,7 @@
 import logging
 import os
 import secrets
+import uuid
 from collections import OrderedDict, namedtuple
 from itertools import groupby
 from operator import itemgetter
@@ -393,6 +394,10 @@ class Manager(object):
     def get_location_by_id(self, location_id: int) -> Location:
         """Get a location."""
         return self.session.query(Location).get(location_id)
+
+    def get_location_by_key_id(self, key_id: uuid.UUID) -> Optional[Location]:
+        """Get a location by its key id."""
+        return self.session.query(Location).filter(Location.key_id == key_id).one_or_none()
 
     def get_responder_by_id(self, responder_id: int) -> Responder:
         """Get a responder."""

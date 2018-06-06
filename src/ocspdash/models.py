@@ -187,7 +187,7 @@ class Location(Base):
     validator_hash = Column(String(255), nullable=False, doc='')
 
     pubkey = Column(Binary, doc="the location's public signing key")
-    key_id = Column(UUID, doc="the UUID of the location's public key")
+    key_id = Column(UUID, doc="the UUID of the location's public key", index=True)
 
     @property
     def accepted(self) -> bool:
