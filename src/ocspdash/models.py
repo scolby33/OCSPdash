@@ -230,9 +230,9 @@ class Location(Base):
         return {
             'id': self.id,
             'name': self.name,
-            'selector': self.selector,
+            'selector': str(self.selector),
             'validator_hash': self.validator_hash,
-            'pubkey': self.pubkey,
+            'pubkey': str(self.pubkey),
             'key_id': str(self.key_id),
             'results': [
                 result.id for result in self.results
