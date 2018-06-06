@@ -25,7 +25,11 @@ class ToJSONCustomEncoder(JSONEncoder):
 
     def default(self, obj):  # noqa: 401
         """Try to use the `to_json` attribute to encode before trying the default."""
-        return getattr(obj, 'to_json', super().default)(obj)
+        to_json = getattr(obj, 'to_json', None)
+        if to_json:
+            return to_json()
+        else:
+            return super().default(obj)
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:
