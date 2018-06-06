@@ -225,7 +225,7 @@ class Location(Base):
 
         return f'Invite for {self.name}'
 
-    def to_json(self):
+    def to_json(self):  # TODO: this gets returned by the /register endpoint and some of this info could be considered private. Should it be removed from the to_json?
         """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
