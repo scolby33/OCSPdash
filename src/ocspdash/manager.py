@@ -15,7 +15,7 @@ from sqlalchemy import and_, create_engine, func
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION
+from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_IDENTIFIER
 from ocspdash.models import (Authority, Base, Chain, Location,
                              Responder, Result)
 from ocspdash.security import pwd_context
@@ -136,7 +136,11 @@ class Manager(object):
     def _get_server_query(cls, api_id: Optional[str] = None, api_secret: Optional[str] = None) -> Optional[ServerQuery]:
         api_id, api_secret = cls._get_credentials(user=api_id, password=api_secret)
         if api_id is not None and api_secret is not None:
-            return ServerQuery(api_id, api_secret)
+            return ServerQuery(
+                api_id=api_id,
+                api_secret=api_secret,
+                user_agent_identifier=OCSPDASH_USER_AGENT_IDENTIFIER
+            )
 
     def create_all(self, checkfirst=True):
         """Issue appropriate CREATE statements via SQLalchemy to create the database tables.

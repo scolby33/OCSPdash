@@ -13,6 +13,7 @@ __all__ = [
     'OCSPDASH_DIRECTORY',
     'OCSPDASH_DEFAULT_CONNECTION',
     'CENSYS_RATE_LIMIT',
+    'OCSPDASH_USER_AGENT_IDENTIFIER',
     'OCSPDASH_USER_AGENT',
     'OCSP_JWT_ALGORITHM',
 ]
@@ -36,6 +37,7 @@ OCSPDASH_DEFAULT_CONNECTION = 'sqlite:///' + os.path.join(OCSPDASH_DIRECTORY, 'o
 # to ``0.2``.
 CENSYS_RATE_LIMIT = float(os.environ.get('OCSPDASH_RATE', 0.2))  # max requests per second
 
-OCSPDASH_USER_AGENT = ' '.join([requests.utils.default_user_agent(), f'OCSPdash/{VERSION}'])
+OCSPDASH_USER_AGENT_IDENTIFIER = f'OCSPdash/{VERSION}'
+OCSPDASH_USER_AGENT = ' '.join([requests.utils.default_user_agent(), OCSPDASH_USER_AGENT_IDENTIFIER])
 
 OCSP_JWT_ALGORITHM = os.environ.get('OCSP_JWT_ALGORITHM', 'ES512')
