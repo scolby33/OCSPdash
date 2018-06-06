@@ -78,7 +78,7 @@ class Manager(object):
         self.create_all()
 
     @classmethod
-    def from_args(cls, connection: Optional[str] = None, echo: bool = False, api_id: Optional[str] = None, api_secret: Optional[str] = None):  # TODO -> Manager
+    def from_args(cls, connection: Optional[str] = None, echo: bool = False, api_id: Optional[str] = None, api_secret: Optional[str] = None) -> 'Manager':
         """Instantiate a Manager along with the objects it needs.
 
         :param connection: An SQLalchemy-compatible connection string.

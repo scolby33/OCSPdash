@@ -7,6 +7,7 @@ import uuid
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Optional  # noqa: F401 imported for PyCharm type checking
 
 from oscrypto import asymmetric
 from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
@@ -107,8 +108,8 @@ class Responder(Base):
         ).current
 
     @property
-    def most_recent_chain(self):  # -> Optional[Chain] TODO
-        """Calculate if this responder is current by the status of its most recent result over all chains."""
+    def most_recent_chain(self) -> 'Optional[Chain]':
+        """Get the most recent chain for this Responder."""
         try:
             return max(self.chains, key=operator.attrgetter('retrieved'))
         except ValueError:
