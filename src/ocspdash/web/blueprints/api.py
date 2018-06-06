@@ -4,6 +4,7 @@
 
 import io
 import logging
+from functools import partial
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 
 import jsonlines
@@ -12,6 +13,7 @@ from jose import jwt
 from jose.exceptions import JWTError
 
 from ocspdash.constants import OCSP_JWT_ALGORITHM
+jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ def register_location_key():
     unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
 
     try:
-        claims = jwt.decode(request.data, unverified_public_key, OCSP_JWT_ALGORITHM)
+        claims = jwt.decode(request.data, unverified_public_key)
     except JWTError:
         return abort(400)  # bad input
 
