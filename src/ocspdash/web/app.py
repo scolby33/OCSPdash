@@ -23,7 +23,6 @@ from ocspdash.web.blueprints import api, ui
 
 logger = logging.getLogger('web')
 
-OCSPDASH_CONFIG = 'OCSPDASH_CONFIG'
 OCSPDASH_CONNECTION = 'OCSPDASH_CONNECTION'
 
 
@@ -48,11 +47,6 @@ def create_application() -> Flask:
     """Create the OCSPdash Flask application."""
     app = Flask(__name__)
 
-    ocspdash_config = os.environ.get(OCSPDASH_CONFIG)
-    if ocspdash_config is not None:
-        app.config.from_object(ocspdash_config)
-    else:
-        app.config.from_object('ocspdash.web.config.DefaultConfig')
 
     app.config.setdefault(OCSPDASH_CONNECTION, OCSPDASH_DEFAULT_CONNECTION)
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config[OCSPDASH_CONNECTION]
