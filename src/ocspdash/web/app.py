@@ -10,11 +10,6 @@ from flask import Flask
 from flask_bootstrap import Bootstrap
 
 from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_DEFAULT_CONNECTION
-from ocspdash.manager import Manager
-from ocspdash.models import (
-    Authority, Chain, Location, Responder,
-    Result,
-)
 from ocspdash.util import ToJSONCustomEncoder
 from ocspdash.web.admin import make_admin
 from ocspdash.web.blueprints import api, ui
@@ -34,8 +29,6 @@ def create_application() -> Flask:
         CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
         CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
     ))
-
-
     db = OCSPSQLAlchemy(app=app)
 
     Bootstrap(app)
