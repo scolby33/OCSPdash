@@ -65,7 +65,7 @@ _workaround_pysqlite_transaction_bug()
 class Manager(object):
     """Manager for interacting with the database."""
 
-    def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery]):
+    def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery]=None):
         """Instantiate a Manager with instances of the objects it needs.
 
         :param engine: The database engine.
