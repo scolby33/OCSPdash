@@ -8,6 +8,7 @@ import logging
 import click
 
 from ocspdash.manager import Manager
+from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION
 
 
 @click.group()
@@ -31,7 +32,7 @@ def web(host, port, flask_debug, verbose):
 
 @main.command()
 @click.option('-n', '--buckets', default=2, type=int, help='Number of top authorities')
-@click.option('--connection')
+@click.option('--connection', help=f'SQLAlchemy connection. Defaults to {OCSPDASH_DEFAULT_CONNECTION}')
 @click.option('-v', '--verbose', is_flag=True, help='Verbose output')
 def update(buckets, connection, verbose):
     """Update the local database."""
@@ -42,7 +43,7 @@ def update(buckets, connection, verbose):
 
 
 @main.command()
-@click.option('--connection')
+@click.option('--connection', help=f'SQLAlchemy connection. Defaults to {OCSPDASH_DEFAULT_CONNECTION}')
 @click.option('-y', '--yes', is_flag=True)
 def nuke(connection, yes):
     """Nuke the database."""
@@ -52,7 +53,7 @@ def nuke(connection, yes):
 
 
 @main.command()
-@click.option('--connection')
+@click.option('--connection', help=f'SQLAlchemy connection. Defaults to {OCSPDASH_DEFAULT_CONNECTION}')
 @click.argument('location_name')
 def new_location(connection, location_name):
     """Register a new location."""
