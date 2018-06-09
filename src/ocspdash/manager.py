@@ -82,8 +82,8 @@ class Manager(object):
     def from_args(cls, connection: Optional[str] = None, echo: bool = False, api_id: Optional[str] = None, api_secret: Optional[str] = None) -> 'Manager':
         """Instantiate a Manager along with the objects it needs.
 
-        :param connection: An SQLalchemy-compatible connection string.
-        :param echo: True to echo SQL emitted by SQLalchemy.
+        :param connection: An SQLAlchemy-compatible connection string.
+        :param echo: True to echo SQL emitted by SQLAlchemy.
         :param api_id: The Censys API id. If None, the value will be obtained from configuration or the environment.
         :param api_secret: The Censys API secret. If none, the value will be obtained from configuration or the environment.
 
@@ -96,8 +96,11 @@ class Manager(object):
         return cls(engine, session, server_query)
 
     @staticmethod
-    def _get_connection(connection=None):
-        """Get a connection from one of the various configuration locations, prioritizing a passed-in value, followed by a value from an environment variable, and finally the default."""
+    def _get_connection(connection:Optional[str]=None):
+        """Get a connection from one of the various configuration locations.
+
+        Prioritizing a passed-in value, followed by a value from an environment variable, and finally the default.
+        """
         if connection is not None:
             logger.info('using passed-in connection: %s', connection)
             return connection
