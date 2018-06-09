@@ -11,7 +11,7 @@ from typing import Optional  # noqa: F401 imported for PyCharm type checking
 
 from oscrypto import asymmetric
 from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
 
@@ -19,7 +19,7 @@ from ocspdash.constants import NAMESPACE_OCSPDASH_KID
 from ocspdash.custom_columns import UUID
 from ocspdash.security import pwd_context
 
-Base = declarative_base()
+Base: DeclarativeMeta = declarative_base()
 
 
 class OCSPResponderStatus(Enum):
@@ -225,7 +225,8 @@ class Location(Base):
 
         return f'Invite for {self.name}'
 
-    def to_json(self):  # TODO: this gets returned by the /register endpoint and some of this info could be considered private. Should it be removed from the to_json?
+    def to_json(
+            self):  # TODO: this gets returned by the /register endpoint and some of this info could be considered private. Should it be removed from the to_json?
         """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,

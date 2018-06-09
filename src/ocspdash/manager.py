@@ -2,6 +2,7 @@
 
 """Manager for OCSPDash."""
 
+import itertools as itt
 import logging
 import os
 import secrets
@@ -16,8 +17,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_IDENTIFIER
-from ocspdash.models import (Authority, Base, Chain, Location,
-                             Responder, Result)
+from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
 from ocspdash.security import pwd_context
 from ocspdash.server_query import ServerQuery
 
@@ -65,7 +65,7 @@ _workaround_pysqlite_transaction_bug()
 class Manager(object):
     """Manager for interacting with the database."""
 
-    def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery]=None):
+    def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery] = None) -> None:
         """Instantiate a Manager with instances of the objects it needs.
 
         :param engine: The database engine.
@@ -115,7 +115,8 @@ class Manager(object):
         return OCSPDASH_DEFAULT_CONNECTION
 
     @staticmethod
-    def _get_credentials(user: Optional[str] = None, password: Optional[str] = None) -> Tuple[str, str]:
+    def _get_credentials(user: Optional[str] = None, password: Optional[str] = None) -> Tuple[
+        Optional[str], Optional[str]]:
         if user is None:
             user = os.environ.get('CENSYS_API_ID')
 
@@ -125,7 +126,8 @@ class Manager(object):
         return user, password
 
     @classmethod
-    def _get_engine_from_connection(cls, connection: Optional[str] = None, echo: bool = False) -> Tuple[Engine, scoped_session]:
+    def _get_engine_from_connection(cls, connection: Optional[str] = None, echo: bool = False) -> Tuple[
+        Engine, scoped_session]:
         connection = cls._get_connection(connection)
         engine = create_engine(connection, echo=echo)
 
@@ -268,6 +270,9 @@ class Manager(object):
 
         :returns: the Chain or None
         """
+        if self.server_query is None:
+            raise RuntimeError('Missing sensys server query')
+
         most_recent_chain = self.get_most_recent_chain_by_responder(responder)
 
         if most_recent_chain and not most_recent_chain.old:
@@ -280,7 +285,7 @@ class Manager(object):
         subject, issuer = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
 
         if subject is None or issuer is None:
-            return None
+            return
 
         chain = Chain(
             responder=responder,
@@ -453,6 +458,8 @@ class Manager(object):
         validator = invite_token[16:]
 
         location = self.get_location_by_selector(selector)
+        if location is None:
+            raise Exception(f'location not found for selector: {selector}')
         if location.pubkey:  # this invite has already been used
             return
         if not location.verify(validator):
@@ -463,14 +470,20 @@ class Manager(object):
         self.session.commit()
         return location
 
+    def _get_top_authorities_responders(self) -> List[Responder]:
+        return list(itt.chain.from_iterable((
+            authority.responders
+            for authority in self.get_top_authorities()
+        )))
+
     def _get_manifest_chains(self) -> List[Chain]:
-        authorities = self.get_top_authorities()
-        responders = []
-        for authority in authorities:
-            responders.extend(authority.responders)
+        responders = self._get_top_authorities_responders()
 
         # TODO @cthoyt SQL
-        chains = [responder.most_recent_chain for responder in responders]
+        chains = [
+            responder.most_recent_chain
+            for responder in responders
+            if responder.most_recent_chain is not None]
 
         assert len(responders) == len(chains)
 
