@@ -115,8 +115,7 @@ class Manager(object):
         return OCSPDASH_DEFAULT_CONNECTION
 
     @staticmethod
-    def _get_credentials(user: Optional[str] = None, password: Optional[str] = None) -> Tuple[
-        Optional[str], Optional[str]]:
+    def _get_credentials(user: Optional[str] = None, password: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
         if user is None:
             user = os.environ.get('CENSYS_API_ID')
 
@@ -126,8 +125,7 @@ class Manager(object):
         return user, password
 
     @classmethod
-    def _get_engine_from_connection(cls, connection: Optional[str] = None, echo: bool = False) -> Tuple[
-        Engine, scoped_session]:
+    def _get_engine_from_connection(cls, connection: Optional[str] = None, echo: bool = False) -> Tuple[Engine, scoped_session]:
         connection = cls._get_connection(connection)
         engine = create_engine(connection, echo=echo)
 
