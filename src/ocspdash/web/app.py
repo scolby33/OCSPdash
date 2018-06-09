@@ -15,6 +15,10 @@ from ocspdash.web.admin import make_admin
 from ocspdash.web.blueprints import api, ui
 from ocspdash.web.extension import OCSPSQLAlchemy
 
+__all__ = [
+    'create_application',
+]
+
 logger = logging.getLogger('web')
 
 

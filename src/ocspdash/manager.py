@@ -96,7 +96,7 @@ class Manager(object):
         return cls(engine, session, server_query)
 
     @staticmethod
-    def _get_connection(connection:Optional[str]=None):
+    def _get_connection(connection: Optional[str] = None):
         """Get a connection from one of the various configuration locations.
 
         Prioritizing a passed-in value, followed by a value from an environment variable, and finally the default.

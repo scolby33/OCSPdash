@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 
+"""An extension of Flask-Admin to support the OCSPdash manager."""
+
 from flask import Flask
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 
 from ocspdash.models import Authority, Chain, Location, Responder, Result
+
+__all__ = [
+    'make_admin',
+]
 
 
 def make_admin(app: Flask, session) -> Admin:

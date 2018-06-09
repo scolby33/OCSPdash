@@ -7,8 +7,8 @@ import logging
 
 import click
 
-from ocspdash.manager import Manager
 from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION
+from ocspdash.manager import Manager
 
 
 @click.group()
