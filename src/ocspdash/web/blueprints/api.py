@@ -11,12 +11,13 @@ from functools import partial
 from http import HTTPStatus
 
 import jsonlines
-from flask import Blueprint, abort, current_app, jsonify, request
+from flask import Blueprint, abort, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
 
 from ocspdash.constants import OCSP_JWT_ALGORITHM
 from ocspdash.models import Result
+from ocspdash.web.proxies import manager
 
 jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
 
@@ -40,7 +41,7 @@ def register_location_key():
     public_key = claims['pk']
     invite_token = b64decode(claims['token'])
 
-    new_location = current_app.manager.process_location(invite_token, public_key)
+    new_location = manager.process_location(invite_token, public_key)
 
     if new_location is None:
         return abort(400)
@@ -51,7 +52,7 @@ def register_location_key():
 @api.route('/manifest.jsonl')
 def get_manifest():
     """Return the manifest of queries an OCSPscrape client should make."""
-    manifest_data = current_app.manager.get_manifest()
+    manifest_data = manager.get_manifest()
 
     manifest_lines = io.StringIO()
     with jsonlines.Writer(manifest_lines, sort_keys=True) as writer:
@@ -76,7 +77,7 @@ def submit():
     submitted_token_header = jwt.get_unverified_header(request.data)
 
     key_id = uuid.UUID(submitted_token_header['kid'])
-    submitting_location = current_app.manager.get_location_by_key_id(key_id)
+    submitting_location = manager.get_location_by_key_id(key_id)
 
     try:
         claims = jwt.decode(request.data, submitting_location.pubkey.decode('utf-8'))
@@ -85,8 +86,8 @@ def submit():
 
     results = []
     for result in claims['res']:  # TODO: I know this should be a function on the manager
-        authority = current_app.manager.get_authority_by_name(result['authority_name'])
-        responder = current_app.manager.get_responder(authority, result['responder_url'])
+        authority = manager.get_authority_by_name(result['authority_name'])
+        responder = manager.get_responder(authority, result['responder_url'])
         chain = responder.most_recent_chain  # TODO: this is a possibly-invalid assumption about which chain the result is for
         result = Result(
             chain=chain,
@@ -96,17 +97,16 @@ def submit():
             ocsp=result['ocsp']
         )
         results.append(result)
-        current_app.manager.session.add(result)
+        manager.session.add(result)
 
-    current_app.manager.session.commit()
+    manager.session.commit()
 
     return ('', HTTPStatus.NO_CONTENT)
-
 
 # @api.route('/status')
 # def get_payload():
 #     """Spits back the current payload"""
-#     payload = current_app.manager.make_payload()
+#     payload = manager.make_payload()
 #
 #     return jsonify(payload)
 
@@ -114,7 +114,7 @@ def submit():
 # @api.route('/recent')
 # def get_recent():
 #     """Get the most recent result set"""
-#     result = current_app.manager.get_most_recent_result_for_each_location()
+#     result = manager.get_most_recent_result_for_each_location()
 #
 #     return jsonify(result)
 
@@ -123,13 +123,13 @@ def submit():
 # def get_authorities():
 #     return jsonify([
 #         authority.to_json()
-#         for authority in current_app.manager.session.query(Authority).all()
+#         for authority in manager.session.query(Authority).all()
 #     ])
 
 
 # @api.route('/authority/<int:authority_id>')
 # def get_authority(authority_id):
-#     authority = current_app.manager.get_authority_by_id(authority_id)
+#     authority = manager.get_authority_by_id(authority_id)
 #
 #     return jsonify(authority.to_json())
 
@@ -138,20 +138,20 @@ def submit():
 # def get_responders():
 #     return jsonify([
 #         responder.to_json()
-#         for responder in current_app.manager.session.query(Responder).all()
+#         for responder in manager.session.query(Responder).all()
 #     ])
 
 
 # @api.route('/responder/<int:responder_id>')
 # def get_responder(responder_id):
-#     responder = current_app.manager.get_responder_by_id(responder_id)
+#     responder = manager.get_responder_by_id(responder_id)
 #
 #     return jsonify(responder.to_json())
 
 
 # @api.route('/responder/<int:responder_id>/chain')
 # def get_responder_chains(responder_id):
-#     responder = current_app.manager.get_responder_by_id(responder_id)
+#     responder = manager.get_responder_by_id(responder_id)
 #
 #     return jsonify([
 #         chain.to_json()
@@ -161,7 +161,7 @@ def submit():
 
 # @api.route('/responder/<int:responder_id>/result')
 # def get_responder_results(responder_id):
-#     responder = current_app.manager.get_responder_by_id(responder_id)
+#     responder = manager.get_responder_by_id(responder_id)
 #
 #     return jsonify([
 #         result.to_json()
