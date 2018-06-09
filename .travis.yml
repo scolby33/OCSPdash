@@ -17,6 +17,9 @@ matrix:
     - env: TOXENV=rst-lint
     - env: TOXENV=flake8
     - env: TOXENV=doc8
+    - env: TOXENV=mypy
+  allow_failures:
+    - env: TOXENV=mypy
 
 
 install:
