@@ -283,7 +283,7 @@ class Manager(object):
         subject, issuer = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
 
         if subject is None or issuer is None:
-            return
+            return None
 
         chain = Chain(
             responder=responder,
@@ -459,9 +459,9 @@ class Manager(object):
         if location is None:
             raise Exception(f'location not found for selector: {selector}')
         if location.pubkey:  # this invite has already been used
-            return
+            return None
         if not location.verify(validator):
-            return
+            return None
 
         location.set_public_key(public_key)
 
