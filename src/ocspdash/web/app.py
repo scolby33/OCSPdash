@@ -8,7 +8,6 @@ import os
 from flasgger import Swagger
 from flask import Flask
 from flask_bootstrap import Bootstrap
-from flask_sqlalchemy import SQLAlchemy
 
 from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_DEFAULT_CONNECTION
 from ocspdash.manager import Manager
@@ -19,6 +18,7 @@ from ocspdash.models import (
 from ocspdash.util import ToJSONCustomEncoder
 from ocspdash.web.admin import make_admin
 from ocspdash.web.blueprints import api, ui
+from ocspdash.web.extension import OCSPSQLAlchemy
 
 logger = logging.getLogger('web')
 
@@ -36,16 +36,15 @@ def create_application() -> Flask:
     ))
 
 
+    db = OCSPSQLAlchemy(app=app)
 
-    db = SQLAlchemy(app=app)
     Bootstrap(app)
     Swagger(app)  # Adds Swagger UI
 
-    app.manager = Manager(engine=db.engine, session=db.session, server_query=None)
-
+    app.manager = db.manager
     app.json_encoder = ToJSONCustomEncoder
 
-    make_admin(app, app.manager.session)
+    make_admin(app, db.session)
 
     app.register_blueprint(api, url_prefix=f'/api/{OCSPDASH_API_VERSION}')
     app.register_blueprint(ui)
