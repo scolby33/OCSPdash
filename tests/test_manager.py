@@ -121,3 +121,8 @@ def test_get_manifest(manager_function: Manager):
     assert c2 in chains
     assert c6 in chains
     assert c4 in chains
+
+
+def test_get_payload(manager_function: Manager):
+    """Test that nothing crashes if you try and get the payload."""
+    manager_function.get_payload()
