@@ -1,11 +1,8 @@
-FROM python:3.6.2-jessie
+FROM python:3.6.5
 
-RUN pip install pymysql gunicorn psycopg2
-
-ADD requirements.txt /
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip
+RUN pip install pipenv gunicorn psycopg2
 
 COPY . /app
 WORKDIR /app
-
-RUN pip install .
+RUN set -ex && pipenv install --deploy --system
