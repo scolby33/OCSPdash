@@ -382,7 +382,12 @@ class Manager(object):
     def get_payload(self):
         """Get the current status payload for the index."""
         locations = self.get_all_locations_with_test_results()
-        Row = namedtuple('Row', f'url current {" ".join(location.name for location in locations)}')  # TODO: allow for spaces in location names...
+
+        field_names = ['url', 'current']
+        for location in locations:
+            field_names.append(location.name)
+
+        Row = namedtuple('Row', field_names=field_names)
         Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 2)
 
         sections = OrderedDict()
