@@ -21,9 +21,9 @@ python-jose = "*"
 requests = "*"
 sqlalchemy = "*"
 tqdm = "*"
-"e1839a8" = {path = ".", editable = true}
 passlib = "*"
 jsonlines = "*"
+"e1839a8" = {path = ".", editable = true}
 
 [dev-packages]
 tox = "*"
