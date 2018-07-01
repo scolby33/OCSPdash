@@ -69,7 +69,7 @@ def get_private_key() -> str:
         return f.read()
 
 
-def write_private_key(serialized_private_key: str) -> None:
+def write_private_key(serialized_private_key: str):
     """Write the serialized private key to a configuration file.
 
     :param serialized_private_key: The private key to write
