@@ -392,22 +392,15 @@ class Manager(object):
         """Get the current status payload for the index."""
         locations = self.get_all_locations_with_test_results()
 
-        field_names = ['url', 'current']
-        for location in locations:
-            field_names.append(location.name)
-
-        Row = namedtuple('Row', field_names=field_names)
-        Row.__new__.__defaults__ = (None,) * (len(Row._fields) - 2)
-
         sections = OrderedDict()
         for authority, group in groupby(self.get_most_recent_result_for_each_location(), itemgetter(0)):
             sections[authority.name] = []
             for responder, group2 in groupby(group, itemgetter(1)):
-                results = {
-                    location.name: result
-                    for _, _, result, location in group2
-                }
-                row = Row(url=responder.url, current=responder.current, **results)
+                results = tuple(
+                    result
+                    for _, _, result, _ in group2
+                )
+                row = (responder.url, responder.current) + results
                 sections[authority.name].append(row)
 
         return {

@@ -27,7 +27,7 @@
         }
 
         .not-current td {
-            background-color: lightgrey;
+            background-color: #DDD;
         }
     </style>
 {% endblock %}
@@ -49,7 +49,7 @@
                 <tr>
                     <th></th>
                     {% for location in payload['locations'] %}
-                        <th class="text-center">{{ location }}</th>
+                        <th class="text-center">{{ location.name }}</th>
                     {% endfor %}
                 </tr>
                 </thead>
@@ -61,8 +61,8 @@
                         </td>
                     </tr>
                     {% for row in rows %}
-                        <tr {% if not row.current %}class="not-current"{% endif %}>
-                            <td>{{ row.url }}</td>
+                        <tr {% if not row[1] %}class="not-current"{% endif %}>
+                            <td>{{ row[0] }}</td>
                             {% for result in row[2:] %}
                                 <td class="text-center">
                                     {% if result is not none %}
