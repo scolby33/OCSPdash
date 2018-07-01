@@ -45,7 +45,7 @@ def rate_limited(max_per_second: Union[int, float]) -> Callable:
 
         :param func: The function being decorated
         """
-        last_time_called = 0
+        last_time_called: float = 0.0
 
         @wraps(func)
         def rate_limited_function(*args, **kwargs):
