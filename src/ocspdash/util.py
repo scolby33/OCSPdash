@@ -54,7 +54,7 @@ def rate_limited(max_per_second: Union[int, float]) -> Callable:
                 elapsed = time.perf_counter() - last_time_called
                 left_to_wait = min_interval - elapsed
                 if left_to_wait > 0:
-                    logger.debug(f'throttling {left_to_wait:f}s... ')
+                    logger.debug('throttling %.2fs', left_to_wait)
                     time.sleep(left_to_wait)
 
                 last_time_called = time.perf_counter()
