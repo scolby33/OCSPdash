@@ -49,9 +49,10 @@ from oscrypto import asymmetric
 
 from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSP_RESULTS_JWT_CLAIM, OCSP_JWT_ALGORITHM
 
-MANIFEST = 'api/v0/manifest.jsonl'
-SUBMIT = 'api/v0/submit'
-REGISTER = 'api/v0/register'
+API_URL = 'api/v0/'
+MANIFEST_URL = urllib.parse.urljoin(API_URL, 'manifest.jsonl')
+SUBMIT_URL = urllib.parse.urljoin(API_URL, 'submit')
+REGISTER_URL = urllib.parse.urljoin(API_URL, 'resigter')
 
 config_directory = os.path.join(os.path.expanduser('~'), '.config', 'ocspdash')
 if not os.path.exists(config_directory):
@@ -114,7 +115,7 @@ def genkey(invite_token, host, no_post):
 
     else:
         res = requests.post(
-            f'{host}/{REGISTER}',
+            urllib.parse.urljoin(host, REGISTER_URL),
             headers={'Content-Type': 'application/octet-stream'},
             data=token,
         )
@@ -129,7 +130,7 @@ def update(host, no_post):
     # TODO provide alternate options for loading a private key
     private_key = get_private_key()
 
-    manifest_response = requests.get(f'{host}/{MANIFEST}')
+    manifest_response = requests.get(urllib.parse.urljoin(host, MANIFEST_URL))
 
     if manifest_response.encoding is None:
         manifest_response.encoding = 'utf-8'
@@ -147,7 +148,7 @@ def update(host, no_post):
 
     else:
         submission_response = requests.post(
-            f'{host}/{SUBMIT}',
+            urllib.parse.urljoin(host, SUBMIT_URL),
             headers={'Content-Type': 'application/octet-stream'},
             data=token,
         )
