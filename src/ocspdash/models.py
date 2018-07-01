@@ -162,6 +162,10 @@ class Chain(Base):
     certificate_hash = Column(Binary(64), nullable=False, unique=True, default=_certificate_hash_default, onupdate=_certificate_hash_default, index=True,
                               doc='')
 
+    __table_args__ = (
+        UniqueConstraint(subject, issuer),
+    )
+
     @property
     def expired(self) -> bool:
         """Return True if the subject certificate has expired, False otherwise."""
