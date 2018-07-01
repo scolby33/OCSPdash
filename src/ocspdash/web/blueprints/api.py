@@ -58,12 +58,13 @@ def get_manifest():
     with jsonlines.Writer(manifest_lines, sort_keys=True) as writer:
         writer.write_all(
             {
-                'authority_name': authority_name,
+                # 'authority_name': authority_name,
                 'responder_url': responder_url,
                 'subject_certificate': b64encode(subject_certificate).decode('utf-8'),
-                'issuer_certificate': b64encode(issuer_certificate).decode('utf-8')
+                'issuer_certificate': b64encode(issuer_certificate).decode('utf-8'),
+                'certificate_hash': b64encode(certificate_hash).decode('utf-8'),
             }
-            for authority_name, responder_url, subject_certificate, issuer_certificate in manifest_data
+            for responder_url, subject_certificate, issuer_certificate, certificate_hash in manifest_data
         )
 
     return manifest_lines.getvalue(), {
@@ -85,16 +86,14 @@ def submit():
         return abort(400)
 
     results = []
-    for result in claims['res']:  # TODO: I know this should be a function on the manager
-        authority = manager.get_authority_by_name(result['authority_name'])
-        responder = manager.get_responder(authority, result['responder_url'])
-        chain = responder.most_recent_chain  # TODO: this is a possibly-invalid assumption about which chain the result is for
+    for result_data in claims['res']:  # TODO: I know this should be a function on the manager
+        chain = manager.get_chain_by_certificate_hash(b64decode(result_data['certificate_hash']))
         result = Result(
             chain=chain,
             location=submitting_location,
-            retrieved=datetime.strptime(result['time'], '%Y-%m-%dT%H:%M:%SZ'),
-            ping=result['ping'],
-            ocsp=result['ocsp']
+            retrieved=datetime.strptime(result_data['time'], '%Y-%m-%dT%H:%M:%SZ'),
+            ping=result_data['ping'],
+            ocsp=result_data['ocsp']
         )
         results.append(result)
         manager.session.add(result)

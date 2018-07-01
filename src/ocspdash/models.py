@@ -2,6 +2,7 @@
 
 """SQLAlchemy models for OCSPdash."""
 
+import hashlib
 import operator
 import uuid
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
@@ -135,6 +136,14 @@ class Responder(Base):
         }
 
 
+def _certificate_hash_default(context) -> bytes:
+    parameters = context.get_current_parameters()
+    subject = parameters['subject']
+    issuer = parameters['issuer']
+
+    return hashlib.sha512(subject + issuer).digest()
+
+
 class Chain(Base):
     """Represents a certificate and its issuing certificate."""
 
@@ -149,6 +158,9 @@ class Chain(Base):
     issuer = Column(Binary, nullable=False, doc="raw bytes of the subject's issuer certificate")
     retrieved = Column(DateTime, default=datetime.utcnow, nullable=False,
                        doc='expire the cached chain when this date is more than 7 days ago')
+
+    certificate_hash = Column(Binary(64), nullable=False, unique=True, default=_certificate_hash_default, onupdate=_certificate_hash_default, index=True,
+                              doc='')
 
     @property
     def expired(self) -> bool:

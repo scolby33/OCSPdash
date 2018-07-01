@@ -27,7 +27,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-ManifestEntry = namedtuple('ManifestEntry', 'authority_name responder_url subject_certificate issuer_certificate')
+ManifestEntry = namedtuple('ManifestEntry', 'responder_url subject_certificate issuer_certificate certificate_hash')
 
 
 def _workaround_pysqlite_transaction_bug():
@@ -243,6 +243,16 @@ class Manager(object):
         self.session.commit()
 
         return responder
+
+    def get_chain_by_certificate_hash(self, certificate_hash: bytes) -> Optional[Chain]:
+        """Get a chain by its certificate hash.
+
+        :param certificate_hash: the bytes of the certificate_hash
+
+        :returns: the Chain or None
+        """
+        return self.session.query(Chain).filter(Chain.certificate_hash == certificate_hash).one_or_none()
+
 
     def get_most_recent_chain_by_responder(self, responder: Responder) -> Optional[Chain]:
         """Get the newest chain for a Responder.
@@ -488,7 +498,9 @@ class Manager(object):
             for responder in responders
             if responder.most_recent_chain is not None]
 
-        assert len(responders) == len(chains)
+        if len(responders) != len(chains):
+            # TODO why is this needed? Originally it was an assertion...
+            logger.warning('Number of responders and number of chains mismatch: %d responders and %d chains', len(responders), len(chains))
 
         return chains
 
@@ -496,10 +508,11 @@ class Manager(object):
         """Get the list of queries to be made by an OCSPscrape client."""
         return [
             ManifestEntry(
-                authority_name=chain.responder.authority.name,
+                # authority_name=chain.responder.authority.name,
                 responder_url=chain.responder.url,
                 subject_certificate=chain.subject,
-                issuer_certificate=chain.issuer
+                issuer_certificate=chain.issuer,
+                certificate_hash=chain.certificate_hash,
             )
             for chain in self._get_manifest_chains()
             if chain is not None
