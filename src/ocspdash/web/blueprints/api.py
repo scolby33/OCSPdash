@@ -15,7 +15,7 @@ from flask import Blueprint, abort, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
 
-from ocspdash.constants import OCSP_JWT_ALGORITHM
+from ocspdash.constants import OCSP_RESULTS_JWT_CLAIM, OCSP_JWT_ALGORITHM
 from ocspdash.web.proxies import manager
 
 jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
@@ -109,7 +109,7 @@ def submit():
         return abort(400)
 
     prepared_result_dicts = (_prepare_result_dictionary(result_data)
-                             for result_data in claims['res'])
+                             for result_data in claims[OCSP_RESULTS_JWT_CLAIM])
     manager.insert_payload(submitting_location, prepared_result_dicts)
 
     return ('', HTTPStatus.NO_CONTENT)

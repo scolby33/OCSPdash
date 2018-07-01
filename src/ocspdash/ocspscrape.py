@@ -47,10 +47,7 @@ from jose import jwt
 from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
 
-# TODO: should this be from constants.py or kept separate to have this module be freestanding/a separate package?
-NAMESPACE_OCSPDASH_KID = uuid.UUID('c81dcfc6-2131-4d05-8ea4-4e5ad8123696')
-RESULTS_JWT_CLAIM = 'res'
-JWT_ALGORITHM = 'ES512'
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSP_RESULTS_JWT_CLAIM, OCSP_JWT_ALGORITHM
 
 MANIFEST = 'api/v0/manifest.jsonl'
 SUBMIT = 'api/v0/submit'
@@ -110,7 +107,7 @@ def genkey(invite_token, host, no_post):
         'pk': public_key,
         'token': invite_token
     }
-    token = jwt.encode(payload, private_key, algorithm=JWT_ALGORITHM)
+    token = jwt.encode(payload, private_key, algorithm=OCSP_JWT_ALGORITHM)
 
     if no_post:
         click.echo(token)
@@ -194,7 +191,7 @@ def scrape(key: str, queries: Iterable[Mapping]) -> str:
 
     claims = {
         'iat': datetime.utcnow(),
-        RESULTS_JWT_CLAIM: [build_claim(query) for query in queries]
+        OCSP_RESULTS_JWT_CLAIM: [build_claim(query) for query in queries]
     }
 
     key_id = str(_keyid_from_private_key(key))
@@ -203,7 +200,7 @@ def scrape(key: str, queries: Iterable[Mapping]) -> str:
         claims=claims,
         key=key,
         headers={'kid': key_id},
-        algorithm=JWT_ALGORITHM
+        algorithm=OCSP_JWT_ALGORITHM
     )
 
 
@@ -277,7 +274,7 @@ def extractkey(token: str, notrunc: bool):
     # FIXME its not obvious what to put in as the token here...
     unverified_claims = jwt.get_unverified_claims(token)
     public_key = b64decode(unverified_claims['pk']).decode('utf-8')
-    claims = jwt.decode(token, public_key, algorithms=[JWT_ALGORITHM])
+    claims = jwt.decode(token, public_key, algorithms=[OCSP_JWT_ALGORITHM])
 
     if notrunc:
         click.echo(f'public key:\t{claims["pk"]}'.expandtabs(7))
