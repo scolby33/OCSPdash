@@ -114,6 +114,7 @@ def genkey(invite_token, host, no_post):
         click.echo(token)
 
     else:
+        # TODO: set useragent
         res = requests.post(
             urllib.parse.urljoin(host, REGISTER_URL),
             headers={'Content-Type': 'application/octet-stream'},
