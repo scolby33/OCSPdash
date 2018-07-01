@@ -47,7 +47,7 @@ from jose import jwt
 from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
 
-from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSP_RESULTS_JWT_CLAIM, OCSP_JWT_ALGORITHM
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
 
 API_URL = 'api/v0/'
 MANIFEST_URL = urllib.parse.urljoin(API_URL, 'manifest.jsonl')

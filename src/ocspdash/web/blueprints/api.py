@@ -15,7 +15,7 @@ from flask import Blueprint, abort, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
 
-from ocspdash.constants import OCSP_RESULTS_JWT_CLAIM, OCSP_JWT_ALGORITHM
+from ocspdash.constants import OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
 from ocspdash.web.proxies import manager
 
 jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
