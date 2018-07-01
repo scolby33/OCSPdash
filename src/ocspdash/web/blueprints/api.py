@@ -62,13 +62,27 @@ def get_manifest():
                 'responder_url': responder_url,
                 'subject_certificate': b64encode(subject_certificate).decode('utf-8'),
                 'issuer_certificate': b64encode(issuer_certificate).decode('utf-8'),
-                'certificate_hash': b64encode(certificate_hash).decode('utf-8'),
+                'chain_certificate_hash': b64encode(chain_certificate_hash).decode('utf-8'),
             }
-            for responder_url, subject_certificate, issuer_certificate, certificate_hash in manifest_data
+            for responder_url, subject_certificate, issuer_certificate, chain_certificate_hash in manifest_data
         )
 
     return manifest_lines.getvalue(), {
         'Content-Type': 'application/json', 'Content-Disposition': 'inline; filename="manifest.jsonl"'
+    }
+
+
+def _prepare_result_dictionary(result_data):
+    chain_certificate_hash: bytes = b64decode(result_data['chain_certificate_hash'])
+    chain = manager.get_chain_by_certificate_hash(chain_certificate_hash)
+
+    retrieved = datetime.strptime(result_data['time'], '%Y-%m-%dT%H:%M:%SZ')
+
+    return {
+        'chain': chain,
+        'retrieved': retrieved,
+        'ping': result_data['ping'],
+        'ocsp': result_data['ocsp']
     }
 
 
@@ -85,20 +99,9 @@ def submit():
     except JWTError:
         return abort(400)
 
-    results = []
-    for result_data in claims['res']:  # TODO: I know this should be a function on the manager
-        chain = manager.get_chain_by_certificate_hash(b64decode(result_data['certificate_hash']))
-        result = Result(
-            chain=chain,
-            location=submitting_location,
-            retrieved=datetime.strptime(result_data['time'], '%Y-%m-%dT%H:%M:%SZ'),
-            ping=result_data['ping'],
-            ocsp=result_data['ocsp']
-        )
-        results.append(result)
-        manager.session.add(result)
-
-    manager.session.commit()
+    prepared_result_dicts = (_prepare_result_dictionary(result_data)
+                             for result_data in claims['res'])
+    manager.insert_payload(submitting_location, prepared_result_dicts)
 
     return ('', HTTPStatus.NO_CONTENT)
 

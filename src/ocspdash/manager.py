@@ -10,7 +10,7 @@ import uuid
 from collections import OrderedDict, namedtuple
 from itertools import groupby
 from operator import itemgetter
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Mapping, Optional, Tuple
 
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.engine import Engine
@@ -27,7 +27,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-ManifestEntry = namedtuple('ManifestEntry', 'responder_url subject_certificate issuer_certificate certificate_hash')
+ManifestEntry = namedtuple('ManifestEntry', 'responder_url subject_certificate issuer_certificate chain_certificate_hash')
 
 
 def _workaround_pysqlite_transaction_bug():
@@ -504,13 +504,17 @@ class Manager(object):
                 responder_url=chain.responder.url,
                 subject_certificate=chain.subject,
                 issuer_certificate=chain.issuer,
-                certificate_hash=chain.certificate_hash,
+                chain_certificate_hash=chain.certificate_hash,
             )
             for chain in self._get_manifest_chains()
             if chain is not None
         ]
 
-    def insert_payload(self, payload):
+    def insert_payload(self, location: Location, results: Iterable[Mapping]):
         """Take the submitted payload and insert its results into the database."""
-        logger.info('Submitted payload: %s', payload)
-        logger.warning('Submit method is not actually implemented')
+        for prepared_result_dict in results:
+            result = Result(**prepared_result_dict)
+            result.location = location
+            self.session.add(result)
+
+        self.session.commit()
