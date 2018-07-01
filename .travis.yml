@@ -19,10 +19,11 @@ matrix:
     - env: TOXENV=flake8
     - env: TOXENV=doc8
     - env: TOXENV=mypy
+    - env: TOXENV=vulture
   allow_failures:
     - env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
     - env: TOXENV=mypy
-
+    - env: TOXENV=vulture
 
 install:
     - pip install tox codecov coverage
