@@ -57,10 +57,10 @@ def test_get_all_locations(manager_function: Manager):
     l3 = manager_function.get_location_by_name('l3')
     assert l3 is not None
 
-    r1 = Result(location=l1)
-    r2 = Result(location=l1)
-    r3 = Result(location=l1)
-    r4 = Result(location=l2)
+    r1 = Result(location=l1, ping=True, ocsp=True)  # bool values don't matter here
+    r2 = Result(location=l1, ping=True, ocsp=True)  # but need to be set to satisfy
+    r3 = Result(location=l1, ping=True, ocsp=True)  # db not null constraint
+    r4 = Result(location=l2, ping=True, ocsp=True)
 
     manager_function.session.add_all([r1, r2, r3, r4])
     manager_function.session.commit()
