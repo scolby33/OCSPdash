@@ -108,7 +108,7 @@ def test_get_manifest(manager_function: Manager):
     assert c4 in chains
 
     c5 = Chain(responder=r1, subject=b'c5s', issuer=b'c5i')
-    c6 = Chain(responder=r3, subject=b'c5s', issuer=b'c5i')
+    c6 = Chain(responder=r3, subject=b'c6s', issuer=b'c6i')
 
     manager_function.session.add_all([c5, c6])
     manager_function.session.commit()
