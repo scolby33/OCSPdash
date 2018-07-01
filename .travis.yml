@@ -11,7 +11,7 @@ services:
 
 matrix:
   include:
-    - env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
+    - env: TOXENV=py DB=sqlite
     - env: TOXENV=docs
     - env: TOXENV=manifest
     - env: TOXENV=rst-lint
@@ -19,6 +19,7 @@ matrix:
     - env: TOXENV=doc8
     - env: TOXENV=mypy
   allow_failures:
+    - env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
     - env: TOXENV=mypy
 
 
