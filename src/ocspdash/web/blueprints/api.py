@@ -16,7 +16,6 @@ from jose import jwt
 from jose.exceptions import JWTError
 
 from ocspdash.constants import OCSP_JWT_ALGORITHM
-from ocspdash.models import Result
 from ocspdash.web.proxies import manager
 
 jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
