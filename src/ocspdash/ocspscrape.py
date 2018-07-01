@@ -2,48 +2,29 @@
 
 r"""OCSPscrape.
 
-Usage:
-    ocspscrape
-    ocspscrape genkey [--fish] <invite-token>
-    ocspscrape extractkey [--notrunc] <token>
-
-Options:
-    --fish      output an environment file suitable for
-                the fish shell instead of POSIX
-    --notrunc   do not truncate public key output
-
 Description:
-    ocspscrape:
-        Reads JSON Lines indicating responders to be scraped from STDIN
-        and writes a JWT of results suitable for POSTing to STDOUT.
-        Progress information is printed to STDERR.
+    ocspscrape update:
+        Gets a list of responders to scrape from the OCSPdash, scrapes
+        them, then uploads the results.
 
     ocspscrape genkey:
-        Generates an EC key pair for signing submissions.
-        Environment variable declarations suitable for sourcing from a file
-        are written to STDERR and a JWT suitable for POSTing to the server
-        are written to STDOUT.
+        Generates an EC key pair for signing submissions and registers
+        with the OCSPdash server.
 
     ocspscrape extractkey:
         Given a JWT as output by `ocspscrape genkey`, print the details in
         a human-readable format.
 
 Examples:
-    Scrape OCSP responders and submit results:
-        source ocspscrape.env ; \
-        curl http://ocsp.dash/manifest.jsonl | ocspscrape | \
-        curl -d @- http://ocsp.dash/results
-
     Generate a keypair and register with the server:
-        ocspscrape genkey 'my-invite-token' 2>ocspscrape.env | \
-        curl -d @- http://ocsp.dash/register
+        ocspscrape genkey 'my-invite-token'
 
     Inspect the output from ocspscrape genkey:
         ocspscrape genkey 'my-invite-token' | \
         xargs ocspscrape extractkey
 
 """
-# TODO docstrings for new functions
+
 import json
 import os
 import platform
@@ -51,60 +32,75 @@ import subprocess
 import sys
 import urllib.parse
 import uuid
-from base64 import urlsafe_b64decode as b64decode
-from base64 import urlsafe_b64encode as b64encode
+from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 from datetime import datetime
+from functools import partial
+from typing import Iterable, Mapping
 
+import click
 import requests
 from asn1crypto.ocsp import OCSPResponse
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from docopt import docopt
 from jose import jwt
 from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
-from tqdm import tqdm
 
 # TODO: should this be from constants.py or kept separate to have this module be freestanding/a separate package?
 NAMESPACE_OCSPDASH_KID = uuid.UUID('c81dcfc6-2131-4d05-8ea4-4e5ad8123696')
 RESULTS_JWT_CLAIM = 'res'
 JWT_ALGORITHM = 'ES512'
 
+MANIFEST = 'api/v0/manifest.jsonl'
+SUBMIT = 'api/v0/submit'
+REGISTER = 'api/v0/register'
 
+config_directory = os.path.join(os.path.expanduser('~'), '.config', 'ocspdash')
+if not os.path.exists(config_directory):
+    os.makedirs(config_directory)
+
+private_key_path = os.path.join(config_directory, 'private.txt')
+
+
+def get_private_key() -> str:
+    """Get the serialized private key to use."""
+    with open(private_key_path) as f:
+        return f.read()
+
+
+def write_private_key(serialized_private_key: str) -> None:
+    """Write the serialized private key to a configuration file.
+
+    :param serialized_private_key: The private key to write
+    """
+    with open(private_key_path, 'w') as file:
+        print(serialized_private_key, file=file)
+
+
+@click.group()
+@click.version_option('0.1.0')
 def main():
     """Run the OCSPscrape tool."""
-    arguments = docopt(__doc__, version='OCSPscrape 0.1.0')
-    if arguments['genkey']:
-        token, private_key = genkey(arguments['<invite-token>'])
-        if not arguments['--fish']:
-            print(f"export OCSPSCRAPE_PRIVATE_KEY='{private_key}'", file=sys.stderr)
-        else:
-            print(f"set -gx OCSPSCRAPE_PRIVATE_KEY '{private_key}'", file=sys.stderr)
-        print(token)
-    elif arguments['extractkey']:
-        claims = extract_claims(arguments['<token>'])
-        if arguments['--notrunc']:
-            print(f'public key:\t{claims["pk"]}'.expandtabs(7))
-        else:
-            print(f'public key:\t{claims["pk"]}'.expandtabs(7)[:78] + '..')
-        print(f'invite token:\t{claims["token"]}'.expandtabs(7))
-    else:
-        token = scrape(
-            json.loads(line)
-            for line in tqdm(sys.stdin)
-        )
-        print(token)
 
 
-def genkey(invite_token: str):
+# TODO better loading of default host
+
+@main.command()
+@click.argument('invite_token')
+@click.option('--host', default='http://localhost:8000')
+@click.option('--no-post', is_flag=True)
+def genkey(invite_token, host, no_post):
     """Generate a new public/private keypair."""
     private_key = ec.generate_private_key(ec.SECP521R1, default_backend())
+
     serialized_private_key = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
     ).decode('utf-8')
+    write_private_key(serialized_private_key)
+
     public_key = b64encode(private_key.public_key().public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -116,56 +112,106 @@ def genkey(invite_token: str):
     }
     token = jwt.encode(payload, private_key, algorithm=JWT_ALGORITHM)
 
-    return token, serialized_private_key
+    if no_post:
+        click.echo(token)
+
+    else:
+        res = requests.post(
+            f'{host}/{REGISTER}',
+            headers={'Content-Type': 'application/octet-stream'},
+            data=token,
+        )
+        res.raise_for_status()
 
 
-def extract_claims(token: str):
-    """Extract the claims from a generate JWT and print them nicely."""
-    unverified_claims = jwt.get_unverified_claims(token)
-    public_key = b64decode(unverified_claims['pk']).decode('utf-8')
-    claims = jwt.decode(token, public_key, algorithms=[JWT_ALGORITHM])
-    return claims
+@main.command()
+@click.option('--host', default='http://localhost:8000')
+@click.option('--no-post', is_flag=True)
+def update(host, no_post):
+    """Scrape updates and post."""
+    # TODO provide alternate options for loading a private key
+    private_key = get_private_key()
+
+    manifest_response = requests.get(f'{host}/{MANIFEST}')
+
+    if manifest_response.encoding is None:
+        manifest_response.encoding = 'utf-8'
+
+    queries = (
+        json.loads(line)
+        for line in manifest_response.iter_lines(decode_unicode=True)
+        if line
+    )
+
+    token = scrape(key=private_key, queries=queries)
+
+    if no_post:
+        click.echo(token)
+
+    else:
+        submission_response = requests.post(
+            f'{host}/{SUBMIT}',
+            headers={'Content-Type': 'application/octet-stream'},
+            data=token,
+        )
+
+        submission_response.raise_for_status()
 
 
-def scrape(queries):
-    """Scrape the OCSP responders provided."""
-    # TODO needs type hint for return
-    requests_session = requests.Session()
-    requests_session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
+def _build_claim(session: requests.Session, query: Mapping) -> Mapping:
+    """Build a result dictionary.
 
-    payload = {RESULTS_JWT_CLAIM: []}
+    :param session: A requests Session
+    :param query: The data from a responder
+    """
+    responder_url = query['responder_url']
+    netloc = urllib.parse.urlparse(responder_url).netloc
 
-    for query in queries:
-        # authority_name = query['authority_name']
+    subject_bytes = b64decode(query['subject_certificate'])
+    issuer_bytes = b64decode(query['issuer_certificate'])
 
-        responder_url = query['responder_url']
-        netloc = urllib.parse.urlparse(responder_url).netloc
+    time = datetime.utcnow().strftime('%FT%TZ')
+    ping_result = ping(netloc)
+    ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, responder_url, session)
 
-        subject_bytes = b64decode(query['subject_certificate'])
-        issuer_bytes = b64decode(query['issuer_certificate'])
+    return {
+        'chain_certificate_hash': query['chain_certificate_hash'],
+        'time': time,
+        'ping': ping_result,
+        'ocsp': ocsp_result
+    }
 
-        time = datetime.utcnow().strftime('%FT%TZ')
-        ping_result = ping(netloc)
-        ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, responder_url, requests_session)
 
-        payload[RESULTS_JWT_CLAIM].append({
-            # 'authority_name': authority_name,
-            'chain_certificate_hash': query['chain_certificate_hash'],
-            # 'responder_url': responder_url,
-            'time': time,
-            'ping': ping_result,
-            'ocsp': ocsp_result
-        })
+def scrape(key: str, queries: Iterable[Mapping]) -> str:
+    """Scrape the OCSP responders provided.
 
-    # TODO handle missing env vars more gracefully
-    key = os.environ['OCSPSCRAPE_PRIVATE_KEY']
+    :param key: The private key
+    :param queries: An iterator over JSON dictionaries representing the manifest from OCSPdash
+    """
+    session = requests.Session()
+    session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
+    build_claim = partial(_build_claim, session)
+
+    claims = {
+        'iat': datetime.utcnow(),
+        RESULTS_JWT_CLAIM: [build_claim(query) for query in queries]
+    }
+
     key_id = str(_keyid_from_private_key(key))
-    payload['iat'] = datetime.utcnow()
-    token = jwt.encode(payload, key, headers={'kid': key_id}, algorithm=JWT_ALGORITHM)
-    return token
+
+    return jwt.encode(
+        claims=claims,
+        key=key,
+        headers={'kid': key_id},
+        algorithm=JWT_ALGORITHM
+    )
 
 
 def _keyid_from_private_key(private_key_data: str) -> uuid.UUID:
+    """Get a UUID for a private key.
+
+    :param private_key_data: The data for a private key
+    """
     loaded_private_key = serialization.load_pem_private_key(
         data=private_key_data.encode('utf-8'),
         password=None,
@@ -180,7 +226,7 @@ def _keyid_from_private_key(private_key_data: str) -> uuid.UUID:
 
 
 def ping(host: str) -> bool:
-    """Return True if host responds to ping request.
+    """Return if the host responds to a ping request.
 
     :param host: The hostname to ping
 
@@ -221,6 +267,24 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, sessi
         return False
 
     return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
+
+
+@main.command()
+@click.argument('token')
+@click.option('--notrunc', is_flag=True)
+def extractkey(token: str, notrunc: bool):
+    """Extract the claims from a generate JWT and print them nicely."""
+    # FIXME its not obvious what to put in as the token here...
+    unverified_claims = jwt.get_unverified_claims(token)
+    public_key = b64decode(unverified_claims['pk']).decode('utf-8')
+    claims = jwt.decode(token, public_key, algorithms=[JWT_ALGORITHM])
+
+    if notrunc:
+        click.echo(f'public key:\t{claims["pk"]}'.expandtabs(7))
+    else:
+        click.echo(f'public key:\t{claims["pk"]}'.expandtabs(7)[:78] + '..')
+
+    click.echo(f'invite token:\t{claims["token"]}'.expandtabs(7))
 
 
 if __name__ == '__main__':
