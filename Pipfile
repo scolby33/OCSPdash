@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"argon2-cffi" = "*"
-"asn1crypto" = "*"
+argon2-cffi = "*"
+asn1crypto = "*"
 censys = "*"
 click = "*"
 cryptography = "*"
@@ -23,24 +23,28 @@ python-jose = "*"
 requests = "*"
 sqlalchemy = "*"
 tqdm = "*"
-"e1839a8" = {path = ".", editable = true}
 
 [dev-packages]
 check-manifest = "*"
 coverage = "*"
-"doc8" = "*"
-"flake8" = "*"
-"flake8-colors" = "*"
-"flake8-docstrings" = "*"
-"flake8-import-order" = "*"
+doc8 = "*"
+flake8 = "*"
+flake8-colors = "*"
+flake8-docstrings = "*"
+flake8-import-order = "*"
 mypy = "*"
-"pep8-naming" = "*"
+pep8-naming = "*"
 pygments = "*"
 pytest = "*"
 restructuredtext-lint = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
 tox = "*"
+vulture = "*"
 
 [requires]
 python_version = "3.6"
+
+[packages.e1839a8]
+path = "."
+editable = true
