@@ -50,7 +50,12 @@ def register_location_key():
 
 @api.route('/manifest.jsonl')
 def get_manifest():
-    """Return the manifest of queries an OCSPscrape client should make."""
+    """Return the manifest of queries an OCSPscrape client should make.
+
+    ---
+    tags:
+        - ocsp
+    """
     manifest_data = manager.get_manifest()
 
     manifest_lines = io.StringIO()
@@ -87,7 +92,12 @@ def _prepare_result_dictionary(result_data):
 
 @api.route('/submit', methods=['POST'])
 def submit():
-    """Submit scrape results."""
+    """Submit scrape results.
+
+    ---
+    tags:
+        - ocsp
+    """
     submitted_token_header = jwt.get_unverified_header(request.data)
 
     key_id = uuid.UUID(submitted_token_header['kid'])
