@@ -253,7 +253,6 @@ class Manager(object):
         """
         return self.session.query(Chain).filter(Chain.certificate_hash == certificate_hash).one_or_none()
 
-
     def get_most_recent_chain_by_responder(self, responder: Responder) -> Optional[Chain]:
         """Get the newest chain for a Responder.
 
