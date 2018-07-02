@@ -5,11 +5,10 @@ graft tests
 prune docs/build
 prune nginx
 
-include .bumpversion.cfg
-include .coveragerc
 include Dockerfile
 include docker-compose.yml
 include .dockerignore
+include .flake8
 include Pipfile
 include Pipfile.lock
 include tox.ini
