@@ -7,9 +7,7 @@ from flask_sqlalchemy import SQLAlchemy, get_state
 
 from ocspdash.manager import Manager
 
-__all__ = [
-    'OCSPSQLAlchemy',
-]
+__all__ = ['OCSPSQLAlchemy']
 
 
 class OCSPSQLAlchemy(SQLAlchemy):

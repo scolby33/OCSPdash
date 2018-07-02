@@ -15,9 +15,7 @@ from ocspdash.web.admin import make_admin
 from ocspdash.web.blueprints import api, ui
 from ocspdash.web.extension import OCSPSQLAlchemy
 
-__all__ = [
-    'create_application',
-]
+__all__ = ['create_application']
 
 logger = logging.getLogger('web')
 
@@ -25,14 +23,18 @@ logger = logging.getLogger('web')
 def create_application() -> Flask:
     """Create the OCSPdash Flask application."""
     app = Flask(__name__)
-    app.config.update(dict(
-        SQLALCHEMY_DATABASE_URI=os.environ.get('OCSPDASH_CONNECTION', OCSPDASH_DEFAULT_CONNECTION),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SECRET_KEY=os.environ.get('OCSPDASH_SECRET_KEY', 'test key'),
-        DEBUG=os.environ.get('OCSPDASH_DEBUG', False),
-        CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
-        CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
-    ))
+    app.config.update(
+        dict(
+            SQLALCHEMY_DATABASE_URI=os.environ.get(
+                'OCSPDASH_CONNECTION', OCSPDASH_DEFAULT_CONNECTION
+            ),
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+            SECRET_KEY=os.environ.get('OCSPDASH_SECRET_KEY', 'test key'),
+            DEBUG=os.environ.get('OCSPDASH_DEBUG', False),
+            CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
+            CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
+        )
+    )
     db = OCSPSQLAlchemy(app=app)
 
     Bootstrap(app)

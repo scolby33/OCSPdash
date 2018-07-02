@@ -7,9 +7,7 @@ import uuid
 import sqlalchemy.dialects.postgresql
 from sqlalchemy.types import BINARY, TypeDecorator
 
-__all__ = [
-    'UUID',
-]
+__all__ = ['UUID']
 
 
 class UUID(TypeDecorator):

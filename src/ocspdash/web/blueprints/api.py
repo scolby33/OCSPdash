@@ -61,14 +61,20 @@ def get_manifest():
                 'responder_url': responder_url,
                 'subject_certificate': b64encode(subject_certificate).decode('utf-8'),
                 'issuer_certificate': b64encode(issuer_certificate).decode('utf-8'),
-                'chain_certificate_hash': b64encode(chain_certificate_hash).decode('utf-8'),
+                'chain_certificate_hash': b64encode(chain_certificate_hash).decode(
+                    'utf-8'
+                ),
             }
             for responder_url, subject_certificate, issuer_certificate, chain_certificate_hash in manifest_data
         )
 
-    return manifest_lines.getvalue(), {
-        'Content-Type': 'application/json', 'Content-Disposition': 'inline; filename="manifest.jsonl"'
-    }
+    return (
+        manifest_lines.getvalue(),
+        {
+            'Content-Type': 'application/json',
+            'Content-Disposition': 'inline; filename="manifest.jsonl"',
+        },
+    )
 
 
 def _prepare_result_dictionary(result_data):
@@ -81,7 +87,7 @@ def _prepare_result_dictionary(result_data):
         'chain': chain,
         'retrieved': retrieved,
         'ping': result_data['ping'],
-        'ocsp': result_data['ocsp']
+        'ocsp': result_data['ocsp'],
     }
 
 
@@ -98,11 +104,13 @@ def submit():
     except JWTError:
         return abort(400)
 
-    prepared_result_dicts = (_prepare_result_dictionary(result_data)
-                             for result_data in claims['res'])
+    prepared_result_dicts = (
+        _prepare_result_dictionary(result_data) for result_data in claims['res']
+    )
     manager.insert_payload(submitting_location, prepared_result_dicts)
 
     return ('', HTTPStatus.NO_CONTENT)
+
 
 # @api.route('/status')
 # def get_payload():

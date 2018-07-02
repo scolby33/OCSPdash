@@ -11,7 +11,17 @@ from enum import Enum
 from typing import Optional  # noqa: F401 imported for PyCharm type checking
 
 from oscrypto import asymmetric
-from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Binary,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
@@ -39,10 +49,15 @@ class Authority(Base):
 
     id = Column(Integer, primary_key=True)
 
-    name = Column(String(255), nullable=False, index=True, doc='the name of the authority')
+    name = Column(
+        String(255), nullable=False, index=True, doc='the name of the authority'
+    )
 
-    cardinality = Column(Integer, doc="The number of certs observed from this authority in the wild. Update this "
-                                      "when rankings change. From the Censys crawler.")
+    cardinality = Column(
+        Integer,
+        doc='The number of certs observed from this authority in the wild. Update this '
+        'when rankings change. From the Censys crawler.',
+    )
 
     last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -68,7 +83,7 @@ class Authority(Base):
                     'current': responder.current,
                 }
                 for responder in self.responders
-            ]
+            ],
         }
 
 
@@ -79,19 +94,22 @@ class Responder(Base):
 
     id = Column(Integer, primary_key=True)
 
-    authority_id = Column(Integer, ForeignKey('authority.id'), nullable=False, doc='the authority')
+    authority_id = Column(
+        Integer, ForeignKey('authority.id'), nullable=False, doc='the authority'
+    )
     authority = relationship('Authority', backref=backref('responders'))
 
     url = Column(Text, nullable=False, doc='the URL of the OCSP endpoint')
 
-    cardinality = Column(Integer, doc="The number of certs observed using this authority/endpoint pair in the "
-                                      "wild. Update this when rankings are updated.")
+    cardinality = Column(
+        Integer,
+        doc='The number of certs observed using this authority/endpoint pair in the '
+        'wild. Update this when rankings are updated.',
+    )
 
     last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    __table_args__ = (
-        UniqueConstraint(authority_id, url),
-    )
+    __table_args__ = (UniqueConstraint(authority_id, url),)
 
     def __repr__(self):
         return f'{self.authority} at {self.url}'
@@ -99,10 +117,7 @@ class Responder(Base):
     @property
     def current(self) -> bool:
         """Calculate if this responder is current by the status of its most recent result over all chains."""
-        return not all(
-            chain.expired
-            for chain in self.chains
-        )
+        return not all(chain.expired for chain in self.chains)
 
     @property
     def most_recent_chain(self) -> 'Optional[Chain]':
@@ -151,16 +166,27 @@ class Chain(Base):
     responder = relationship('Responder', backref=backref('chains'))
 
     subject = Column(Binary, nullable=False, doc='raw bytes of the subject certificate')
-    issuer = Column(Binary, nullable=False, doc="raw bytes of the subject's issuer certificate")
-    retrieved = Column(DateTime, default=datetime.utcnow, nullable=False,
-                       doc='expire the cached chain when this date is more than 7 days ago')
-
-    certificate_hash = Column(Binary(64), nullable=False, unique=True, default=_certificate_hash_default, onupdate=_certificate_hash_default, index=True,
-                              doc='')
-
-    __table_args__ = (
-        UniqueConstraint(subject, issuer),
+    issuer = Column(
+        Binary, nullable=False, doc="raw bytes of the subject's issuer certificate"
     )
+    retrieved = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+        doc='expire the cached chain when this date is more than 7 days ago',
+    )
+
+    certificate_hash = Column(
+        Binary(64),
+        nullable=False,
+        unique=True,
+        default=_certificate_hash_default,
+        onupdate=_certificate_hash_default,
+        index=True,
+        doc='',
+    )
+
+    __table_args__ = (UniqueConstraint(subject, issuer),)
 
     @property
     def expired(self) -> bool:
@@ -238,7 +264,8 @@ class Location(Base):
         return f'Invite for {self.name}'
 
     def to_json(
-            self):  # TODO: this gets returned by the /register endpoint and some of this info could be considered private. Should it be removed from the to_json?
+        self
+    ):  # TODO: this gets returned by the /register endpoint and some of this info could be considered private. Should it be removed from the to_json?
         """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
@@ -247,9 +274,7 @@ class Location(Base):
             'validator_hash': self.validator_hash,
             'pubkey': str(self.pubkey),
             'key_id': str(self.key_id),
-            'results': [
-                result.id for result in self.results
-            ]
+            'results': [result.id for result in self.results],
         }
 
 
@@ -260,16 +285,27 @@ class Result(Base):
 
     id = Column(Integer, primary_key=True)
 
-    chain_id = Column(Integer, ForeignKey('chain.id'), doc='the certificate chain that was used for the OCSP test')
+    chain_id = Column(
+        Integer,
+        ForeignKey('chain.id'),
+        doc='the certificate chain that was used for the OCSP test',
+    )
     chain = relationship('Chain', backref=backref('results'))
 
-    location_id = Column(Integer, ForeignKey('location.id'), nullable=False, doc='the location that ran the test')
+    location_id = Column(
+        Integer,
+        ForeignKey('location.id'),
+        nullable=False,
+        doc='the location that ran the test',
+    )
     location = relationship('Location', backref=backref('results', lazy='dynamic'))
 
     retrieved = Column(DateTime, default=datetime.utcnow, doc='when the test was run')
 
     ping = Column(Boolean, nullable=False, doc='did the server respond to a ping?')
-    ocsp = Column(Boolean, nullable=False, doc='did a valid OCSP request get a good response?')
+    ocsp = Column(
+        Boolean, nullable=False, doc='did a valid OCSP request get a good response?'
+    )
 
     @property
     def status(self) -> OCSPResponderStatus:  # relates to the glyphicon displayed
@@ -292,10 +328,7 @@ class Result(Base):
         """Return a representation of the instance suitable for passing in to JSON conversion."""
         return {
             'id': self.id,
-            'location': {
-                'id': self.location.id,
-                'location': self.location.name
-            },
+            'location': {'id': self.location.id, 'location': self.location.name},
             'chain': {
                 'id': self.chain.id,
                 'retrieved': str(self.chain.retrieved),
