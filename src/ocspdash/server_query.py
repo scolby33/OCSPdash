@@ -16,20 +16,13 @@ logger = logging.getLogger(__name__)
 
 
 def _get_results(report):
-    return sorted(
-        report['results'],
-        key=itemgetter('doc_count'),
-        reverse=True
-    )
+    return sorted(report['results'], key=itemgetter('doc_count'), reverse=True)
 
 
 def _get_results_as_dict(report):
     results = _get_results(report)
 
-    return OrderedDict([
-        (result['key'], result['doc_count'])
-        for result in results
-    ])
+    return OrderedDict([(result['key'], result['doc_count']) for result in results])
 
 
 class ServerQuery(RateLimitedCensysCertificates):
@@ -45,7 +38,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         report = self.report(
             query='validation.nss.valid: true',
             field='parsed.issuer.organization',
-            buckets=buckets
+            buckets=buckets,
         )
 
         return _get_results_as_dict(report)
@@ -59,7 +52,7 @@ class ServerQuery(RateLimitedCensysCertificates):
         """
         report = self.report(
             query=f'validation.nss.valid: true AND parsed.issuer.organization: "{issuer}"',
-            field='parsed.extensions.authority_info_access.ocsp_urls'
+            field='parsed.extensions.authority_info_access.ocsp_urls',
         )
 
         return _get_results_as_dict(report)
@@ -80,17 +73,20 @@ class ServerQuery(RateLimitedCensysCertificates):
         """
         tags_report = self.report(
             query=f'validation.nss.valid: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND (tags: "unexpired" OR tags: "expired")',
-            field='tags'
+            field='tags',
         )
 
         results = {
-            result['key']: result['doc_count']
-            for result in tags_report['results']
+            result['key']: result['doc_count'] for result in tags_report['results']
         }
 
-        return self._url_not_expired(results)  # TODO: turn this return to a function to document implicitly
+        return self._url_not_expired(
+            results
+        )  # TODO: turn this return to a function to document implicitly
 
-    def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
+    def get_certs_for_issuer_and_url(
+        self, issuer: str, url: str
+    ) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url.
 
         :param issuer: The name of the authority from which a certificate is sought
@@ -104,7 +100,11 @@ class ServerQuery(RateLimitedCensysCertificates):
         base_query = f'validation.nss.valid: true AND parsed.issuer.organization: "{issuer}" AND parsed.extensions.authority_info_access.ocsp_urls.raw: "{url}" AND parsed.extensions.authority_info_access.issuer_urls: /.+/'
         search = self.search(
             query=f'{base_query} AND tags: "unexpired"',
-            fields=['parsed.extensions.authority_info_access.issuer_urls', 'parsed.names', 'raw']
+            fields=[
+                'parsed.extensions.authority_info_access.issuer_urls',
+                'parsed.names',
+                'raw',
+            ],
         )
         subject_cert = next(search, None)
         if subject_cert is None:
@@ -112,14 +112,20 @@ class ServerQuery(RateLimitedCensysCertificates):
             logger.info('Searching for an expired certificate instead')
             search = self.search(
                 query=base_query,
-                fields=['parsed.extensions.authority_info_access.issuer_urls', 'parsed.names', 'raw']
+                fields=[
+                    'parsed.extensions.authority_info_access.issuer_urls',
+                    'parsed.names',
+                    'raw',
+                ],
             )
             subject_cert = next(search, None)
             if subject_cert is None:
                 return None, None
 
         logger.debug(f'Getting issuer cert for {issuer}: {url}')
-        issuer_urls = subject_cert['parsed.extensions.authority_info_access.issuer_urls']
+        issuer_urls = subject_cert[
+            'parsed.extensions.authority_info_access.issuer_urls'
+        ]
         for issuer_url in issuer_urls:
             try:
                 resp = requests_session.get(issuer_url)

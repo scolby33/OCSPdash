@@ -16,18 +16,22 @@ from sqlalchemy import and_, create_engine, func
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_IDENTIFIER
+from ocspdash.constants import (
+    OCSPDASH_DEFAULT_CONNECTION,
+    OCSPDASH_USER_AGENT_IDENTIFIER,
+)
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
 from ocspdash.security import pwd_context
 from ocspdash.server_query import ServerQuery
 
-__all__ = [
-    'Manager',
-]
+__all__ = ['Manager']
 
 logger = logging.getLogger(__name__)
 
-ManifestEntry = namedtuple('ManifestEntry', 'responder_url subject_certificate issuer_certificate chain_certificate_hash')
+ManifestEntry = namedtuple(
+    'ManifestEntry',
+    'responder_url subject_certificate issuer_certificate chain_certificate_hash',
+)
 
 
 def _workaround_pysqlite_transaction_bug():
@@ -48,12 +52,16 @@ def _workaround_pysqlite_transaction_bug():
         if isinstance(dbapi_connection, _sqlite3_Connection):
             # disable pysqlite's emitting of the BEGIN statement entirely.
             # also stops it from emitting COMMIT before any DDL.
-            logger.debug('setting connection isolation level to `None` to work around pysqlite bug')
+            logger.debug(
+                'setting connection isolation level to `None` to work around pysqlite bug'
+            )
             dbapi_connection.isolation_level = None
 
     @_event.listens_for(_Engine, 'begin')
     def do_begin(connection):
-        if isinstance(connection._Connection__connection.connection, _sqlite3_Connection):
+        if isinstance(
+            connection._Connection__connection.connection, _sqlite3_Connection
+        ):
             # emit our own BEGIN
             logger.debug('emitting our own BEGIN to work around pysqlite bug')
             connection.execute('BEGIN')
@@ -65,7 +73,12 @@ _workaround_pysqlite_transaction_bug()
 class Manager(object):
     """Manager for interacting with the database."""
 
-    def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery] = None) -> None:
+    def __init__(
+        self,
+        engine: Engine,
+        session: scoped_session,
+        server_query: Optional[ServerQuery] = None,
+    ) -> None:
         """Instantiate a Manager with instances of the objects it needs.
 
         :param engine: The database engine.
@@ -79,7 +92,13 @@ class Manager(object):
         self.create_all()
 
     @classmethod
-    def from_args(cls, connection: Optional[str] = None, echo: bool = False, api_id: Optional[str] = None, api_secret: Optional[str] = None) -> 'Manager':
+    def from_args(
+        cls,
+        connection: Optional[str] = None,
+        echo: bool = False,
+        api_id: Optional[str] = None,
+        api_secret: Optional[str] = None,
+    ) -> 'Manager':
         """Instantiate a Manager along with the objects it needs.
 
         :param connection: An SQLAlchemy-compatible connection string.
@@ -89,7 +108,9 @@ class Manager(object):
 
         :returns: An instance of Manager configured according to the arguments provided.
         """
-        engine, session = cls._get_engine_from_connection(connection=connection, echo=echo)
+        engine, session = cls._get_engine_from_connection(
+            connection=connection, echo=echo
+        )
 
         server_query = cls._get_server_query(api_id=api_id, api_secret=api_secret)
 
@@ -115,7 +136,9 @@ class Manager(object):
         return OCSPDASH_DEFAULT_CONNECTION
 
     @staticmethod
-    def _get_credentials(user: Optional[str] = None, password: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
+    def _get_credentials(
+        user: Optional[str] = None, password: Optional[str] = None
+    ) -> Tuple[Optional[str], Optional[str]]:
         if user is None:
             user = os.environ.get('CENSYS_API_ID')
 
@@ -125,24 +148,30 @@ class Manager(object):
         return user, password
 
     @classmethod
-    def _get_engine_from_connection(cls, connection: Optional[str] = None, echo: bool = False) -> Tuple[Engine, scoped_session]:
+    def _get_engine_from_connection(
+        cls, connection: Optional[str] = None, echo: bool = False
+    ) -> Tuple[Engine, scoped_session]:
         connection = cls._get_connection(connection)
         engine = create_engine(connection, echo=echo)
 
-        session_maker = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+        session_maker = sessionmaker(
+            bind=engine, autoflush=False, expire_on_commit=False
+        )
 
         session = scoped_session(session_maker)
 
         return engine, session
 
     @classmethod
-    def _get_server_query(cls, api_id: Optional[str] = None, api_secret: Optional[str] = None) -> Optional[ServerQuery]:
+    def _get_server_query(
+        cls, api_id: Optional[str] = None, api_secret: Optional[str] = None
+    ) -> Optional[ServerQuery]:
         api_id, api_secret = cls._get_credentials(user=api_id, password=api_secret)
         if api_id is not None and api_secret is not None:
             return ServerQuery(
                 api_id=api_id,
                 api_secret=api_secret,
-                user_agent_identifier=OCSPDASH_USER_AGENT_IDENTIFIER
+                user_agent_identifier=OCSPDASH_USER_AGENT_IDENTIFIER,
             )
 
     def create_all(self, checkfirst=True):
@@ -175,7 +204,9 @@ class Manager(object):
 
         :returns: The Authority or None
         """
-        return self.session.query(Authority).filter(Authority.name == name).one_or_none()
+        return (
+            self.session.query(Authority).filter(Authority.name == name).one_or_none()
+        )
 
     def ensure_authority(self, name: str, cardinality: int) -> Authority:
         """Create or update an Authority in the DB.
@@ -191,10 +222,7 @@ class Manager(object):
         authority = self.get_authority_by_name(name)
 
         if authority is None:
-            authority = Authority(
-                name=name,
-                cardinality=cardinality,
-            )
+            authority = Authority(name=name, cardinality=cardinality)
             self.session.add(authority)
 
         else:
@@ -215,7 +243,9 @@ class Manager(object):
         f = and_(Responder.authority_id == authority.id, Responder.url == url)
         return self.session.query(Responder).filter(f).one_or_none()
 
-    def ensure_responder(self, authority: Authority, url: str, cardinality: int) -> Responder:
+    def ensure_responder(
+        self, authority: Authority, url: str, cardinality: int
+    ) -> Responder:
         """Create or update a responder in the DB.
 
         If a responder with the given Authority and URL exists, the cardinality is updated.
@@ -230,11 +260,7 @@ class Manager(object):
         responder = self.get_responder(authority=authority, url=url)
 
         if responder is None:
-            responder = Responder(
-                authority=authority,
-                url=url,
-                cardinality=cardinality
-            )
+            responder = Responder(authority=authority, url=url, cardinality=cardinality)
             self.session.add(responder)
 
         else:
@@ -251,17 +277,27 @@ class Manager(object):
 
         :returns: the Chain or None
         """
-        return self.session.query(Chain).filter(Chain.certificate_hash == certificate_hash).one_or_none()
+        return (
+            self.session.query(Chain)
+            .filter(Chain.certificate_hash == certificate_hash)
+            .one_or_none()
+        )
 
-    def get_most_recent_chain_by_responder(self, responder: Responder) -> Optional[Chain]:
+    def get_most_recent_chain_by_responder(
+        self, responder: Responder
+    ) -> Optional[Chain]:
         """Get the newest chain for a Responder.
 
         :param responder: the Responder whose chain we're seeking
 
         :returns: the Chain or None
         """
-        return self.session.query(Chain).filter(Chain.responder_id == responder.id).order_by(
-            Chain.retrieved.desc()).first()
+        return (
+            self.session.query(Chain)
+            .filter(Chain.responder_id == responder.id)
+            .order_by(Chain.retrieved.desc())
+            .first()
+        )
 
     def ensure_chain(self, responder: Responder) -> Optional[Chain]:
         """Get or create a chain for a Responder.
@@ -289,16 +325,14 @@ class Manager(object):
             if not responder.current:
                 return most_recent_chain
 
-        subject, issuer = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
+        subject, issuer = self.server_query.get_certs_for_issuer_and_url(
+            responder.authority.name, responder.url
+        )
 
         if subject is None or issuer is None:
             return None
 
-        chain = Chain(
-            responder=responder,
-            subject=subject,
-            issuer=issuer,
-        )
+        chain = Chain(responder=responder, subject=subject, issuer=issuer)
 
         self.session.add(chain)
         self.session.commit()
@@ -332,8 +366,9 @@ class Manager(object):
             raise RuntimeError('No username and password for Censys supplied')
 
         authorities = self.get_top_authorities(n)
-        if (not authorities or  # probably a first run with a clean DB
-                any(authority.old for authority in authorities)):
+        if not authorities or any(  # probably a first run with a clean DB
+            authority.old for authority in authorities
+        ):
             issuers = self.server_query.get_top_authorities(buckets=n)
             for issuer_name, issuer_cardinality in issuers.items():
                 authority = self.ensure_authority(issuer_name, issuer_cardinality)
@@ -341,7 +376,9 @@ class Manager(object):
                 ocsp_urls = self.server_query.get_ocsp_urls_for_issuer(authority.name)
 
                 for url, responder_cardinality in ocsp_urls.items():
-                    responder = self.ensure_responder(authority, url, responder_cardinality)
+                    responder = self.ensure_responder(
+                        authority, url, responder_cardinality
+                    )
                     self.ensure_chain(responder)
 
         authorities = self.get_top_authorities(n)
@@ -362,23 +399,32 @@ class Manager(object):
 
         :returns: a list of up to n Authorities
         """
-        return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
-
-    def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, Location]]:
-        """Get the most recent results for each location."""
-        return self.session.query(Authority, Responder, Result, Location) \
-            .join(Responder) \
-            .join(Chain) \
-            .join(Result) \
-            .join(Location) \
-            .group_by(Responder, Location) \
-            .having(func.max(Result.retrieved)) \
-            .order_by(Authority.cardinality.desc()) \
-            .order_by(Authority.name) \
-            .order_by(Responder.cardinality.desc()) \
-            .order_by(Responder.url) \
-            .order_by(Location.name) \
+        return (
+            self.session.query(Authority)
+            .order_by(Authority.cardinality.desc())
+            .limit(n)
             .all()
+        )
+
+    def get_most_recent_result_for_each_location(
+        self
+    ) -> List[Tuple[Authority, Responder, Result, Location]]:
+        """Get the most recent results for each location."""
+        return (
+            self.session.query(Authority, Responder, Result, Location)
+            .join(Responder)
+            .join(Chain)
+            .join(Result)
+            .join(Location)
+            .group_by(Responder, Location)
+            .having(func.max(Result.retrieved))
+            .order_by(Authority.cardinality.desc())
+            .order_by(Authority.name)
+            .order_by(Responder.cardinality.desc())
+            .order_by(Responder.url)
+            .order_by(Location.name)
+            .all()
+        )
 
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result."""
@@ -393,24 +439,22 @@ class Manager(object):
         locations = self.get_all_locations_with_test_results()
 
         sections = OrderedDict()
-        for authority, group in groupby(self.get_most_recent_result_for_each_location(), itemgetter(0)):
+        for authority, group in groupby(
+            self.get_most_recent_result_for_each_location(), itemgetter(0)
+        ):
             sections[authority.name] = []
             for responder, group2 in groupby(group, itemgetter(1)):
-                results = tuple(
-                    result
-                    for _, _, result, _ in group2
-                )
+                results = tuple(result for _, _, result, _ in group2)
                 row = (responder.url, responder.current) + results
                 sections[authority.name].append(row)
 
-        return {
-            'locations': locations,
-            'sections': sections
-        }
+        return {'locations': locations, 'sections': sections}
 
     def get_location_by_key_id(self, key_id: uuid.UUID) -> Optional[Location]:
         """Get a location by its key id."""
-        return self.session.query(Location).filter(Location.key_id == key_id).one_or_none()
+        return (
+            self.session.query(Location).filter(Location.key_id == key_id).one_or_none()
+        )
 
     def create_location(self, location_name: str) -> Tuple[bytes, bytes]:
         """Create a new Location with an invite.
@@ -424,9 +468,7 @@ class Manager(object):
         invite_validator_hash = pwd_context.hash(validator)
 
         new_location = Location(
-            name=location_name,
-            selector=selector,
-            validator_hash=invite_validator_hash
+            name=location_name, selector=selector, validator_hash=invite_validator_hash
         )
 
         self.session.add(new_location)
@@ -435,9 +477,15 @@ class Manager(object):
 
     def get_location_by_selector(self, selector: bytes) -> Optional[Location]:
         """Get an invite by its binary selector."""
-        return self.session.query(Location).filter(Location.selector == selector).one_or_none()
+        return (
+            self.session.query(Location)
+            .filter(Location.selector == selector)
+            .one_or_none()
+        )
 
-    def process_location(self, invite_token: bytes, public_key: str) -> Optional[Location]:
+    def process_location(
+        self, invite_token: bytes, public_key: str
+    ) -> Optional[Location]:
         """Given an invite token and public key, check for a valid invite and associate the public key with the corresponding location.
 
         :parameter invite_token: a 32-byte string corresponding to an invited Location.
@@ -464,10 +512,11 @@ class Manager(object):
         return location
 
     def _get_top_authorities_responders(self) -> List[Responder]:
-        return list(itt.chain.from_iterable((
-            authority.responders
-            for authority in self.get_top_authorities()
-        )))
+        return list(
+            itt.chain.from_iterable(
+                (authority.responders for authority in self.get_top_authorities())
+            )
+        )
 
     def _get_manifest_chains(self) -> List[Chain]:
         responders = self._get_top_authorities_responders()
@@ -476,11 +525,16 @@ class Manager(object):
         chains = [
             responder.most_recent_chain
             for responder in responders
-            if responder.most_recent_chain is not None]
+            if responder.most_recent_chain is not None
+        ]
 
         if len(responders) != len(chains):
             # TODO why is this needed? Originally it was an assertion...
-            logger.warning('Number of responders and number of chains mismatch: %d responders and %d chains', len(responders), len(chains))
+            logger.warning(
+                'Number of responders and number of chains mismatch: %d responders and %d chains',
+                len(responders),
+                len(chains),
+            )
 
         return chains
 

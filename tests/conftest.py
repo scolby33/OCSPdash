@@ -85,11 +85,7 @@ def manager_session(rfc):
     session.begin_nested()
 
     logger.debug('create Manager')
-    manager = Manager(
-        engine=engine,
-        session=session,
-        server_query=None
-    )
+    manager = Manager(engine=engine, session=session, server_query=None)
 
     logger.debug('yielding from session')
     yield manager, connection
