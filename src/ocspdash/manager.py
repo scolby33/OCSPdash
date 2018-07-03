@@ -9,12 +9,12 @@ import secrets
 import uuid
 from collections import OrderedDict, namedtuple
 from itertools import groupby
-from operator import itemgetter
+from operator import attrgetter
 from typing import Iterable, List, Mapping, Optional, Tuple
 
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import aliased, scoped_session, sessionmaker
 
 from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_IDENTIFIER
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
@@ -364,15 +364,20 @@ class Manager(object):
         """
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
-    def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, Location]]:
+    def get_most_recent_result_for_each_location(self) -> List[Result]:
         """Get the most recent results for each location."""
-        return self.session.query(Authority, Responder, Result, Location) \
-            .join(Responder) \
+        # TODO better docstring
+        result_alias_1 = aliased(Result)
+        result_alias_2 = aliased(Result)
+        return self.session.query(result_alias_1) \
             .join(Chain) \
-            .join(Result) \
             .join(Location) \
-            .group_by(Responder, Location) \
-            .having(func.max(Result.retrieved)) \
+            .join(Responder) \
+            .join(Authority) \
+            .filter(result_alias_1.retrieved ==
+                    self.session.query(func.max(result_alias_2.retrieved)).filter(result_alias_1.id == result_alias_2.id)) \
+            .group_by(Location.id) \
+            .group_by(Responder.id) \
             .order_by(Authority.cardinality.desc()) \
             .order_by(Authority.name) \
             .order_by(Responder.cardinality.desc()) \
@@ -386,22 +391,21 @@ class Manager(object):
 
     def get_payload(self):
         """Get the current status payload for the index."""
+        # TODO better docstring and type checking
         locations = self.get_all_locations_with_test_results()
 
-        sections = OrderedDict()
-        for authority, group in groupby(self.get_most_recent_result_for_each_location(), itemgetter(0)):
-            sections[authority.name] = []
-            for responder, group2 in groupby(group, itemgetter(1)):
-                results = tuple(
-                    result
-                    for _, _, result, _ in group2
-                )
-                row = (responder.url, responder.current) + results
-                sections[authority.name].append(row)
+        authorities = OrderedDict()
+
+        for authority, results_by_authority in groupby(self.get_most_recent_result_for_each_location(), attrgetter('chain.responder.authority')):
+            authorities[authority.name] = []
+            for responder, results_by_authority_and_location in groupby(results_by_authority, attrgetter('chain.responder')):
+                row = (responder.url, responder.current)
+                row = row + tuple(results_by_authority_and_location)
+                authorities[authority.name].append(row)
 
         return {
             'locations': locations,
-            'sections': sections
+            'sections': authorities
         }
 
     def get_location_by_key_id(self, key_id: uuid.UUID) -> Optional[Location]:
