@@ -2,7 +2,6 @@
 
 """Manager for OCSPDash."""
 
-import itertools as itt
 import logging
 import os
 import secrets
@@ -486,14 +485,22 @@ class Manager(object):
         self.session.commit()
         return location
 
-    def _get_top_authorities_responders(self) -> List[Responder]:
-        return list(itt.chain.from_iterable((
-            authority.responders
-            for authority in self.get_top_authorities()
-        )))
+    def _get_top_authorities_responders(self, n: int = 10) -> List[Responder]:
+        subquery = (
+            self.session.query(Authority.id.label('auth_id'))
+            .order_by(Authority.cardinality.desc())
+            .limit(n)
+            .subquery()
+        )
+        query = (
+            self.session.query(Responder)
+            .select_from(subquery)
+            .join(Responder, Responder.authority_id == subquery.c.auth_id)
+        )
+        return query.all()
 
-    def _get_manifest_chains(self) -> List[Chain]:
-        responders = self._get_top_authorities_responders()
+    def _get_manifest_chains(self, n: int = 10) -> List[Chain]:
+        responders = self._get_top_authorities_responders(n)
 
         # TODO @cthoyt SQL
         chains = [
