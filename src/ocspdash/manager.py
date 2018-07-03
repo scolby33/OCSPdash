@@ -387,7 +387,13 @@ class Manager(object):
 
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result."""
-        return self.session.query(Location).join(Location.results).group_by(Location.id).having(func.count(Result.location_id) > 0).all()
+        return (
+            self.session.query(Location)
+                .join(Location.results)
+                .group_by(Location.id)
+                .having(func.count(Result.location_id) > 0)
+                .all()
+        )
 
     def get_payload(self):
         """Get the current status payload for the index."""
