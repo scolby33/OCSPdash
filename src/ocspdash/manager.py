@@ -14,7 +14,7 @@ from typing import Iterable, List, Mapping, Optional, Tuple
 
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import aliased, scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_IDENTIFIER
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
@@ -367,23 +367,40 @@ class Manager(object):
     def get_most_recent_result_for_each_location(self) -> List[Result]:
         """Get the most recent results for each location."""
         # TODO better docstring
-        result_alias_1 = aliased(Result)
-        result_alias_2 = aliased(Result)
-        return self.session.query(result_alias_1) \
-            .join(Chain) \
-            .join(Location) \
-            .join(Responder) \
-            .join(Authority) \
-            .filter(result_alias_1.retrieved ==
-                    self.session.query(func.max(result_alias_2.retrieved)).filter(result_alias_1.id == result_alias_2.id)) \
-            .group_by(Location.id) \
-            .group_by(Responder.id) \
-            .order_by(Authority.cardinality.desc()) \
-            .order_by(Authority.name) \
-            .order_by(Responder.cardinality.desc()) \
-            .order_by(Responder.url) \
-            .order_by(Location.name) \
-            .all()
+        subquery = (
+            self.session.query(
+                Responder.id.label('resp_id'),
+                Location.id.label('loc_id'),
+                func.max(Result.retrieved).label('most_recent'),
+            )
+            .select_from(Result)
+            .join(Chain)
+            .join(Responder)
+            .join(Location)
+            .group_by(Responder.id, Location.id)
+            .subquery()
+        )
+        query = (
+            self.session.query(Result)
+            .select_from(subquery)
+            .join(Result, Result.retrieved == subquery.c.most_recent)
+            .join(Chain)
+            .join(
+                Responder,
+                and_(
+                    Responder.id == Chain.responder_id,
+                    Responder.id == subquery.c.resp_id,
+                ),
+            )
+            .join(
+                Location,
+                and_(
+                    Location.id == Result.location_id,
+                    Location.id == subquery.c.loc_id
+                ),
+            )
+        )
+        return query.all()
 
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result."""
