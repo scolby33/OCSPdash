@@ -233,8 +233,8 @@ def test_get_all_locations(manager_function: Manager):
     assert l3 not in locations
 
 
-def test_get_manifest(manager_function: Manager):
-    """Test the generation of the manifest."""
+def test_get_most_recent_chains_for_authorities(manager_function: Manager):
+    """Test getting the most recent chain for each top authority. This becomes the manifest."""
     a1 = manager_function.ensure_authority('a1', 5)
     assert a1 is not None
     a2 = manager_function.ensure_authority('a2', 5)
@@ -261,7 +261,7 @@ def test_get_manifest(manager_function: Manager):
 
     assert 4 == manager_function.count_chains()
 
-    chains = manager_function._get_manifest_chains()
+    chains = manager_function.get_most_recent_chains_for_authorities()
     assert 4 == len(chains)
     assert c1 in chains
     assert c2 in chains
@@ -276,7 +276,7 @@ def test_get_manifest(manager_function: Manager):
 
     assert 6 == manager_function.count_chains()
 
-    chains = manager_function._get_manifest_chains()
+    chains = manager_function.get_most_recent_chains_for_authorities()
     assert 4 == len(chains)
     assert c5 in chains
     assert c2 in chains

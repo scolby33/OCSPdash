@@ -5,7 +5,7 @@
 import io
 import logging
 import uuid
-from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
+from base64 import urlsafe_b64decode as b64decode
 from datetime import datetime
 from functools import partial
 from http import HTTPStatus
@@ -54,21 +54,23 @@ def get_manifest():
 
     ---
     tags:
-        - ocsp
+      - ocsp
+    parameters:
+      - name: n
+        in: query
+        description: Number of top authorities
+        default: 10
+        required: false
+        type: integer
     """
-    manifest_data = manager.get_manifest()
-
+    n = request.args.get('n', type=int, default=10)  # TODO make configurable at app level
+    if n > 10:
+        abort(400, 'n too large, max is 10')  # TODO get the max config value here too
     manifest_lines = io.StringIO()
     with jsonlines.Writer(manifest_lines, sort_keys=True) as writer:
         writer.write_all(
-            {
-                # 'authority_name': authority_name,
-                'responder_url': responder_url,
-                'subject_certificate': b64encode(subject_certificate).decode('utf-8'),
-                'issuer_certificate': b64encode(issuer_certificate).decode('utf-8'),
-                'chain_certificate_hash': b64encode(chain_certificate_hash).decode('utf-8'),
-            }
-            for responder_url, subject_certificate, issuer_certificate, chain_certificate_hash in manifest_data
+            chain.get_manifest_json()
+            for chain in manager.get_most_recent_chains_for_authorities(n)
         )
 
     return manifest_lines.getvalue(), {

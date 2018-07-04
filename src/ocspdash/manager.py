@@ -6,7 +6,6 @@ import logging
 import os
 import secrets
 import uuid
-from collections import namedtuple
 from itertools import groupby
 from operator import attrgetter
 from typing import Iterable, List, Mapping, Optional, Tuple
@@ -26,8 +25,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-ManifestEntry = namedtuple('ManifestEntry', 'responder_url subject_certificate issuer_certificate chain_certificate_hash')
 
 
 def _workaround_pysqlite_transaction_bug():
@@ -486,35 +483,28 @@ class Manager(object):
         self.session.commit()
         return location
 
-    def _get_top_authorities_responders(self, n: int = 10) -> List[Responder]:
-        # TODO: this is no longer used with my SQL changes.
-        # Do we remove it? Should partial SQLalchemy queries be abstracted out like functions?
-        subquery = (
-            self.session.query(Authority.id.label('auth_id'))
-            .order_by(Authority.cardinality.desc())
-            .limit(n)
-            .subquery()
-        )
-        query = (
-            self.session.query(Responder)
-            .select_from(subquery)
-            .join(Responder, Responder.authority_id == subquery.c.auth_id)
-        )
-        return query.all()
+    def get_most_recent_chains_for_authorities(self, n: Optional[int] = 10) -> List[Chain]:
+        """Get the most recently updated chain for each of the top n authorities.
 
-    def _get_manifest_chains(self, n: int = 10) -> List[Chain]:
+        :param n: The number of Authorities/Chains to retrieve. Pass None for no limit.
+
+        :returns: A list of chains.
+        """
         top_authorities = (
             self.session.query(Authority.id.label('auth_id'))
             .order_by(Authority.cardinality.desc())
-            .limit(n)
-            .subquery('top_authorities')
         )
+        if n is not None:
+            top_authorities = top_authorities.limit(n)
+        top_authorities = top_authorities.subquery('top_authorities')
+
         top_authorities_responders = (
             self.session.query(Responder.id.label('resp_id'))
             .select_from(top_authorities)
             .join(Responder, Responder.authority_id == top_authorities.c.auth_id)
             .subquery('top_authorities_responders')
         )
+
         most_recent_chain_timestamps = (
             self.session.query(func.max(Chain.retrieved).label('most_recent'), Chain.responder_id.label('resp_id'))
             .select_from(top_authorities_responders)
@@ -522,6 +512,7 @@ class Manager(object):
             .group_by(Chain.responder_id)
             .subquery('most_recent_chain_timestamps')
         )
+
         query = (
             self.session.query(Chain)
             .select_from(most_recent_chain_timestamps)
@@ -531,27 +522,7 @@ class Manager(object):
             ))
         )
 
-        chains = query.all()
-
-        # if len(responders) != len(chains):
-        #     # TODO why is this needed? Originally it was an assertion...
-        #     logger.warning('Number of responders and number of chains mismatch: %d responders and %d chains', len(responders), len(chains))
-
-        return chains
-
-    def get_manifest(self) -> List[ManifestEntry]:
-        """Get the list of queries to be made by an OCSPscrape client."""
-        return [
-            ManifestEntry(
-                # authority_name=chain.responder.authority.name,
-                responder_url=chain.responder.url,
-                subject_certificate=chain.subject,
-                issuer_certificate=chain.issuer,
-                chain_certificate_hash=chain.certificate_hash,
-            )
-            for chain in self._get_manifest_chains()
-            if chain is not None
-        ]
+        return query.all()
 
     def insert_payload(self, location: Location, results: Iterable[Mapping]):
         """Take the submitted payload and insert its results into the database."""

@@ -8,7 +8,7 @@ import uuid
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional  # noqa: F401 imported for PyCharm type checking
+from typing import Mapping, Optional  # noqa: F401 imported for PyCharm type checking
 
 from oscrypto import asymmetric
 from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
@@ -173,6 +173,15 @@ class Chain(Base):
     def old(self) -> bool:
         """Return True if the last_updated time is older than 7 days, False otherwise."""
         return self.retrieved < datetime.utcnow() - timedelta(days=7)
+
+    def get_manifest_json(self) -> Mapping:
+        """Get a mapping suitable for creating a manifest line in the API."""
+        return {
+            'responder_url': self.responder.url,
+            'subject_certificate': b64encode(self.subject).decode('utf-8'),
+            'issuer_certificate': b64encode(self.issuer).decode('utf-8'),
+            'chain_certificate_hash': b64encode(self.certificate_hash).decode('utf-8'),
+        }
 
     def __repr__(self):
         return f'{self.responder} at {self.retrieved}'
