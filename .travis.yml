@@ -21,7 +21,6 @@ matrix:
     - env: TOXENV=mypy
     - env: TOXENV=vulture
   allow_failures:
-    - env: TOXENV=mypy
     - env: TOXENV=vulture
 
 install:
