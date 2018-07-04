@@ -53,6 +53,17 @@ def test_count_chains(manager_function: Manager):
 
     assert manager_function.count_chains() == 10
 
+
+def test_get_authority_by_name(manager_function: Manager):
+    """Test getting an authority by its name."""
+    authority = manager_function.ensure_authority(
+        name='Test Authority',
+        cardinality=1234
+    )
+    assert manager_function.get_authority_by_name('Test Authority') is authority
+    assert manager_function.get_authority_by_name('Nonexistent Authority') is None
+
+
 def test_ensure_authority(manager_function: Manager):
     """Test the creation of Authority objects."""
     authority1 = manager_function.ensure_authority(
@@ -69,6 +80,50 @@ def test_ensure_authority(manager_function: Manager):
     assert authority1 is authority2
     assert authority2.name == 'Test Authority'
     assert authority2.cardinality == 2345
+
+
+def test_get_responder(manager_function: Manager):
+    """Test getting a responder for an Authority and URL."""
+    authority = manager_function.ensure_authority(
+        name='Test Authority',
+        cardinality=1234
+    )
+    responder = manager_function.ensure_responder(
+        authority=authority,
+        url='http://test-responder.url/',
+        cardinality=123
+    )
+
+    assert manager_function.get_responder(authority, 'http://test-responder.url/') is responder
+    assert manager_function.get_responder(authority, 'http://non-existent.url/') is None
+
+
+def test_ensure_responder(manager_function: Manager):
+    """Test the creation of Responder objects."""
+    authority = manager_function.ensure_authority(
+        name='Test Authority',
+        cardinality=1234
+    )
+
+    responder1 = manager_function.ensure_responder(
+        authority=authority,
+        url='http://test-responder.url/',
+        cardinality=123
+    )
+
+    assert responder1.authority is authority
+    assert responder1.url == 'http://test-responder.url/'
+    assert responder1.cardinality == 123
+
+    responder2 = manager_function.ensure_responder(
+        authority=authority,
+        url='http://test-responder.url/',
+        cardinality=234
+    )
+
+    assert responder2 is responder1
+    assert responder2.url == 'http://test-responder.url/'
+    assert responder2.cardinality == 234
 
 
 def test_location_invites(manager_function: Manager):
