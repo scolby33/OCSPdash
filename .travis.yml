@@ -7,7 +7,7 @@ python:
     - 3.6
 
 services:
-  - postgres
+  - postgresql
 
 matrix:
   include:
