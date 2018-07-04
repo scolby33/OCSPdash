@@ -39,6 +39,7 @@ restructuredtext-lint = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
 tox = "*"
+vulture = "*"
 
 [requires]
 python_version = "3.6"

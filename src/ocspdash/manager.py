@@ -2,14 +2,13 @@
 
 """Manager for OCSPDash."""
 
-import itertools as itt
 import logging
 import os
 import secrets
 import uuid
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 from itertools import groupby
-from operator import itemgetter
+from operator import attrgetter
 from typing import Iterable, List, Mapping, Optional, Tuple
 
 from sqlalchemy import and_, create_engine, func
@@ -20,6 +19,7 @@ from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
 from ocspdash.security import pwd_context
 from ocspdash.server_query import ServerQuery
+from ocspdash.util import OrderedDefaultDict
 
 __all__ = [
     'Manager',
@@ -364,65 +364,75 @@ class Manager(object):
         """
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
-    def get_most_recent_result_for_each_location(self) -> List[Tuple[Authority, Responder, Result, Location]]:
+    def get_most_recent_result_for_each_location(self) -> List[Result]:
         """Get the most recent results for each location."""
-        return self.session.query(Authority, Responder, Result, Location) \
-            .join(Responder) \
-            .join(Chain) \
-            .join(Result) \
-            .join(Location) \
-            .group_by(Responder, Location) \
-            .having(func.max(Result.retrieved)) \
-            .order_by(Authority.cardinality.desc()) \
-            .order_by(Authority.name) \
-            .order_by(Responder.cardinality.desc()) \
-            .order_by(Responder.url) \
-            .order_by(Location.name) \
-            .all()
+        # TODO better docstring
+        subquery = (
+            self.session.query(
+                Responder.id.label('resp_id'),
+                Location.id.label('loc_id'),
+                func.max(Result.retrieved).label('most_recent'),
+            )
+            .select_from(Result)
+            .join(Chain)
+            .join(Responder)
+            .join(Location)
+            .group_by(Responder.id, Location.id)
+            .subquery()
+        )
+        query = (
+            self.session.query(Result)
+            .select_from(subquery)
+            .join(Result, Result.retrieved == subquery.c.most_recent)
+            .join(Chain)
+            .join(
+                Responder,
+                and_(
+                    Responder.id == Chain.responder_id,
+                    Responder.id == subquery.c.resp_id,
+                ),
+            )
+            .join(
+                Location,
+                and_(
+                    Location.id == Result.location_id,
+                    Location.id == subquery.c.loc_id
+                ),
+            )
+        )
+        return query.all()
 
     def get_all_locations_with_test_results(self) -> List[Location]:
         """Return all the Location objects that have at least one associated Result."""
-        return [
-            location
-            for location in self.session.query(Location).join(Result).all()
-            if location.results.count()
-        ]
+        return (
+            self.session.query(Location)
+                .join(Location.results)
+                .group_by(Location.id)
+                .having(func.count(Result.location_id) > 0)
+                .all()
+        )
 
     def get_payload(self):
         """Get the current status payload for the index."""
+        # TODO better docstring and type checking
         locations = self.get_all_locations_with_test_results()
 
-        sections = OrderedDict()
-        for authority, group in groupby(self.get_most_recent_result_for_each_location(), itemgetter(0)):
-            sections[authority.name] = []
-            for responder, group2 in groupby(group, itemgetter(1)):
-                results = tuple(
-                    result
-                    for _, _, result, _ in group2
-                )
-                row = (responder.url, responder.current) + results
-                sections[authority.name].append(row)
+        authorities = OrderedDefaultDict(list)
+
+        for authority, results_by_authority in groupby(self.get_most_recent_result_for_each_location(), attrgetter('chain.responder.authority')):
+            for responder, results_by_authority_and_location in groupby(results_by_authority, attrgetter('chain.responder')):
+                row = (responder.url, responder.current)
+                row = row + tuple(results_by_authority_and_location)
+                authorities[authority.name].append(row)
 
         return {
             'locations': locations,
-            'sections': sections
+            'sections': authorities
         }
-
-    def get_location_by_id(self, location_id: int) -> Location:
-        """Get a location."""
-        return self.session.query(Location).get(location_id)
 
     def get_location_by_key_id(self, key_id: uuid.UUID) -> Optional[Location]:
         """Get a location by its key id."""
         return self.session.query(Location).filter(Location.key_id == key_id).one_or_none()
-
-    def get_responder_by_id(self, responder_id: int) -> Responder:
-        """Get a responder."""
-        return self.session.query(Responder).get(responder_id)
-
-    def get_authority_by_id(self, authority_id: int) -> Authority:
-        """Get an authority."""
-        return self.session.query(Authority).get(authority_id)
 
     def create_location(self, location_name: str) -> Tuple[bytes, bytes]:
         """Create a new Location with an invite.
@@ -476,24 +486,56 @@ class Manager(object):
         self.session.commit()
         return location
 
-    def _get_top_authorities_responders(self) -> List[Responder]:
-        return list(itt.chain.from_iterable((
-            authority.responders
-            for authority in self.get_top_authorities()
-        )))
+    def _get_top_authorities_responders(self, n: int = 10) -> List[Responder]:
+        # TODO: this is no longer used with my SQL changes.
+        # Do we remove it? Should partial SQLalchemy queries be abstracted out like functions?
+        subquery = (
+            self.session.query(Authority.id.label('auth_id'))
+            .order_by(Authority.cardinality.desc())
+            .limit(n)
+            .subquery()
+        )
+        query = (
+            self.session.query(Responder)
+            .select_from(subquery)
+            .join(Responder, Responder.authority_id == subquery.c.auth_id)
+        )
+        return query.all()
 
-    def _get_manifest_chains(self) -> List[Chain]:
-        responders = self._get_top_authorities_responders()
+    def _get_manifest_chains(self, n: int = 10) -> List[Chain]:
+        top_authorities = (
+            self.session.query(Authority.id.label('auth_id'))
+            .order_by(Authority.cardinality.desc())
+            .limit(n)
+            .subquery('top_authorities')
+        )
+        top_authorities_responders = (
+            self.session.query(Responder.id.label('resp_id'))
+            .select_from(top_authorities)
+            .join(Responder, Responder.authority_id == top_authorities.c.auth_id)
+            .subquery('top_authorities_responders')
+        )
+        most_recent_chain_timestamps = (
+            self.session.query(func.max(Chain.retrieved).label('most_recent'), Chain.responder_id.label('resp_id'))
+            .select_from(top_authorities_responders)
+            .join(Chain, Chain.responder_id == top_authorities_responders.c.resp_id)
+            .group_by(Chain.responder_id)
+            .subquery('most_recent_chain_timestamps')
+        )
+        query = (
+            self.session.query(Chain)
+            .select_from(most_recent_chain_timestamps)
+            .join(Chain, and_(
+                Chain.responder_id == most_recent_chain_timestamps.c.resp_id,
+                Chain.retrieved == most_recent_chain_timestamps.c.most_recent
+            ))
+        )
 
-        # TODO @cthoyt SQL
-        chains = [
-            responder.most_recent_chain
-            for responder in responders
-            if responder.most_recent_chain is not None]
+        chains = query.all()
 
-        if len(responders) != len(chains):
-            # TODO why is this needed? Originally it was an assertion...
-            logger.warning('Number of responders and number of chains mismatch: %d responders and %d chains', len(responders), len(chains))
+        # if len(responders) != len(chains):
+        #     # TODO why is this needed? Originally it was an assertion...
+        #     logger.warning('Number of responders and number of chains mismatch: %d responders and %d chains', len(responders), len(chains))
 
         return chains
 

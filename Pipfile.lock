@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "859a6ea03e1e7c8fefdf85c8a9e50913cd4c7f06989cdf54bd7388423f49e19f"
+            "sha256": "43d9e50c20f41bff9d23d3404eb31c97efb928c23ce41fecb93eb89b63a0e9c4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -721,6 +721,7 @@
                 "sha256:68ca7ff70785cbe1e7bccc71a48b5b6d965d79ca50629606c7861a21b206d9dd",
                 "sha256:9de47f375baf1ea07cdb3436ff39d7a9c76042c10a769c52353ec46e4e8fc3b9"
             ],
+            "markers": "python_version != '3.0.*' and python_version >= '2.7' and python_version != '3.2.*' and python_version != '3.3.*' and python_version != '3.1.*'",
             "version": "==1.1.0"
         },
         "stevedore": {
@@ -775,6 +776,14 @@
             ],
             "markers": "python_version != '3.0.*' and python_version != '3.2.*' and python_version >= '2.7' and python_version != '3.1.*'",
             "version": "==16.0.0"
+        },
+        "vulture": {
+            "hashes": [
+                "sha256:991b6701a9a6acb1af67f39a4ca1ab52f41dd129666cae9c6e13775d775cd38b",
+                "sha256:b436c8fa332ef7b05de837c0daa8c2bf69be56d36103333339e269572918c473"
+            ],
+            "index": "pypi",
+            "version": "==0.27"
         }
     }
 }
