@@ -12,7 +12,7 @@ services:
      - db
     environment:
       OCSPDASH_CONNECTION: postgresql://postgres:postgres@db:5432/postgres
-      OCSPDASH_SECRET_KEY: ${SECRET_KEY}
+      SECRET_KEY: ${SECRET_KEY}
       CENSYS_API_ID: ${CENSYS_API_ID}
       CENSYS_API_SECRET: ${CENSYS_API_SECRET}
     restart: on-failure

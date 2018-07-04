@@ -28,8 +28,8 @@ def create_application() -> Flask:
     app.config.update(dict(
         SQLALCHEMY_DATABASE_URI=os.environ.get('OCSPDASH_CONNECTION', OCSPDASH_DEFAULT_CONNECTION),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SECRET_KEY=os.environ.get('OCSPDASH_SECRET_KEY', 'test key'),
-        DEBUG=os.environ.get('OCSPDASH_DEBUG', False),
+        SECRET_KEY=os.environ.get('SECRET_KEY', 'test key'),
+        DEBUG=os.environ.get('DEBUG', False),
         CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
         CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
     ))
