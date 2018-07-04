@@ -11,8 +11,7 @@ from enum import Enum
 from typing import Mapping, Optional  # noqa: F401 imported for PyCharm type checking
 
 from oscrypto import asymmetric
-from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, LargeBinary, String, Text, \
-    UniqueConstraint
+from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
@@ -151,8 +150,8 @@ class Chain(Base):
     responder_id = Column(Integer, ForeignKey('responder.id'))
     responder = relationship('Responder', backref=backref('chains'))
 
-    subject = Column(LargeBinary, nullable=False, doc='raw bytes of the subject certificate')
-    issuer = Column(LargeBinary, nullable=False, doc="raw bytes of the subject's issuer certificate")
+    subject = Column(Binary, nullable=False, doc='raw bytes of the subject certificate')
+    issuer = Column(Binary, nullable=False, doc="raw bytes of the subject's issuer certificate")
     retrieved = Column(DateTime, default=datetime.utcnow, nullable=False,
                        doc='expire the cached chain when this date is more than 7 days ago')
 
@@ -208,7 +207,7 @@ class Location(Base):
     selector = Column(Binary(16), nullable=False, unique=True, index=True, doc='')
     validator_hash = Column(String(255), nullable=False, doc='')
 
-    pubkey = Column(Binary(256), doc="the location's public signing key")
+    pubkey = Column(Binary, doc="the location's public signing key")
     key_id = Column(UUID, doc="the UUID of the location's public key", index=True)
 
     @property
