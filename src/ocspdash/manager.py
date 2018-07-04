@@ -486,6 +486,8 @@ class Manager(object):
         return location
 
     def _get_top_authorities_responders(self, n: int = 10) -> List[Responder]:
+        # TODO: this is no longer used with my SQL changes.
+        # Do we remove it? Should partial SQLalchemy queries be abstracted out like functions?
         subquery = (
             self.session.query(Authority.id.label('auth_id'))
             .order_by(Authority.cardinality.desc())
