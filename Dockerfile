@@ -6,3 +6,4 @@ RUN pip install pipenv gunicorn psycopg2
 COPY . /app
 WORKDIR /app
 RUN set -ex && pipenv install --deploy --system
+RUN set -ex && pipenv install -e .

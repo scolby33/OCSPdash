@@ -44,6 +44,6 @@ vulture = "*"
 [requires]
 python_version = "3.6"
 
-[packages.e1839a8]
+[dev-packages.e1839a8]
 path = "."
 editable = true
