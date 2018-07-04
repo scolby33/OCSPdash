@@ -7,6 +7,52 @@ from ocspdash.models import Chain, Result
 from .constants import TEST_KEY_ID, TEST_LOCATION_NAME, TEST_PUBLIC_KEY
 
 
+def test_count_authorities(manager_function: Manager):
+    """Test the counting query for authorities."""
+    for i in range(10):
+        manager_function.ensure_authority(
+            name=f'Test Authority {i}',
+            cardinality=i * 10 + 7
+        )
+
+    assert manager_function.count_authorities() == 10
+
+
+def test_count_responders(manager_function: Manager):
+    """Test the counting query for responders."""
+    authority = manager_function.ensure_authority(
+        name='Test Authority',
+        cardinality=1234
+    )
+    for i in range(10):
+        manager_function.ensure_responder(
+            authority=authority,
+            url=f'http://test-responder.url/{i}',
+            cardinality=i * 9 - 3
+        )
+
+    assert manager_function.count_responders() == 10
+
+
+def test_count_chains(manager_function: Manager):
+    """Test the counting query for chains."""
+    authority = manager_function.ensure_authority(
+        name='Test Authority',
+        cardinality=1234
+    )
+    responder = manager_function.ensure_responder(
+        authority=authority,
+        url='http://test-responder.url/',
+        cardinality=123
+    )
+
+    for i in range(10):
+        chain = Chain(responder=responder, subject=f'c{i}s'.encode('utf-8'), issuer=f'c{i}i'.encode('utf-8'))
+        manager_function.session.add(chain)
+    manager_function.session.commit()
+
+    assert manager_function.count_chains() == 10
+
 def test_ensure_authority(manager_function: Manager):
     """Test the creation of Authority objects."""
     authority1 = manager_function.ensure_authority(
