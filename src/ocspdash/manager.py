@@ -504,20 +504,20 @@ class Manager(object):
             self.session.query(Authority.id.label('auth_id'))
             .order_by(Authority.cardinality.desc())
             .limit(n)
-            .cte('top_authorities')
+            .subquery('top_authorities')
         )
         top_authorities_responders = (
             self.session.query(Responder.id.label('resp_id'))
             .select_from(top_authorities)
             .join(Responder, Responder.authority_id == top_authorities.c.auth_id)
-            .cte('top_authorities_responders')
+            .subquery('top_authorities_responders')
         )
         most_recent_chain_timestamps = (
             self.session.query(func.max(Chain.retrieved).label('most_recent'), Chain.responder_id.label('resp_id'))
             .select_from(top_authorities_responders)
             .join(Chain, Chain.responder_id == top_authorities_responders.c.resp_id)
             .group_by(Chain.responder_id)
-            .cte('most_recent_chain_timestamps')
+            .subquery('most_recent_chain_timestamps')
         )
         query = (
             self.session.query(Chain)
