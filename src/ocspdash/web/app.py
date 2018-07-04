@@ -4,12 +4,13 @@
 
 import logging
 import os
+from typing import Optional
 
 from flasgger import Swagger
 from flask import Flask
 from flask_bootstrap import Bootstrap
 
-from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_DEFAULT_CONNECTION
+from ocspdash.constants import OCSPDASH_API_VERSION, OCSPDASH_CONNECTION
 from ocspdash.util import ToJSONCustomEncoder
 from ocspdash.web.admin import make_admin
 from ocspdash.web.blueprints import api, ui
@@ -22,11 +23,14 @@ __all__ = [
 logger = logging.getLogger('web')
 
 
-def create_application() -> Flask:
-    """Create the OCSPdash Flask application."""
+def create_application(connection: Optional[str] = None) -> Flask:
+    """Create the OCSPdash Flask application.
+
+    :param connection: Database connection string
+    """
     app = Flask(__name__)
     app.config.update(dict(
-        SQLALCHEMY_DATABASE_URI=os.environ.get('OCSPDASH_CONNECTION', OCSPDASH_DEFAULT_CONNECTION),
+        SQLALCHEMY_DATABASE_URI=connection or OCSPDASH_CONNECTION,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SECRET_KEY=os.environ.get('SECRET_KEY', 'test key'),
         DEBUG=os.environ.get('DEBUG', False),
