@@ -6,7 +6,7 @@ import logging
 import os
 import secrets
 import uuid
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 from itertools import groupby
 from operator import attrgetter
 from typing import Iterable, List, Mapping, Optional, Tuple
