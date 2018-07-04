@@ -1,5 +1,4 @@
 -i https://pypi.org/simple
--e .
 argon2-cffi==18.1.0
 asn1crypto==0.24.0
 censys==0.0.8
