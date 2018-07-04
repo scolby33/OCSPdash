@@ -1,6 +1,6 @@
 # Follow guide at https://realpython.com/blog/python/dockerizing-flask-with-compose-and-machine-from-localhost-to-the-cloud/
 
-version: '3'
+version: '3.6'
 
 services:
   web:
@@ -15,6 +15,7 @@ services:
       OCSPDASH_SECRET_KEY: ${SECRET_KEY}
       CENSYS_API_ID: ${CENSYS_API_ID}
       CENSYS_API_SECRET: ${CENSYS_API_SECRET}
+    restart: on-failure
 
   db:
     image: postgres:latest
