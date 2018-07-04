@@ -19,6 +19,7 @@ from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
 from ocspdash.security import pwd_context
 from ocspdash.server_query import ServerQuery
+from ocspdash.util import OrderedDefaultDict
 
 __all__ = [
     'Manager',
@@ -416,10 +417,9 @@ class Manager(object):
         # TODO better docstring and type checking
         locations = self.get_all_locations_with_test_results()
 
-        authorities = OrderedDict()
+        authorities = OrderedDefaultDict(list)
 
         for authority, results_by_authority in groupby(self.get_most_recent_result_for_each_location(), attrgetter('chain.responder.authority')):
-            authorities[authority.name] = []
             for responder, results_by_authority_and_location in groupby(results_by_authority, attrgetter('chain.responder')):
                 row = (responder.url, responder.current)
                 row = row + tuple(results_by_authority_and_location)
