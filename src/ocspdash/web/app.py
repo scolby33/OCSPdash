@@ -45,7 +45,8 @@ def create_application(connection: Optional[str] = None) -> Flask:
     app.manager = db.manager
     app.json_encoder = ToJSONCustomEncoder
 
-    make_admin(app, db.session)
+    if app.debug:
+        make_admin(app, db.session)
 
     app.register_blueprint(api, url_prefix=f'/api/{OCSPDASH_API_VERSION}')
     app.register_blueprint(ui)
