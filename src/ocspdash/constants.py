@@ -43,5 +43,5 @@ CENSYS_RATE_LIMIT = float(os.environ.get('OCSPDASH_RATE', 0.2))  # max requests 
 OCSPDASH_USER_AGENT_IDENTIFIER = f'OCSPdash/{VERSION}'
 OCSPDASH_USER_AGENT = ' '.join([requests.utils.default_user_agent(), OCSPDASH_USER_AGENT_IDENTIFIER])
 
-OCSP_RESULTS_JWT_CLAIM = os.environ.get('OCSPD_RESULTS_JWT_CLAIM', 'res')
-OCSP_JWT_ALGORITHM = os.environ.get('OCSP_JWT_ALGORITHM', 'ES512')
+OCSP_RESULTS_JWT_CLAIM = os.environ.get('OCSPDASH_RESULTS_JWT_CLAIM', 'res')
+OCSP_JWT_ALGORITHM = os.environ.get('OCSPDASH_JWT_ALGORITHM', 'ES512')
