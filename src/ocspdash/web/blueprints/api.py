@@ -15,7 +15,7 @@ from flask import Blueprint, abort, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
 
-from ocspdash.constants import OCSP_JWT_ALGORITHM
+from ocspdash.constants import OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
 from ocspdash.web.proxies import manager
 
 jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
@@ -50,7 +50,12 @@ def register_location_key():
 
 @api.route('/manifest.jsonl')
 def get_manifest():
-    """Return the manifest of queries an OCSPscrape client should make."""
+    """Return the manifest of queries an OCSPscrape client should make.
+
+    ---
+    tags:
+        - ocsp
+    """
     manifest_data = manager.get_manifest()
 
     manifest_lines = io.StringIO()
@@ -87,7 +92,12 @@ def _prepare_result_dictionary(result_data):
 
 @api.route('/submit', methods=['POST'])
 def submit():
-    """Submit scrape results."""
+    """Submit scrape results.
+
+    ---
+    tags:
+        - ocsp
+    """
     submitted_token_header = jwt.get_unverified_header(request.data)
 
     key_id = uuid.UUID(submitted_token_header['kid'])
@@ -99,7 +109,7 @@ def submit():
         return abort(400)
 
     prepared_result_dicts = (_prepare_result_dictionary(result_data)
-                             for result_data in claims['res'])
+                             for result_data in claims[OCSP_RESULTS_JWT_CLAIM])
     manager.insert_payload(submitting_location, prepared_result_dicts)
 
     return ('', HTTPStatus.NO_CONTENT)

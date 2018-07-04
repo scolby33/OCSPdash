@@ -27,7 +27,6 @@ INSTALL_REQUIRES = [
     'censys',
     'click',
     'cryptography',
-    'docopt',
     'flasgger',
     'flask',
     'flask-admin',
