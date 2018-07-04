@@ -52,7 +52,7 @@ from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSP_JWT_ALGORITHM, OCSP_
 API_URL = 'api/v0/'
 MANIFEST_URL = urllib.parse.urljoin(API_URL, 'manifest.jsonl')
 SUBMIT_URL = urllib.parse.urljoin(API_URL, 'submit')
-REGISTER_URL = urllib.parse.urljoin(API_URL, 'resigter')
+REGISTER_URL = urllib.parse.urljoin(API_URL, 'register')
 
 config_directory = os.path.join(os.path.expanduser('~'), '.config', 'ocspdash')
 if not os.path.exists(config_directory):
