@@ -500,17 +500,39 @@ class Manager(object):
         return query.all()
 
     def _get_manifest_chains(self, n: int = 10) -> List[Chain]:
-        responders = self._get_top_authorities_responders(n)
+        top_authorities = (
+            self.session.query(Authority.id.label('auth_id'))
+            .order_by(Authority.cardinality.desc())
+            .limit(n)
+            .cte('top_authorities')
+        )
+        top_authorities_responders = (
+            self.session.query(Responder.id.label('resp_id'))
+            .select_from(top_authorities)
+            .join(Responder, Responder.authority_id == top_authorities.c.auth_id)
+            .cte('top_authorities_responders')
+        )
+        most_recent_chain_timestamps = (
+            self.session.query(func.max(Chain.retrieved).label('most_recent'), Chain.responder_id.label('resp_id'))
+            .select_from(top_authorities_responders)
+            .join(Chain, Chain.responder_id == top_authorities_responders.c.resp_id)
+            .group_by(Chain.responder_id)
+            .cte('most_recent_chain_timestamps')
+        )
+        query = (
+            self.session.query(Chain)
+            .select_from(most_recent_chain_timestamps)
+            .join(Chain, and_(
+                Chain.responder_id == most_recent_chain_timestamps.c.resp_id,
+                Chain.retrieved == most_recent_chain_timestamps.c.most_recent
+            ))
+        )
 
-        # TODO @cthoyt SQL
-        chains = [
-            responder.most_recent_chain
-            for responder in responders
-            if responder.most_recent_chain is not None]
+        chains = query.all()
 
-        if len(responders) != len(chains):
-            # TODO why is this needed? Originally it was an assertion...
-            logger.warning('Number of responders and number of chains mismatch: %d responders and %d chains', len(responders), len(chains))
+        # if len(responders) != len(chains):
+        #     # TODO why is this needed? Originally it was an assertion...
+        #     logger.warning('Number of responders and number of chains mismatch: %d responders and %d chains', len(responders), len(chains))
 
         return chains
 
