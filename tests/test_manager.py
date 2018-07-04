@@ -2,6 +2,8 @@
 
 """Test the functionality of the Manager."""
 
+from datetime import datetime
+
 from ocspdash.manager import Manager
 from ocspdash.models import Chain, Result
 from .constants import TEST_KEY_ID, TEST_LOCATION_NAME, TEST_PUBLIC_KEY
@@ -124,6 +126,64 @@ def test_ensure_responder(manager_function: Manager):
     assert responder2 is responder1
     assert responder2.url == 'http://test-responder.url/'
     assert responder2.cardinality == 234
+
+
+def test_get_chain_by_certificate_hash(manager_function: Manager):
+    """Test retrieving a Chain by its certificate hash."""
+    authority = manager_function.ensure_authority(
+        name='Test Authority',
+        cardinality=1234
+    )
+    responder = manager_function.ensure_responder(
+        authority=authority,
+        url='http://test-responder.url/',
+        cardinality=234
+    )
+    chain = Chain(
+        responder=responder,
+        subject=b'cs',
+        issuer=b'ci'
+    )
+    manager_function.session.add(chain)
+    manager_function.session.commit()
+
+    certificate_hash = chain.certificate_hash
+
+    assert manager_function.get_chain_by_certificate_hash(certificate_hash) is chain
+    assert manager_function.get_chain_by_certificate_hash(b'bad hash') is None
+
+
+def test_get_most_recent_chain_by_responder(manager_function: Manager):
+    """Test that we get the proper Chain for a Responder."""
+    authority = manager_function.ensure_authority(
+        name='Test Authority',
+        cardinality=1234
+    )
+    responder = manager_function.ensure_responder(
+        authority=authority,
+        url='http://test-responder.url/',
+        cardinality=234
+    )
+
+    c1 = Chain(responder=responder, subject=b'c1s', issuer=b'c1i', retrieved=datetime(2018, 7, 1))
+    c2 = Chain(responder=responder, subject=b'c2s', issuer=b'c2i', retrieved=datetime(2018, 7, 2))
+    c3 = Chain(responder=responder, subject=b'c3s', issuer=b'c3i', retrieved=datetime(2018, 7, 3))
+    c4 = Chain(responder=responder, subject=b'c4s', issuer=b'c4i', retrieved=datetime(2018, 7, 4))
+    manager_function.session.add_all([c1, c2, c3, c4])
+    manager_function.session.commit()
+
+    assert manager_function.get_most_recent_chain_by_responder(responder) is c4
+
+
+def test_get_location_by_name(manager_function: Manager):
+    """Test getting a location by its name."""
+    selector, validator = manager_function.create_location(TEST_LOCATION_NAME)
+
+    location = manager_function.get_location_by_selector(selector)
+    assert location
+
+    assert manager_function.get_location_by_name(TEST_LOCATION_NAME) is location
+    assert manager_function.get_location_by_name('Nonexistent Location') is None
 
 
 def test_location_invites(manager_function: Manager):
