@@ -46,6 +46,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from jose import jwt
 from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
+from tqdm import tqdm
 
 from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
 
@@ -193,7 +194,7 @@ def scrape(key: str, queries: Iterable[Mapping]) -> str:
 
     claims = {
         'iat': datetime.utcnow(),
-        OCSP_RESULTS_JWT_CLAIM: [build_result(query) for query in queries]
+        OCSP_RESULTS_JWT_CLAIM: [build_result(query) for query in tqdm(queries)]
     }
 
     key_id = str(_keyid_from_private_key(key))
