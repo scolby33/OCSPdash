@@ -157,7 +157,7 @@ def update(host, no_post):
         submission_response.raise_for_status()
 
 
-def _build_claim(session: requests.Session, query: Mapping) -> Mapping:
+def _build_result(session: requests.Session, query: Mapping) -> Mapping:
     """Build a result dictionary.
 
     :param session: A requests Session
@@ -189,11 +189,11 @@ def scrape(key: str, queries: Iterable[Mapping]) -> str:
     """
     session = requests.Session()
     session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
-    build_claim = partial(_build_claim, session)
+    build_result = partial(_build_result, session)
 
     claims = {
         'iat': datetime.utcnow(),
-        OCSP_RESULTS_JWT_CLAIM: [build_claim(query) for query in queries]
+        OCSP_RESULTS_JWT_CLAIM: [build_result(query) for query in queries]
     }
 
     key_id = str(_keyid_from_private_key(key))
