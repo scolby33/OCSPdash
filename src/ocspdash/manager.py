@@ -326,6 +326,8 @@ class Manager:
         :param n: the number of top authorities to get information on
         """
         # TODO: doesn't do full update if number of buckets increases
+        # TODO: responder cardinality only for active certs?
+        # TODO: why are authority card numbers > responder card numbers?
         if self.server_query is None:
             raise RuntimeError('No username and password for Censys supplied')
 
