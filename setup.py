@@ -21,6 +21,7 @@ CLASSIFIERS = [
     'Programming Language :: Python',
     'Programming Language :: Python :: 3.6',
 ]
+# TODO data for templates
 INSTALL_REQUIRES = [
     'argon2-cffi',
     'asn1crypto',

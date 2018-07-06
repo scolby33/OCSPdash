@@ -325,6 +325,7 @@ class Manager(object):
 
         :param n: the number of top authorities to get information on
         """
+        # TODO: doesn't do full update if number of buckets increases
         if self.server_query is None:
             raise RuntimeError('No username and password for Censys supplied')
 
