@@ -27,7 +27,7 @@ def web(host, port, connection, flask_debug, verbose):
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
 
     from ocspdash.web import create_application
-    app = create_application(connection=connection)
+    app = create_application(connection=connection, flask_debug=flask_debug)
     app.run(host=host, port=port, debug=flask_debug)
 
 
