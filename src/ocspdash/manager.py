@@ -422,6 +422,7 @@ class Manager:
                 .join(Location.results)
                 .group_by(Location.id)
                 .having(func.count(Result.location_id) > 0)
+                .order_by(Location.name)
                 .all()
         )
 
