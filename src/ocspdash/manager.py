@@ -18,7 +18,6 @@ from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
 from ocspdash.security import pwd_context
 from ocspdash.server_query import ServerQuery
-from ocspdash.util import OrderedDefaultDict
 
 __all__ = [
     'Manager',
@@ -403,7 +402,7 @@ class Manager:
                 ),
             )
             .join(Authority)
-                .order_by(
+            .order_by(
                 Authority.cardinality.desc(),
                 Authority.name,
                 Responder.cardinality.desc(),
