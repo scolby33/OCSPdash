@@ -6,7 +6,7 @@ from datetime import datetime
 
 from ocspdash.manager import Manager
 from ocspdash.models import Chain, Result
-from .constants import TEST_KEY_ID, TEST_LOCATION_NAME, TEST_PUBLIC_KEY
+from .constants import TEST_BAD_CERTIFICATE_CHAIN_UUID, TEST_KEY_ID, TEST_LOCATION_NAME, TEST_PUBLIC_KEY
 
 
 def test_count_authorities(manager_function: Manager):
@@ -128,8 +128,8 @@ def test_ensure_responder(manager_function: Manager):
     assert responder2.cardinality == 234
 
 
-def test_get_chain_by_certificate_hash(manager_function: Manager):
-    """Test retrieving a Chain by its certificate hash."""
+def test_get_chain_by_certificate_chain_uuid(manager_function: Manager):
+    """Test retrieving a Chain by its certificate chain UUID."""
     authority = manager_function.ensure_authority(
         name='Test Authority',
         cardinality=1234
@@ -147,10 +147,10 @@ def test_get_chain_by_certificate_hash(manager_function: Manager):
     manager_function.session.add(chain)
     manager_function.session.commit()
 
-    certificate_hash = chain.certificate_hash
+    certificate_hash = chain.certificate_chain_uuid
 
-    assert manager_function.get_chain_by_certificate_hash(certificate_hash) is chain
-    assert manager_function.get_chain_by_certificate_hash(b'bad hash') is None
+    assert manager_function.get_chain_by_certificate_chain_uuid(certificate_hash) is chain
+    assert manager_function.get_chain_by_certificate_chain_uuid(TEST_BAD_CERTIFICATE_CHAIN_UUID) is None
 
 
 def test_get_most_recent_chain_by_responder(manager_function: Manager):
