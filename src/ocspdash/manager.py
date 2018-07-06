@@ -59,7 +59,7 @@ def _workaround_pysqlite_transaction_bug():
 _workaround_pysqlite_transaction_bug()
 
 
-class Manager(object):
+class Manager:
     """Manager for interacting with the database."""
 
     def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery] = None) -> None:
