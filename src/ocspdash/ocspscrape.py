@@ -175,7 +175,7 @@ def _build_result(session: requests.Session, query: Mapping) -> Mapping:
     ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, responder_url, session)
 
     return {
-        'chain_certificate_hash': query['chain_certificate_hash'],
+        'certificate_chain_uuid': query['certificate_chain_uuid'],
         'time': time,
         'ping': ping_result,
         'ocsp': ocsp_result

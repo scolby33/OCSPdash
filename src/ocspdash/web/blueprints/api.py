@@ -79,8 +79,8 @@ def get_manifest():
 
 
 def _prepare_result_dictionary(result_data):
-    chain_certificate_hash: bytes = b64decode(result_data['chain_certificate_hash'])
-    chain = manager.get_chain_by_certificate_hash(chain_certificate_hash)
+    certificate_chain_uuid: uuid.UUID = uuid.UUID(result_data['certificate_chain_uuid'])
+    chain = manager.get_chain_by_certificate_chain_uuid(certificate_chain_uuid)
 
     retrieved = datetime.strptime(result_data['time'], '%Y-%m-%dT%H:%M:%SZ')
 

@@ -3,9 +3,11 @@
 """Miscellaneous utilities for OCSPdash."""
 
 import collections
+import hashlib
 import logging
 import threading
 import time
+import uuid
 from functools import wraps
 from json import JSONEncoder
 from typing import Callable, Union
@@ -59,6 +61,23 @@ class OrderedDefaultDict(collections.OrderedDict):
 
     def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.default_factory, list(self.items()))
+
+
+def uuid5(namespace: uuid.UUID, name: Union[str, bytes]) -> uuid.UUID:
+    """Generate a UUID from the SHA-1 hash of a namespace UUID and a name.
+
+    Unlike the stdlib version, the name can be bytes. If it is a str, this function delgates to the stdlib.
+
+    :param namespace: The UUID namespace identifier
+    :param name: The name, which is a str or bytes
+
+    :returns: The UUID version 5
+    """
+    if isinstance(name, str):
+        return uuid.uuid5(namespace, name)
+    else:
+        hash = hashlib.sha1(namespace.bytes + name).digest()
+        return uuid.UUID(bytes=hash[:16], version=5)
 
 
 def rate_limited(max_per_second: Union[int, float]) -> Callable:

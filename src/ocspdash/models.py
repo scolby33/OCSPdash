@@ -2,7 +2,6 @@
 
 """SQLAlchemy models for OCSPdash."""
 
-import hashlib
 import operator
 import uuid
 from base64 import urlsafe_b64decode as b64decode, urlsafe_b64encode as b64encode
@@ -16,7 +15,8 @@ from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
 
-from ocspdash.constants import NAMESPACE_OCSPDASH_KID
+import ocspdash.util
+from ocspdash.constants import NAMESPACE_OCSPDASH_CERTIFICATE_CHAIN_ID, NAMESPACE_OCSPDASH_KID
 from ocspdash.custom_columns import UUID
 from ocspdash.security import pwd_context
 
@@ -132,12 +132,12 @@ class Responder(Base):
         }
 
 
-def _certificate_hash_default(context) -> bytes:
+def _certificate_uuid_default(context) -> uuid.UUID:
     parameters = context.get_current_parameters()
     subject = parameters['subject']
     issuer = parameters['issuer']
 
-    return hashlib.sha512(subject + issuer).digest()
+    return ocspdash.util.uuid5(NAMESPACE_OCSPDASH_CERTIFICATE_CHAIN_ID, subject + issuer)
 
 
 class Chain(Base):
@@ -155,8 +155,8 @@ class Chain(Base):
     retrieved = Column(DateTime, default=datetime.utcnow, nullable=False,
                        doc='expire the cached chain when this date is more than 7 days ago')
 
-    certificate_hash = Column(Binary(64), nullable=False, unique=True, default=_certificate_hash_default, onupdate=_certificate_hash_default, index=True,
-                              doc='')
+    certificate_chain_uuid = Column(UUID, nullable=False, unique=True, default=_certificate_uuid_default, onupdate=_certificate_uuid_default, index=True,
+                                    doc='')
 
     @property
     def expired(self) -> bool:
@@ -176,7 +176,7 @@ class Chain(Base):
             'responder_url': self.responder.url,
             'subject_certificate': b64encode(self.subject).decode('utf-8'),
             'issuer_certificate': b64encode(self.issuer).decode('utf-8'),
-            'chain_certificate_hash': b64encode(self.certificate_hash).decode('utf-8'),
+            'certificate_chain_uuid': str(self.certificate_chain_uuid),
         }
 
     def __repr__(self):

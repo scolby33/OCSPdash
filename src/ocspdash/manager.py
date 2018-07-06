@@ -241,14 +241,14 @@ class Manager(object):
 
         return responder
 
-    def get_chain_by_certificate_hash(self, certificate_hash: bytes) -> Optional[Chain]:
-        """Get a chain by its certificate hash.
+    def get_chain_by_certificate_chain_uuid(self, certificate_chain_uuid: uuid.UUID) -> Optional[Chain]:
+        """Get a chain by its certificate chain UUID.
 
-        :param certificate_hash: the bytes of the certificate_hash
+        :param certificate_chain_uuid: the certificate chain UUID
 
         :returns: the Chain or None
         """
-        return self.session.query(Chain).filter(Chain.certificate_hash == certificate_hash).one_or_none()
+        return self.session.query(Chain).filter(Chain.certificate_chain_uuid == certificate_chain_uuid).one_or_none()
 
     def get_most_recent_chain_by_responder(self, responder: Responder) -> Optional[Chain]:
         """Get the newest chain for a Responder.
