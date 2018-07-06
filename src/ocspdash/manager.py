@@ -363,7 +363,10 @@ class Manager:
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
     def get_most_recent_result_for_each_location(self) -> List[Result]:
-        """Get the most recent results for each location."""
+        """Get the most recent results for each location.
+
+        Results are sorted by Authority cardinality, Authority name, Responder cardinality, Responder url, and Location name.
+        """
         # TODO better docstring
         subquery = (
             self.session.query(
@@ -397,11 +400,22 @@ class Manager:
                     Location.id == subquery.c.loc_id
                 ),
             )
+            .join(Authority)
+                .order_by(
+                Authority.cardinality.desc(),
+                Authority.name,
+                Responder.cardinality.desc(),
+                Responder.url,
+                Location.name
+            )
         )
         return query.all()
 
     def get_all_locations_with_test_results(self) -> List[Location]:
-        """Return all the Location objects that have at least one associated Result."""
+        """Return all the Location objects that have at least one associated Result.
+
+        Locations are returned sorted by name.
+        """
         return (
             self.session.query(Location)
                 .join(Location.results)
@@ -415,17 +429,27 @@ class Manager:
         # TODO better docstring and type checking
         locations = self.get_all_locations_with_test_results()
 
-        authorities = OrderedDefaultDict(list)
+        authorities = []
 
         for authority, results_by_authority in groupby(self.get_most_recent_result_for_each_location(), attrgetter('chain.responder.authority')):
-            for responder, results_by_authority_and_location in groupby(results_by_authority, attrgetter('chain.responder')):
-                row = (responder.url, responder.current)
-                row = row + tuple(results_by_authority_and_location)
-                authorities[authority.name].append(row)
+            responders = []
+
+            for responder, results_by_authority_and_responder in groupby(results_by_authority, attrgetter('chain.responder')):
+                responders.append(
+                    {
+                        'responder': responder,
+                        'results': tuple(results_by_authority_and_responder)
+                    }
+                )
+
+            authorities.append({
+                'authority': authority,
+                'responders': responders
+            })
 
         return {
             'locations': locations,
-            'sections': authorities
+            'authorities': authorities
         }
 
     def get_location_by_key_id(self, key_id: uuid.UUID) -> Optional[Location]:
