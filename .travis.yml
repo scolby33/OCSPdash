@@ -13,13 +13,14 @@ matrix:
   include:
     - env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
     - env: TOXENV=py DB=sqlite
-    - env: TOXENV=docs
     - env: TOXENV=manifest
-    - env: TOXENV=rst-lint
     - env: TOXENV=flake8
-    - env: TOXENV=doc8
     - env: TOXENV=mypy
     - env: TOXENV=vulture
+    - env: TOXENV=doc8
+    - env: TOXENV=rst-lint
+    - env: TOXENV=readme
+    - env: TOXENV=docs
   allow_failures:
     - env: TOXENV=vulture
 
