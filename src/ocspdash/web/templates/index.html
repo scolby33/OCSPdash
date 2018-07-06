@@ -55,6 +55,7 @@
             border-right: 1px solid #EEE;
         }
     </style>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='sprite.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -97,7 +98,7 @@
                             {% for result in responder['results'] %}
                                 <td class="text-center">
                                     {% if result is not none %}
-                                        <span class="glyphicon {% if result.status.value == 'good' %}glyphicon-ok-sign text-success{% elif result.status.value == 'questionable' %}glyphicon-warning-sign text-warning{% elif result.status.value == 'bad' %}glyphicon-remove-sign text-danger{% endif %}" data-toggle="popover" data-trigger="click" data-placement="top" data-html="true" data-content="<table><tbody><tr><td>Ping</td><td>{{ result.ping }}</td></tr><tr><td>OCSP</td><td>{{ result.ocsp }}</td></tr><tr><td>Retrieved</td><td>{{ result.retrieved }}</td></tr><tr><td>Chain ID</td><td>{{  result.chain.certificate_chain_uuid | string }}</td></tr></tbody></table>"></span>
+                                        <span class="svg {% if result.status.value == 'good' %}svg-check-circle{% elif result.status.value == 'questionable' %}svg-x-circle{% elif result.status.value == 'bad' %}svg-question-circle{% endif %}" data-toggle="popover" data-trigger="click" data-placement="top" data-html="true" data-content="<table><tbody><tr><td>Ping</td><td>{{ result.ping }}</td></tr><tr><td>OCSP</td><td>{{ result.ocsp }}</td></tr><tr><td>Retrieved</td><td>{{ result.retrieved }}</td></tr><tr><td>Chain ID</td><td>{{  result.chain.certificate_chain_uuid | string }}</td></tr></tbody></table>"></span>
                                     {% else %}
                                         <span class="glyphicon glyphicon-question-sign text-muted"></span>
                                     {% endif %}

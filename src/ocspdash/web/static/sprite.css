@@ -1,0 +1,25 @@
+.svg {
+    background: url("svg/sprite.css-893944c7.svg") no-repeat;
+    background-size: auto 100%;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    position: relative;
+    top: 2px;
+}
+
+.svg-check-circle {
+    background-position: 0 0;
+}
+
+.svg-info-circle {
+	background-position: 33.333333333333336% 0;
+}
+
+.svg-question-circle {
+	background-position: 66.66666666666667% 0;
+}
+
+.svg-x-circle {
+	background-position: 100% 0;
+}
