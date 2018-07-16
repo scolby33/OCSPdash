@@ -55,7 +55,7 @@ cache: pip
 
 # 4. install
 install:
-    - pip install tox coverage codecov
+    - sh -c 'if [ "$TOXENV" = "py" ]; then pip install tox codecov; else pip install tox; fi'
 
 
 # 5. before_script
