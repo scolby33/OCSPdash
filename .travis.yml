@@ -5,16 +5,16 @@
 language: python
 
 # 0.5 jobs, stages, and matrix
-env:
-  - TOXENV=flake8
-  - TOXENV=manifest
-  - TOXENV=mypy
-  - TOXENV=vulture
-  - TOXENV=doc8
-  - TOXENV=readme
-  - TOXENV=docs
-  - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
-  - TOXENV=py DB=sqlite
+# env:
+#   - TOXENV=flake8
+#   - TOXENV=manifest
+#   - TOXENV=mypy
+#   - TOXENV=vulture
+#   - TOXENV=doc8
+#   - TOXENV=readme
+#   - TOXENV=docs
+#   - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
+#   - TOXENV=py DB=sqlite
 
 jobs:
   include:
@@ -53,7 +53,9 @@ before_script:
 
 # 6. script
 script:
-    - tox
+    # - tox
+    - python --version
+    - pip --version
 
 
 # 7. before_cache
