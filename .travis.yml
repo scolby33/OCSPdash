@@ -4,24 +4,22 @@
 # 0. language and environment
 language: python
 
-# 0.5 jobs, stages, and matrix
-# env:
-#   - TOXENV=flake8
-#   - TOXENV=manifest
-#   - TOXENV=mypy
-#   - TOXENV=vulture
-#   - TOXENV=doc8
-#   - TOXENV=readme
-#   - TOXENV=docs
-#   - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
-#   - TOXENV=py DB=sqlite
+python: 3.7
+dist: xenial
+sudo: true
 
-jobs:
-  include:
-    - python: 3.6
-    - python: 3.7
-      dist: xenial
-      sudo: true
+
+# 0.5 jobs, stages, and matrix
+env:
+  - TOXENV=flake8
+  - TOXENV=manifest
+  - TOXENV=mypy
+  - TOXENV=vulture
+  - TOXENV=doc8
+  - TOXENV=readme
+  - TOXENV=docs
+  - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
+  - TOXENV=py DB=sqlite
 
 matrix:
   allow_failures:
@@ -53,9 +51,7 @@ before_script:
 
 # 6. script
 script:
-    # - tox
-    - python --version
-    - pip --version
+    - tox
 
 
 # 7. before_cache
