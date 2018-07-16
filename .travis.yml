@@ -14,6 +14,11 @@ services: postgresql
 
 
 # 0.5 jobs, stages, and matrix
+stages:
+  - lint
+  - docs
+  - test
+
 env:
   - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
   - TOXENV=py DB=sqlite
@@ -34,6 +39,10 @@ jobs:
     - env: TOXENV=docs
 
 matrix:
+  include:
+    - python: 3.6
+      dist: trusty
+      sudo: false
   allow_failures:
     - env: TOXENV=vulture
 
