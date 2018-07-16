@@ -22,6 +22,7 @@ python-jose = "*"
 requests = "*"
 sqlalchemy = "*"
 tqdm = "*"
+"e1839a8" = {editable = true, path = "."}
 
 [dev-packages]
 check-manifest = "*"
@@ -43,7 +44,3 @@ vulture = "*"
 
 [requires]
 python_version = "3.6"
-
-[dev-packages.e1839a8]
-path = "."
-editable = true
