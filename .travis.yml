@@ -1,15 +1,23 @@
 # Organize the .travis.yml by the steps in the build lifecycle
 # https://docs.travis-ci.com/user/customizing-the-build/#The-Build-Lifecycle
 
-# 0. language and environment
+# 0. language and build environment
 language: python
 
-python: 3.7
+python:
+  - 3.7
+  - 3.6
 dist: xenial
 sudo: true
 
+services: postgresql
+
 
 # 0.5 jobs, stages, and matrix
+env:
+  - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
+  - TOXENV=py DB=sqlite
+
 jobs:
   include:
     # lint stage
@@ -24,23 +32,6 @@ jobs:
       env: TOXENV=doc8
     - env: TOXENV=readme
     - env: TOXENV=docs
-
-    # test stage
-    - stage: test
-      env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
-      services: postgresql
-    - env: TOXENV=py DB=sqlite
-
-    - env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
-      services: postgresql
-      python: 3.6
-      dist: trusty
-      sudo: false
-    - env: TOXENV=py DB=sqlite
-      services: postgresql
-      python: 3.6
-      dist: trusty
-      sudo: false
 
 matrix:
   allow_failures:
