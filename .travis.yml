@@ -39,10 +39,6 @@ jobs:
     - env: TOXENV=docs
 
 matrix:
-  include:
-    - python: 3.6
-      dist: trusty
-      sudo: false
   allow_failures:
     - env: TOXENV=vulture
 
