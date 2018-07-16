@@ -10,6 +10,8 @@ python:
 dist: xenial
 sudo: true
 
+services: postgresql
+
 
 # 0.5 jobs, stages, and matrix
 stages:
@@ -19,7 +21,6 @@ stages:
 
 env:
   - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
-    services: postgresql
   - TOXENV=py DB=sqlite
 
 jobs:
