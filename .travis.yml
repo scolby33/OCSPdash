@@ -9,27 +9,24 @@ dist: xenial
 sudo: true
 
 
-# 0.5 jobs and matrix
+# 0.5 jobs, stages, and matrix
+env:
+  - TOXENV=flake8
+  - TOXENV=manifest
+  - TOXENV=mypy
+  - TOXENV=vulture
+  - TOXENV=doc8
+  - TOXENV=readme
+  - TOXENV=docs
+  - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
+  - TOXENV=py DB=sqlite
+
 jobs:
   include:
-    # lint stage
-    - stage: lint
-      env: TOXENV=flake8
-    - env: TOXENV=manifest
-    - env: TOXENV=mypy
-    - env: TOXENV=vulture
-
-    # docs stage
-    - stage: docs
-      env: TOXENV=doc8
-    - env: TOXENV=readme
-    - env: TOXENV=docs
-
-    # test stage
-    - stage: test
-      env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
-      services: postgresql
-    - env: TOXENV=py DB=sqlite
+    - python: 3.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
 
 matrix:
   allow_failures:
@@ -69,8 +66,7 @@ script:
 
 # 8. after_success/after_failure
 after_success:
-    - tox -e coverage-report
-    - codecov
+    - sh -c 'if [ "$TOXENV" = "py" ]; then tox -e coverage-report; codecov; fi'
 
 
 # 9. before_deploy
