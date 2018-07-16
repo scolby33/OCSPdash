@@ -55,7 +55,7 @@ cache: pip
 
 # 4. install
 install:
-    - pip install tox codecov coverage
+    - pip install tox coverage codecov
 
 
 # 5. before_script
