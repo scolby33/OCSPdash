@@ -32,9 +32,8 @@ jobs:
     - env: TOXENV=py DB=sqlite
 
 matrix:
-  allow-failures:
+  allow_failures:
     - env: TOXENV=vulture
-      stage: lint
 
 
 # 1. apt addons
