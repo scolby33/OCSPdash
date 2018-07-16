@@ -2,7 +2,7 @@
 # https://docs.travis-ci.com/user/customizing-the-build/#The-Build-Lifecycle
 
 # 0. language and environment
-langauge: python
+language: python
 
 python: "3.7"
 dist: xenial
