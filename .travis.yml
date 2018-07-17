@@ -1,41 +1,92 @@
-sudo: false
-cache: pip
+# Organize the .travis.yml by the steps in the build lifecycle
+# https://docs.travis-ci.com/user/customizing-the-build/#The-Build-Lifecycle
 
+# 0. language and build environment
 language: python
 
 python:
-    - 3.6
+  - 3.7
+  - 3.6
+dist: xenial
+sudo: true
 
-services:
-  - postgresql
+services: postgresql
 
-matrix:
+
+# 0.5 jobs, stages, and matrix
+stages:
+  - lint
+  - docs
+  - test
+
+env:
+  - TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
+  - TOXENV=py DB=sqlite
+
+jobs:
   include:
-    - env: TOXENV=py DB=postgres OCSPDASH_TEST_CONNECTOR=psycopg2 OCSPDASH_TEST_CONNECTION=postgresql+psycopg2://travis@localhost/tests
-    - env: TOXENV=py DB=sqlite
+    # lint stage
+    - stage: lint
+      env: TOXENV=flake8
     - env: TOXENV=manifest
-    - env: TOXENV=flake8
     - env: TOXENV=mypy
     - env: TOXENV=vulture
-    - env: TOXENV=doc8
-    - env: TOXENV=rst-lint
+
+    # docs stage
+    - stage: docs
+      env: TOXENV=doc8
     - env: TOXENV=readme
     - env: TOXENV=docs
+
+matrix:
   allow_failures:
     - env: TOXENV=vulture
 
-install:
-    - pip install tox codecov coverage
 
+# 1. apt addons
+
+
+# 2. cache components
+cache: pip
+
+
+# 3. before_install
+
+
+# 4. install
+install:
+    - sh -c 'if [ "$TOXENV" = "py" ]; then pip install tox codecov; else pip install tox; fi'
+
+
+# 5. before_script
 before_script:
   - sh -c "if [ '$DB' = 'postgres' ]; then psql -c 'DROP DATABASE IF EXISTS tests;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'postgres' ]; then psql -c 'DROP DATABASE IF EXISTS tests_tmp;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'postgres' ]; then psql -c 'CREATE DATABASE tests;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'postgres' ]; then psql -c 'CREATE DATABASE tests_tmp;' -U postgres; fi"
 
+
+# 6. script
 script:
     - tox
 
+
+# 7. before_cache
+
+
+# 8. after_success/after_failure
 after_success:
-    - tox -e coverage-report
-    - codecov
+    - sh -c 'if [ "$TOXENV" = "py" ]; then tox -e coverage-report; codecov; fi'
+
+
+# 9. before_deploy
+
+
+# 10. deploy
+
+
+# 11. after_deploy
+
+
+# 12. after_script
+
