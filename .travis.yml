@@ -55,7 +55,7 @@ cache: pip
 
 # 4. install
 install:
-    - sh -c 'if [ "$TOXENV" = "py" ]; then pip install tox codecov; else pip install tox; fi'
+  - sh -c 'if [ "$TOXENV" = "py" ]; then pip install tox codecov; else pip install tox; fi'
 
 
 # 5. before_script
@@ -68,7 +68,7 @@ before_script:
 
 # 6. script
 script:
-    - tox
+  - tox
 
 
 # 7. before_cache
@@ -76,7 +76,7 @@ script:
 
 # 8. after_success/after_failure
 after_success:
-    - sh -c 'if [ "$TOXENV" = "py" ]; then tox -e coverage-report; codecov; fi'
+  - sh -c 'if [ "$TOXENV" = "py" ]; then tox -e coverage-report; codecov; fi'
 
 
 # 9. before_deploy
