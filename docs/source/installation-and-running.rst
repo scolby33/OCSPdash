@@ -3,3 +3,12 @@
 
 Installation and Running
 ========================
+
+
+Docker
+------
+
+.. toctree::
+    :maxdepth: 2
+
+    docker
