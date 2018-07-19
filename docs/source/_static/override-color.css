@@ -1,0 +1,7 @@
+/* Sidebar header (and topbar for mobile) */
+.wy-side-nav-search, .wy-nav-top {
+    background: #79f0c0;
+}
+.wy-menu-vertical a:active {
+    background-color: #79f0c0;
+}

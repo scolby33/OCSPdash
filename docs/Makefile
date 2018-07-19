@@ -3,8 +3,8 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = python3 -m sphinx
-SPHINXPROJ    = OCSPDashboard
+SPHINXBUILD   = sphinx-build
+SPHINXPROJ    = OCSPdash
 SOURCEDIR     = source
 BUILDDIR      = build
 
