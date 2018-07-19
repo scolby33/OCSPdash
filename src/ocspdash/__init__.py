@@ -14,4 +14,4 @@ __author__ = 'Scott Colby'
 __email__ = 'scolby33@gmail.com'
 
 __license__ = 'MIT'
-__copyright__ = 'Copyright (c) 2017 Scott Colby and Charles Tapley Hoyt'
+__copyright__ = 'Copyright (c) 2018 Scott Colby and Charles Tapley Hoyt'
