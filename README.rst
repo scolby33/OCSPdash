@@ -32,7 +32,8 @@ Changes as of 22 August 2017
 - Create a pretty results page using Bootstrap styles
 - Major refactoring of the ServerQuery class to be a subclass of the Censys API class
 - Create models and associated database schemata
-- Create a manager class to encapsulate working with the models and implement caching logic to reduce the number of (slow) API requests used
+- Create a manager class to encapsulate working with the models and implement caching logic to 
+  reduce the number of (slow) API requests used
 - Added lots of type hinting information
 - Created a working webapp to display the results information and interact with the DB
 - Major updates to the CLI to allow it to run the webapp and local DB updates
@@ -46,7 +47,8 @@ Changes as of 16 August 2017
 
 Contributing
 ------------
-There are many ways to contribute to an open-source project, but the two most common are reporting bugs and contributing code.
+There are many ways to contribute to an open-source project, but the two most common are reporting 
+bugs and contributing code.
 
 If you have a bug or issue to report, please visit the `issues page on GitHub <https://github.com/scolby33/OCSPdash/issues>`_ and open an issue there.
 
