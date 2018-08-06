@@ -11,7 +11,7 @@ import setuptools
 #################################################################
 PACKAGES = setuptools.find_packages(where='src')
 META_PATH = os.path.join('src', 'ocspdash', '__init__.py')
-KEYWORDS = []
+KEYWORDS = ['OCSP', 'X509', 'PKI', 'certificates', 'certificate revocation']
 # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
 CLASSIFIERS = [
     'Development Status :: 1 - Planning',
@@ -99,4 +99,5 @@ if __name__ == '__main__':
         tests_require=TESTS_REQUIRE,
         entry_points=ENTRY_POINTS,
         include_package_data=True,
+        zip_safe=False,
     )

@@ -4,7 +4,7 @@
 # (formerly in tox.ini) #
 #########################
 [flake8]
-application-import-names = ocspdash
+# flake8
 exclude =
     .tox,
     .git,
@@ -18,6 +18,11 @@ exclude =
     .cache,
     .eggs
 format = ${cyan}%(path)s${reset}:${yellow_bold}%(row)d${reset}:${green_bold}%(col)d${reset}: ${red_bold}%(code)s${reset} %(text)s
-import-order-style = pycharm
 ignore = D105,E501
+
+# flake8-import-order
+application-import-names = ocspdash
+import-order-style = pycharm
+
+# mccabe
 max-complexity = 10
