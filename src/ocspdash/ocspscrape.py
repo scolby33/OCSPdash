@@ -268,24 +268,5 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, sessi
 
     return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
 
-
-@main.command()
-@click.argument('token')
-@click.option('--notrunc', is_flag=True)
-def extractkey(token: str, notrunc: bool):
-    """Extract the claims from a generate JWT and print them nicely."""
-    # FIXME its not obvious what to put in as the token here...
-    unverified_claims = jwt.get_unverified_claims(token)
-    public_key = b64decode(unverified_claims['pk']).decode('utf-8')
-    claims = jwt.decode(token, public_key, algorithms=[OCSP_JWT_ALGORITHM])
-
-    if notrunc:
-        click.echo(f'public key:\t{claims["pk"]}'.expandtabs(7))
-    else:
-        click.echo(f'public key:\t{claims["pk"]}'.expandtabs(7)[:78] + '..')
-
-    click.echo(f'invite token:\t{claims["token"]}'.expandtabs(7))
-
-
 if __name__ == '__main__':
     sys.exit(main())
