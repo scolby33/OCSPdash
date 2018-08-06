@@ -268,5 +268,6 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, sessi
 
     return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
 
+
 if __name__ == '__main__':
     sys.exit(main())
