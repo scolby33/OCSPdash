@@ -11,7 +11,7 @@ from functools import partial
 from http import HTTPStatus
 
 import jsonlines
-from flask import Blueprint, abort, jsonify, request
+from flask import Blueprint, abort, request
 from jose import jwt
 from jose.exceptions import JWTError
 
@@ -45,7 +45,7 @@ def register_location_key():
     if new_location is None:
         return abort(400)
 
-    return jsonify(new_location)
+    return '', HTTPStatus.NO_CONTENT
 
 
 @api.route('/manifest.jsonl')
