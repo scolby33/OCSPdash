@@ -4,8 +4,7 @@
 # 0. language and build environment
 language: python
 
-python:
-  - 3.7
+python: 3.7
 dist: xenial
 sudo: true
 
@@ -26,10 +25,16 @@ jobs:
   include:
     # lint stage
     - stage: lint
-      env: TOXENV=flake8
+      env: TOXENV=dodgy
+    - env: TOXENV=flake8
+    - env: TOXENV=flake8-bandit
     - env: TOXENV=manifest
     - env: TOXENV=mypy
+    - env: TOXENV=mypy-strict
+    - env: TOXENV=pyroma  # TODO move to deploy?
+    - env: TOXENV=radon
     - env: TOXENV=vulture
+    - env: TOXENV=xenon
 
     # docs stage
     - stage: docs
@@ -39,7 +44,10 @@ jobs:
 
 matrix:
   allow_failures:
+    - env: TOXENV=flake8-bandit
+    - env: TOXENV=mypy-strict
     - env: TOXENV=vulture
+    - env: TOXENV=xenon
 
 
 # 1. apt addons
