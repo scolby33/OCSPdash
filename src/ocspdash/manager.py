@@ -364,12 +364,11 @@ class Manager:
         return self.session.query(Authority).order_by(Authority.cardinality.desc()).limit(n).all()
 
     def get_most_recent_result_for_each_location(self) -> List[Result]:
-        """Get the most recent results for each location.
+        """Get the most recent result from each location for each authority.
 
         Results are sorted by Authority cardinality, Authority name, Responder cardinality, Responder url, and Location name.
         """
-        # TODO better docstring
-        subquery = (
+        timestamps_for_most_recent_results = (
             self.session.query(
                 Responder.id.label('resp_id'),
                 Location.id.label('loc_id'),
@@ -384,21 +383,21 @@ class Manager:
         )
         query = (
             self.session.query(Result)
-            .select_from(subquery)
-            .join(Result, Result.retrieved == subquery.c.most_recent)
+            .select_from(timestamps_for_most_recent_results)
+            .join(Result, Result.retrieved == timestamps_for_most_recent_results.c.most_recent)
             .join(Chain)
             .join(
                 Responder,
                 and_(
                     Responder.id == Chain.responder_id,
-                    Responder.id == subquery.c.resp_id,
+                    Responder.id == timestamps_for_most_recent_results.c.resp_id,
                 ),
             )
             .join(
                 Location,
                 and_(
                     Location.id == Result.location_id,
-                    Location.id == subquery.c.loc_id
+                    Location.id == timestamps_for_most_recent_results.c.loc_id
                 ),
             )
             .join(Authority)
