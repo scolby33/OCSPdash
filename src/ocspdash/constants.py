@@ -26,7 +26,7 @@ VERSION = '0.1.0-dev'
 NAMESPACE_OCSPDASH_KID = uuid.UUID('c81dcfc6-2131-4d05-8ea4-4e5ad8123696')
 NAMESPACE_OCSPDASH_CERTIFICATE_CHAIN_ID = uuid.UUID('6eb9a010-b49c-4b61-95cf-f28c175dda8a')
 
-OCSPDASH_API_VERSION = 'v0'  # TODO: add a bumpversion target for this?
+OCSPDASH_API_VERSION = 'v0'
 
 #: The directory in which data for OCSP Dashboard is stored. Can be set from the environment variable
 #: ``OCSPDASH_DIRECTORY`` or defaults to ``~/.ocspdash``
