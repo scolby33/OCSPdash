@@ -6,6 +6,7 @@ import os
 import uuid
 
 import requests.utils
+from cryptography.hazmat.primitives.asymmetric import ec
 
 __all__ = [
     'NAMESPACE_OCSPDASH_KID',
@@ -19,6 +20,7 @@ __all__ = [
     'OCSPDASH_USER_AGENT',
     'OCSPSCRAPE_USER_AGENT_IDENTIFIER',
     'OCSPSCRAPE_USER_AGENT',
+    'OCSPSCRAPE_PRIVATE_KEY_ALGORITHMS',
     'OCSP_RESULTS_JWT_CLAIM',
     'OCSP_JWT_ALGORITHM',
 ]
@@ -49,6 +51,8 @@ OCSPDASH_USER_AGENT = ' '.join([requests.utils.default_user_agent(), OCSPDASH_US
 
 OCSPSCRAPE_USER_AGENT_IDENTIFIER = f'OCSPscrape/{VERSION}'
 OCSPSCRAPE_USER_AGENT = ' '.join([requests.utils.default_user_agent(), OCSPSCRAPE_USER_AGENT_IDENTIFIER])
+
+OCSPSCRAPE_PRIVATE_KEY_ALGORITHMS = [ec.SECP521R1]
 
 OCSP_RESULTS_JWT_CLAIM = os.environ.get('OCSPDASH_RESULTS_JWT_CLAIM', 'res')
 OCSP_JWT_ALGORITHM = os.environ.get('OCSPDASH_JWT_ALGORITHM', 'ES512')

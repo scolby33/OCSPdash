@@ -530,7 +530,6 @@ class Manager:
         if not location.verify(validator):
             return None
 
-        # TODO: verify that the public key is an algorithm we want to support
         location.set_public_key(public_key)
 
         self.session.commit()

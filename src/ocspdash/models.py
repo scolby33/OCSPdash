@@ -9,6 +9,8 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Mapping, Optional  # noqa: F401 imported for PyCharm type checking
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from oscrypto import asymmetric
 from sqlalchemy import Binary, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
@@ -16,7 +18,7 @@ from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import functions as func
 
 import ocspdash.util
-from ocspdash.constants import NAMESPACE_OCSPDASH_CERTIFICATE_CHAIN_ID, NAMESPACE_OCSPDASH_KID
+from ocspdash.constants import NAMESPACE_OCSPDASH_CERTIFICATE_CHAIN_ID, NAMESPACE_OCSPDASH_KID, OCSPSCRAPE_PRIVATE_KEY_ALGORITHMS
 from ocspdash.custom_columns import UUID
 from ocspdash.security import pwd_context
 
@@ -225,6 +227,10 @@ class Location(Base):
 
         :param public_key: The public key for the Location.
         """
+        pubkey = b64decode(public_key)
+        loaded_pubkey = serialization.load_pem_public_key(pubkey, default_backend())
+        if not any(isinstance(getattr(loaded_pubkey, 'curve', None), algorithm) for algorithm in OCSPSCRAPE_PRIVATE_KEY_ALGORITHMS):
+            raise ValueError('Key type not in accepted algorithms')
         self.pubkey = b64decode(public_key)
         self.key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
 
