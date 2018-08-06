@@ -88,7 +88,7 @@ class ServerQuery(RateLimitedCensysCertificates):
             for result in tags_report['results']
         }
 
-        return self._url_not_expired(results)  # TODO: turn this return to a function to document implicitly
+        return self._url_not_expired(results)
 
     def get_certs_for_issuer_and_url(self, issuer: str, url: str) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
         """Retrieve the raw bytes for an example subject certificate and its issuing cert for a given authority and OCSP url.
