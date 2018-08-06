@@ -48,12 +48,15 @@ from ocspbuilder import OCSPRequestBuilder
 from oscrypto import asymmetric
 from tqdm import tqdm
 
-from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
+from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPSCRAPE_USER_AGENT, OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
 
 API_URL = 'api/v0/'
 MANIFEST_URL = urllib.parse.urljoin(API_URL, 'manifest.jsonl')
 SUBMIT_URL = urllib.parse.urljoin(API_URL, 'submit')
 REGISTER_URL = urllib.parse.urljoin(API_URL, 'register')
+
+requests_session = requests.Session()
+requests_session.headers.update({'User-Agent': OCSPSCRAPE_USER_AGENT})
 
 config_directory = os.path.join(os.path.expanduser('~'), '.config', 'ocspdash')
 if not os.path.exists(config_directory):
@@ -115,8 +118,7 @@ def genkey(invite_token, host, no_post):
         click.echo(token)
 
     else:
-        # TODO: set useragent
-        res = requests.post(
+        res = requests_session.post(
             urllib.parse.urljoin(host, REGISTER_URL),
             headers={'Content-Type': 'application/octet-stream'},
             data=token,
@@ -132,7 +134,7 @@ def update(host, no_post):
     # TODO provide alternate options for loading a private key
     private_key = get_private_key()
 
-    manifest_response = requests.get(urllib.parse.urljoin(host, MANIFEST_URL))
+    manifest_response = requests_session.get(urllib.parse.urljoin(host, MANIFEST_URL))
 
     if manifest_response.encoding is None:
         manifest_response.encoding = 'utf-8'
@@ -149,7 +151,7 @@ def update(host, no_post):
         click.echo(token)
 
     else:
-        submission_response = requests.post(
+        submission_response = requests_session.post(
             urllib.parse.urljoin(host, SUBMIT_URL),
             headers={'Content-Type': 'application/octet-stream'},
             data=token,
@@ -188,9 +190,7 @@ def scrape(key: str, queries: Iterable[Mapping]) -> str:
     :param key: The private key
     :param queries: An iterator over JSON dictionaries representing the manifest from OCSPdash
     """
-    session = requests.Session()
-    session.headers.update({'User-Agent': ' '.join([requests.utils.default_user_agent(), 'OCSPscrape 0.1.0'])})
-    build_result = partial(_build_result, session)
+    build_result = partial(_build_result, requests_session)
 
     claims = {
         'iat': datetime.utcnow(),
