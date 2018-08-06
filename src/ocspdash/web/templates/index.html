@@ -74,7 +74,7 @@
                 <thead>
                 <tr>
                     <th></th>
-                    {% for location in payload['locations'] %}
+                    {% for location in payload.locations %}
                         <th class="text-center">{# <span data-toggle="popover" data-trigger="hover" data-placement="top" data-content="{{ location.key_id }}"> #}
                             {{ location.name }}
                         {# </span> #}</th>
@@ -82,20 +82,20 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for authority in payload['authorities'] %}
+                {% for authority_payload in payload.authorities %}
                     <tr>
-                        <td colspan="{{ 1 + payload['locations'] | length }}">
+                        <td colspan="{{ 1 + payload.locations | length }}">
                             {# <span data-toggle="popover" data-trigger="hover" data-placement="top" data-content="{{ '{:,}'.format(authority['authority'].cardinality) }}"> #}
-                                {{ authority['authority'].name }}
+                                {{ authority_payload.authority.name }}
                             {# </span> #}
                         </td>
                     </tr>
-                    {% for responder in authority['responders'] %}
+                    {% for responder_payload in authority_payload.responders %}
                         <tr {# {% if not row[1] %}class="not-current"{% endif %} #}>
                             <td>{# <span data-toggle="popover" data-trigger="hover" data-placement="top" data-content="{{ '{:,}'.format(responder['responder'].cardinality) }}"> #}
-                                {{ responder['responder'].url }}
+                                {{ responder_payload.responder.url }}
                             {# </span> #}</td>
-                            {% for result in responder['results'] %}
+                            {% for result in responder_payload.results %}
                                 <td class="text-center">
                                     {% if result is not none %}
                                         <span class="svg {% if result.status.value == 'good' %}svg-check-circle{% elif result.status.value == 'questionable' %}svg-x-circle{% elif result.status.value == 'bad' %}svg-question-circle{% endif %}" data-toggle="popover" data-trigger="click" data-placement="top" data-html="true" data-content="<table><tbody><tr><td>Ping</td><td>{{ result.ping }}</td></tr><tr><td>OCSP</td><td>{{ result.ocsp }}</td></tr><tr><td>Retrieved</td><td>{{ result.retrieved }}</td></tr><tr><td>Chain ID</td><td>{{  result.chain.certificate_chain_uuid | string }}</td></tr></tbody></table>"></span>

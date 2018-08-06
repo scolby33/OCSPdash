@@ -2,10 +2,13 @@
 
 """Manager for OCSPDash."""
 
+from __future__ import annotations
+
 import logging
 import os
 import secrets
 import uuid
+from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter
 from typing import Iterable, List, Mapping, Optional, Tuple
@@ -56,6 +59,30 @@ def _workaround_pysqlite_transaction_bug():
 
 
 _workaround_pysqlite_transaction_bug()
+
+
+@dataclass
+class Payload:
+    """A payload to be parsed by the index.html template."""
+
+    authorities: List[AuthorityPayload]  # noqa: F821
+    locations: List[Location]
+
+
+@dataclass
+class AuthorityPayload:
+    """The authority section of the payload for the index.html template."""
+
+    authority: Authority
+    responders: List[ResponderPayload]  # noqa: F821
+
+
+@dataclass
+class ResponderPayload:
+    """The responder section of the payload for the index.html template."""
+
+    responder: Responder
+    results: Iterable[Result]
 
 
 class Manager:
@@ -425,9 +452,11 @@ class Manager:
                 .all()
         )
 
-    def get_payload(self):
-        """Get the current status payload for the index."""
-        # TODO better docstring and type checking
+    def get_payload(self) -> Payload:
+        """Get the current status payload for the home page.
+
+        :returns: a Payload suitable for parsing by the index.html template
+        """
         locations = self.get_all_locations_with_test_results()
 
         authorities = []
@@ -436,22 +465,20 @@ class Manager:
             responders = []
 
             for responder, results_by_authority_and_responder in groupby(results_by_authority, attrgetter('chain.responder')):
-                responders.append(
-                    {
-                        'responder': responder,
-                        'results': tuple(results_by_authority_and_responder)
-                    }
-                )
+                responders.append(ResponderPayload(
+                    responder=responder,
+                    results=tuple(results_by_authority_and_responder)
+                ))
 
-            authorities.append({
-                'authority': authority,
-                'responders': responders
-            })
+            authorities.append(AuthorityPayload(
+                authority=authority,
+                responders=responders
+            ))
 
-        return {
-            'locations': locations,
-            'authorities': authorities
-        }
+        return Payload(
+            authorities=authorities,
+            locations=locations
+        )
 
     def get_location_by_key_id(self, key_id: uuid.UUID) -> Optional[Location]:
         """Get a location by its key id."""
