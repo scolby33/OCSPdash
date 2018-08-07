@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 api = Blueprint('api', __name__)
 
 
-@api.route('/register', methods=['POST'])
+@api.route('/register', methods=['POST'])  # noqa: C901
 def register_location_key():
     """Register a public key for an invited location."""
     # TODO: error handling (what if no invite, what if duplicate name, etc.)
