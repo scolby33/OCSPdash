@@ -524,11 +524,11 @@ class Manager:
 
         location = self.get_location_by_selector(selector)
         if location is None:
-            raise Exception(f'location not found for selector: {selector}')
+            raise ValueError(f'location not found for selector: {selector}')
         if location.pubkey:  # this invite has already been used
-            return None
+            raise ValueError(f'invite has already been used: {invite_token}')
         if not location.verify(validator):
-            return None
+            raise ValueError(f'invalid invite validator: {validator}')
 
         location.set_public_key(public_key)
 

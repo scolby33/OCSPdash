@@ -2,6 +2,7 @@
 
 """The OCSPdash API blueprint."""
 
+import binascii
 import io
 import logging
 import uuid
@@ -29,21 +30,41 @@ api = Blueprint('api', __name__)
 def register_location_key():
     """Register a public key for an invited location."""
     # TODO: error handling (what if no invite, what if duplicate name, etc.)
-    unverified_claims = jwt.get_unverified_claims(request.data)
-    unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
+    print(request.data)
+    try:
+        unverified_claims = jwt.get_unverified_claims(request.data)
+    except jwt.JWTError:
+        return 'malformed JWT', HTTPStatus.BAD_REQUEST
+
+    try:
+        unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
+    except KeyError:
+        return "'pk' missing from unverified claims", HTTPStatus.BAD_REQUEST
+    except (binascii.Error, UnicodeError):
+        abort(400)  # bad data in 'pk' claim
+        return "failed to decode 'pk' claim", HTTPStatus.BAD_REQUEST
 
     try:
         claims = jwt.decode(request.data, unverified_public_key)
     except JWTError:
-        return abort(400)  # bad input
+        return 'failed to validate JWT', HTTPStatus.BAD_REQUEST
 
-    public_key = claims['pk']
-    invite_token = b64decode(claims['token'])
+    try:
+        public_key = claims['pk']
+    except KeyError:
+        return "'pk' misisng from verified claims", HTTPStatus.BAD_REQUEST
 
-    new_location = manager.process_location(invite_token, public_key)
+    try:
+        invite_token = b64decode(claims['token'])
+    except KeyError:
+        return "'token' missing from verified claims", HTTPStatus.BAD_REQUEST
+    except binascii.Error:
+        return "failed to decode 'token' claim", HTTPStatus.BAD_REQUEST
 
-    if new_location is None:
-        return abort(400)
+    try:
+        manager.process_location(invite_token, public_key)
+    except ValueError:
+        return 'bad invite or public key', HTTPStatus.BAD_REQUEST
 
     return '', HTTPStatus.NO_CONTENT
 
