@@ -115,7 +115,7 @@ def _prepare_result_dictionary(result_data):
     }
 
 
-@api.route('/submit', methods=['POST'])
+@api.route('/submit', methods=['POST'])  # noqa: C901
 def submit():
     """Submit scrape results.
 
