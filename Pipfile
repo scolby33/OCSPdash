@@ -25,22 +25,7 @@ tqdm = "*"
 "e1839a8" = {editable = true, path = "."}
 
 [dev-packages]
-check-manifest = "*"
-coverage = "*"
-doc8 = "*"
-flake8 = "*"
-flake8-colors = "*"
-flake8-docstrings = "*"
-flake8-import-order = "*"
-mypy = "*"
-pep8-naming = "*"
-pygments = "*"
-pytest = "*"
-restructuredtext-lint = "*"
-sphinx = "*"
-sphinx-rtd-theme = "*"
 tox = "*"
-vulture = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
