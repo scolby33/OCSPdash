@@ -516,6 +516,7 @@ class Manager:
         :parameter public_key: The public key to be associated with the Location.
 
         :returns: The Location if a valid invite was provided, otherwise None.
+        :raises ValueError: with an appropriate message for failures to process the location invite.
         """
         if len(invite_token) != 32:
             raise ValueError('invite_token of wrong length')
