@@ -29,7 +29,7 @@ class OCSPSQLAlchemy(SQLAlchemy):
         self.manager = Manager(engine=self.engine, session=self.session)
 
     @staticmethod
-    def get_db(app: Flask) -> OCSPSQLAlchemy:  # noqa: F821
+    def get_db(app: Flask) -> SQLAlchemy:  # noqa: F821
         """Get the db from an app.
 
         :param app: A Flask app
