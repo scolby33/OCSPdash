@@ -6,7 +6,7 @@ import logging
 
 import pytest
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from ocspdash.manager import Manager
 from ocspdash.models import Base
@@ -62,7 +62,7 @@ def manager_session(rfc):
     logger.debug('creating sessionmaker')
     session_maker = sessionmaker(bind=connection)
     logger.debug('creating scoped_session')
-    session = scoped_session(session_maker)
+    session: Session = scoped_session(session_maker)
 
     @event.listens_for(session, 'after_transaction_end')
     def restart_savepoint(session, transaction):

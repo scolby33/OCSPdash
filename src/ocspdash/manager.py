@@ -11,11 +11,11 @@ import uuid
 from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter
-from typing import Iterable, List, Mapping, Optional, Tuple
+from typing import Iterable, List, Mapping, Optional, Tuple, Union
 
 from sqlalchemy import and_, create_engine, func
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from ocspdash.constants import OCSPDASH_DEFAULT_CONNECTION, OCSPDASH_USER_AGENT_IDENTIFIER
 from ocspdash.models import Authority, Base, Chain, Location, Responder, Result
@@ -27,6 +27,8 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+_SessionHint = Union[Session, scoped_session]
 
 
 def _workaround_pysqlite_transaction_bug():
@@ -88,12 +90,13 @@ class ResponderPayload:
 class Manager:
     """Manager for interacting with the database."""
 
-    def __init__(self, engine: Engine, session: scoped_session, server_query: Optional[ServerQuery] = None) -> None:
+    def __init__(self, engine: Engine, session: _SessionHint, server_query: Optional[ServerQuery] = None) -> None:
         """Instantiate a Manager with instances of the objects it needs.
 
         :param engine: The database engine.
         :param session: The database session.
-        :param server_query: The server_query instance. If None, using server_query-related functionality will raise an error.
+        :param server_query: The server_query instance. If None, using server_query-related functionality will raise
+         an error.
         """
         self.engine = engine
         self.session = session
@@ -108,7 +111,8 @@ class Manager:
         :param connection: An SQLAlchemy-compatible connection string.
         :param echo: True to echo SQL emitted by SQLAlchemy.
         :param api_id: The Censys API id. If None, the value will be obtained from configuration or the environment.
-        :param api_secret: The Censys API secret. If none, the value will be obtained from configuration or the environment.
+        :param api_secret: The Censys API secret. If none, the value will be obtained from configuration or the
+         environment.
 
         :returns: An instance of Manager configured according to the arguments provided.
         """
@@ -510,7 +514,7 @@ class Manager:
         return self.session.query(Location).filter(Location.selector == selector).one_or_none()
 
     def process_location(self, invite_token: bytes, public_key: str) -> Optional[Location]:
-        """Given an invite token and public key, check for a valid invite and associate the public key with the corresponding location.
+        """Check for a valid invite and associate the public key with the corresponding location.
 
         :parameter invite_token: a 32-byte string corresponding to an invited Location.
         :parameter public_key: The public key to be associated with the Location.
