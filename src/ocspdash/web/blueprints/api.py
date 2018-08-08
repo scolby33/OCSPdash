@@ -12,11 +12,12 @@ from functools import partial
 from http import HTTPStatus
 
 import jsonlines
-from flask import Blueprint, abort, request
+from flask import Blueprint, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
 
 from ocspdash.constants import OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
+from ocspdash.web.exceptions import InvalidUsage
 from ocspdash.web.proxies import manager
 
 jwt.decode = partial(jwt.decode, algorithms=OCSP_JWT_ALGORITHM)
@@ -34,36 +35,36 @@ def register_location_key():
     try:
         unverified_claims = jwt.get_unverified_claims(request.data)
     except jwt.JWTError:
-        abort(HTTPStatus.BAD_REQUEST, 'malformed JWT')
+        raise InvalidUsage('malformed JWT')
 
     try:
         unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
     except KeyError:
-        abort(HTTPStatus.BAD_REQUEST, "'pk' missing from claims")
+        raise InvalidUsage("'pk' missing from claims")
     except (binascii.Error, UnicodeError):
-        abort(HTTPStatus.BAD_REQUEST, "failed to decode 'pk' claim")
+        raise InvalidUsage("failed to decode 'pk' claim")
 
     try:
         claims = jwt.decode(request.data, unverified_public_key)
     except JWTError:
-        abort(HTTPStatus.BAD_REQUEST, 'failed to validate JWT')
+        raise InvalidUsage('failed to validate JWT')
 
     try:
         public_key = claims['pk']
     except KeyError:
-        abort(HTTPStatus.BAD_REQUEST, "'pk' misisng from claims")
+        raise InvalidUsage("'pk' missing from claims")
 
     try:
         invite_token = b64decode(claims['token'])
     except KeyError:
-        abort(HTTPStatus.BAD_REQUEST, "'token' missing from claims")
+        raise InvalidUsage("'token' missing from claims")
     except binascii.Error:
-        abort(HTTPStatus.BAD_REQUEST, "failed to decode 'token' claim")
+        raise InvalidUsage("failed to decode 'token' claim")
 
     try:
         manager.process_location(invite_token, public_key)
     except ValueError:
-        abort(HTTPStatus.BAD_REQUEST, 'bad invite or public key')
+        raise InvalidUsage('bad invite or public key')
 
     return '', HTTPStatus.NO_CONTENT
 
@@ -85,7 +86,7 @@ def get_manifest():
     """
     n = request.args.get('n', type=int, default=10)  # TODO make configurable at app level
     if n > 10:
-        abort(HTTPStatus.BAD_REQUEST, 'n too large, max is 10')  # TODO get the max config value here too
+        raise InvalidUsage(f'n too large, max is 10: {n}')  # TODO get the max config value here too
     manifest_lines = io.StringIO()
     with jsonlines.Writer(manifest_lines, sort_keys=True) as writer:
         writer.write_all(
@@ -126,34 +127,45 @@ def submit():
     try:
         submitted_token_header = jwt.get_unverified_header(request.data)
     except jwt.JWTError:
-        abort(HTTPStatus.BAD_REQUEST, 'malformed JWT')
+        raise InvalidUsage('malformed JWT')
 
     try:
         key_id = uuid.UUID(submitted_token_header['kid'])
     except KeyError:
-        abort(HTTPStatus.BAD_REQUEST, "'kid' missing from JWT header")
+        raise InvalidUsage("'kid' missing from JWT header")
 
     submitting_location = manager.get_location_by_key_id(key_id)
     if not submitting_location:
-        abort(HTTPStatus.BAD_REQUEST, f'no location with key id: {key_id}')
+        raise InvalidUsage(f'no location with key id: {key_id}')
 
     try:
         claims = jwt.decode(request.data, submitting_location.pubkey.decode('utf-8'))
     except JWTError:
-        abort(HTTPStatus.BAD_REQUEST, 'failed to validate JWT')
+        raise InvalidUsage('failed to validate JWT')
 
     try:
         results = claims[OCSP_RESULTS_JWT_CLAIM]
     except KeyError:
-        abort(HTTPStatus.BAD_REQUEST, f"'{OCSP_RESULTS_JWT_CLAIM}' missing from claims")
+        raise InvalidUsage(f"'{OCSP_RESULTS_JWT_CLAIM}' missing from claims")
 
     try:
         prepared_result_dicts = (_prepare_result_dictionary(result_data)
                                  for result_data in results)
     except (KeyError, ValueError):
-        abort(HTTPStatus.BAD_REQUEST, 'invalid result data')
+        raise InvalidUsage('invalid result data')
 
     # TODO: can this raise an exception? I think yes if there's a constraint broken on the DB when commit is called()
     manager.insert_payload(submitting_location, prepared_result_dicts)
 
     return '', HTTPStatus.NO_CONTENT
+
+
+@api.errorhandler(InvalidUsage)
+def handle_invalid_usage(error: InvalidUsage):
+    """Handle InvalidUsage exceptions raised by views in the blueprint.
+
+    :param error: The exception that caused this handler to be called.
+    """
+    response = jsonify(error)
+    response.status_code = error.status_code
+    return response
