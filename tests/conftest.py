@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from ocspdash.manager import Manager
-from ocspdash.models import Base
+from ocspdash.models import Authority, Base, Chain, Responder
 from ocspdash.web import create_application
 from .constants import TEST_CONNECTION
 
@@ -218,3 +218,28 @@ def client_function(client_session):
 
 
 # TODO: fixture to pre-fill DB with some stuff for the client to test on
+def prefill_my_database(s: Session):
+    """Add some test data to the database.
+
+    :param s: A session to the database. Could be wrapped for a manager or transaction or whatever
+    """
+    a1 = Authority(name='a1', cardinality=5)
+    a2 = Authority(name='a2', cardinality=5)
+    a3 = Authority(name='a3', cardinality=5)
+    s.add_all([a1, a2, a3])
+    s.commit()
+
+    r1 = Responder(authority=a1, url='url1', cardinality=5)
+    r2 = Responder(authority=a1, url='url2', cardinality=5)
+    r3 = Responder(authority=a2, url='url3', cardinality=5)
+    r4 = Responder(authority=a2, url='url4', cardinality=5)
+
+    s.add_all([r1, r2, r3, r4])
+
+    c1 = Chain(responder=r1, subject=b'c1s', issuer=b'c1i')
+    c2 = Chain(responder=r2, subject=b'c2s', issuer=b'c2i')
+    c3 = Chain(responder=r3, subject=b'c3s', issuer=b'c3i')
+    c4 = Chain(responder=r4, subject=b'c4s', issuer=b'c4i')
+
+    s.add_all([c1, c2, c3, c4])
+    s.commit()
