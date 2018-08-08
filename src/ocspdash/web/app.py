@@ -28,7 +28,8 @@ def create_application(connection: Optional[str] = None, flask_debug: bool = Fal
 
     :param connection: Database connection string
     :param flask_debug: Enable Flask debug mode, overridden by env $DEBUG
-    :param db_session_options: Mapping of options passed to the flask-sqlalchemy constructor for eventual passage to sqlalchemy.sessionmaker.
+    :param db_session_options: Mapping of options passed to the flask-sqlalchemy constructor for eventual passage to
+     sqlalchemy.sessionmaker.
     """
     app = Flask(__name__)
     app.config.update(dict(
@@ -39,8 +40,7 @@ def create_application(connection: Optional[str] = None, flask_debug: bool = Fal
         CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
         CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
     ))
-    if db_session_options is None:
-        db_session_options = {}
+
     db = OCSPSQLAlchemy(app=app, session_options=db_session_options)
 
     Bootstrap(app)
