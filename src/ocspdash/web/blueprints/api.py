@@ -31,7 +31,6 @@ api = Blueprint('api', __name__)
 def register_location_key():
     """Register a public key for an invited location."""
     # TODO: error handling (what if no invite, what if duplicate name, etc.)
-    print(request.data)
     try:
         unverified_claims = jwt.get_unverified_claims(request.data)
     except jwt.JWTError:
