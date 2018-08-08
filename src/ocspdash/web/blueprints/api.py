@@ -33,37 +33,39 @@ def register_location_key():
     # TODO: error handling (what if no invite, what if duplicate name, etc.)
     try:
         unverified_claims = jwt.get_unverified_claims(request.data)
-    except jwt.JWTError:
-        raise InvalidUsage('malformed JWT')
+    except jwt.JWTError as e:
+        raise InvalidUsage(f'failed to decode JWT: {str(e)}')
 
     try:
         unverified_public_key = b64decode(unverified_claims['pk']).decode('utf-8')
-    except KeyError:
-        raise InvalidUsage("'pk' missing from claims")
-    except (binascii.Error, UnicodeError):
-        raise InvalidUsage("failed to decode 'pk' claim")
+    except KeyError as e:
+        raise InvalidUsage(f'missing claim: {str(e)}')
+    except binascii.Error as e:
+        raise InvalidUsage(f"failed to decode 'pk' claim: {str(e)}")
+    except UnicodeError as e:
+        raise InvalidUsage(f"failed to decode 'pk' claim: {e.reason}")
 
     try:
         claims = jwt.decode(request.data, unverified_public_key)
-    except JWTError:
-        raise InvalidUsage('failed to validate JWT')
+    except JWTError as e:
+        raise InvalidUsage(f'failed to decode JWT: {str(e)}')
 
     try:
         public_key = claims['pk']
-    except KeyError:
-        raise InvalidUsage("'pk' missing from claims")
+    except KeyError as e:
+        raise InvalidUsage(f'missing claim: {str(e)}')
 
     try:
         invite_token = b64decode(claims['token'])
-    except KeyError:
-        raise InvalidUsage("'token' missing from claims")
-    except binascii.Error:
-        raise InvalidUsage("failed to decode 'token' claim")
+    except KeyError as e:
+        raise InvalidUsage(f'missing claim: {str(e)}')
+    except binascii.Error as e:
+        raise InvalidUsage(f"failed to decode 'token' claim: {str(e)}")
 
     try:
         manager.process_location(invite_token, public_key)
-    except ValueError:
-        raise InvalidUsage('bad invite or public key')
+    except ValueError as e:
+        raise InvalidUsage(f'failed to process invite: {str(e)}')
 
     return '', HTTPStatus.NO_CONTENT
 
@@ -103,7 +105,7 @@ def _prepare_result_dictionary(result_data):
 
     chain = manager.get_chain_by_certificate_chain_uuid(certificate_chain_uuid)
     if not chain:
-        raise ValueError(f'No chain with certificate_chain_uuid: {certificate_chain_uuid}')
+        raise ValueError(f'no chain with certificate_chain_uuid: {certificate_chain_uuid}')
 
     retrieved = datetime.strptime(result_data['time'], '%Y-%m-%dT%H:%M:%SZ')
 
@@ -125,33 +127,35 @@ def submit():
     """
     try:
         submitted_token_header = jwt.get_unverified_header(request.data)
-    except jwt.JWTError:
-        raise InvalidUsage('malformed JWT')
+    except jwt.JWTError as e:
+        raise InvalidUsage(f'failed to decode JWT: {str(e)}')
 
     try:
         key_id = uuid.UUID(submitted_token_header['kid'])
-    except KeyError:
-        raise InvalidUsage("'kid' missing from JWT header")
+    except KeyError as e:
+        raise InvalidUsage(f'missing header claim: {str(e)}')
 
     submitting_location = manager.get_location_by_key_id(key_id)
     if not submitting_location:
-        raise InvalidUsage(f'no location with key id: {key_id}')
+        raise InvalidUsage(f'no location for key id', payload={'key_id': key_id})
 
     try:
         claims = jwt.decode(request.data, submitting_location.pubkey.decode('utf-8'))
-    except JWTError:
-        raise InvalidUsage('failed to validate JWT')
+    except JWTError as e:
+        raise InvalidUsage(f'failed to decode JWT: {str(e)}')
 
     try:
         results = claims[OCSP_RESULTS_JWT_CLAIM]
-    except KeyError:
-        raise InvalidUsage(f"'{OCSP_RESULTS_JWT_CLAIM}' missing from claims")
+    except KeyError as e:
+        raise InvalidUsage(f'missing claim: {str(e)}')
 
-    try:
-        prepared_result_dicts = (_prepare_result_dictionary(result_data)
-                                 for result_data in results)
-    except (KeyError, ValueError):
-        raise InvalidUsage('invalid result data')
+    prepared_result_dicts = []
+    for result_data in results:
+        try:
+            prepared_dict = _prepare_result_dictionary(result_data)
+            prepared_result_dicts.append(prepared_dict)
+        except (KeyError, ValueError):
+            raise InvalidUsage('invalid result data', payload={'result': result_data})
 
     # TODO: can this raise an exception? I think yes if there's a constraint broken on the DB when commit is called()
     manager.insert_payload(submitting_location, prepared_result_dicts)
