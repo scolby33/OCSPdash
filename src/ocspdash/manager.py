@@ -310,10 +310,7 @@ class Manager:
         most_recent_chain = self.get_most_recent_chain_by_responder(responder)
 
         if most_recent_chain and not most_recent_chain.old:
-            if not most_recent_chain.expired:
-                return most_recent_chain
-
-            if not responder.current:
+            if not most_recent_chain.expired or not responder.current:
                 return most_recent_chain
 
         subject, issuer = self.server_query.get_certs_for_issuer_and_url(responder.authority.name, responder.url)
