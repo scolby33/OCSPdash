@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 """Exceptions and Errors for the OCSPdash web package."""
+
 from http import HTTPStatus
 from typing import Mapping
 
