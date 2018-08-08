@@ -10,6 +10,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ocspdash.manager import Manager
 from ocspdash.models import Base
+from ocspdash.web import create_application
 from .constants import TEST_CONNECTION
 
 logger = logging.getLogger(__name__)
@@ -131,3 +132,15 @@ def manager_function(manager_session):
     # is rolled back
     logger.debug('rolling back transaction from function')
     transaction.rollback()
+
+
+@pytest.fixture(scope='session')
+def client_session():
+    app = create_application()
+    app.testing = True
+
+    transaction = app.db.engine.begin()
+    app.manager.session.begin_nested()
+
+    yield app.test_client()
+
