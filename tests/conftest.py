@@ -135,12 +135,86 @@ def manager_function(manager_session):
 
 
 @pytest.fixture(scope='session')
-def client_session():
-    app = create_application()
+def client_session(rfc):
+    """Create a Flask test client with a temporary SQLite database for a test session.
+
+    All DB operations will be rolled back upon the end of a test session.
+    See below for a fixture that rolls back after every test function.
+
+    Note that a connection object is yielded as well, which is necessary for the function-scoped version, so you must unpack the actual test client object if using this fixture directly.
+
+    :yields: a 2-tuple of test client and Connection
+    """
+    logger.debug('creating engine for web client')
+    engine = create_engine(rfc)
+
+    logger.debug('creating connection for web client')
+    connection = engine.connect()
+
+    app = create_application(connection=rfc, db_session_options={'bind': connection})
     app.testing = True
 
-    transaction = app.db.engine.begin()
+    @event.listens_for(app.manager.session, 'after_transaction_end')
+    def restart_savepoint(session, transaction):
+        logger.debug('called restart_savepoint for web client')
+        if transaction.nested and not transaction._parent.nested:
+            logger.debug('restarting savepoint for web client')
+            # ensure that state is expired the way
+            # session.commit() normally does
+            logger.debug('expiring for web client')
+            session.expire_all()
+
+            logger.debug('beginning nested in restart_savepoint for web client')
+            session.begin_nested()
+            logger.debug('end of restart_savepoint if statement for web client')
+        logger.debug('end of restart_savepoint for web client')
+
+    logger.debug('beginning transaction in session for web client')
+    transaction = connection.begin()
+
+    logger.debug('beginning nested in session for web client')
     app.manager.session.begin_nested()
 
-    yield app.test_client()
+    logger.debug('yielding from session for web client')
+    yield app.test_client(), connection
 
+    logger.debug('closing session from session for web client')
+    app.manager.session.close()
+    logger.debug('rolling back transaction from session for web client')
+    transaction.rollback()
+
+    logger.debug('closing connection for web client')
+    connection.close()
+
+
+@pytest.fixture(scope='function')
+def client_function(client_session):
+    """Create a test client fixture with a temporary SQLite database for a test function.
+
+    All DB operations will be rolled back upon the end of the test function.
+
+    :yields: a Flask test client
+    """
+    logger.debug('unpacking client and connection for web client')
+    client = client_session[0]
+    connection = client_session[1]
+
+    logger.debug('beginning transaction in function for web client')
+    transaction = connection.begin()
+    logger.debug('beginning nested in function for web client')
+    client.application.manager.session.begin_nested()
+
+    logger.debug('yielding client for web client')
+    yield client
+
+    logger.debug('closing session from function for web client')
+    client.application.manager.session.close()
+
+    # rollback - everything that happened with the
+    # Session above (including all calls to commit())
+    # is rolled back
+    logger.debug('rolling back transaction from function for web client')
+    transaction.rollback()
+
+
+# TODO: fixture to pre-fill DB with some stuff for the client to test on

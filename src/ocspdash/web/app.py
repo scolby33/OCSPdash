@@ -4,7 +4,7 @@
 
 import logging
 import os
-from typing import Optional
+from typing import Mapping, Optional
 
 from flasgger import Swagger
 from flask import Flask
@@ -23,11 +23,12 @@ __all__ = [
 logger = logging.getLogger('web')
 
 
-def create_application(connection: Optional[str] = None, flask_debug: bool = False) -> Flask:
+def create_application(connection: Optional[str] = None, flask_debug: bool = False, db_session_options: Optional[Mapping] = None) -> Flask:
     """Create the OCSPdash Flask application.
 
     :param connection: Database connection string
     :param flask_debug: Enable Flask debug mode, overridden by env $DEBUG
+    :param db_session_options: Mapping of options passed to the flask-sqlalchemy constructor for eventual passage to sqlalchemy.sessionmaker.
     """
     app = Flask(__name__)
     app.config.update(dict(
@@ -38,7 +39,9 @@ def create_application(connection: Optional[str] = None, flask_debug: bool = Fal
         CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
         CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
     ))
-    db = OCSPSQLAlchemy(app=app)
+    if db_session_options is None:
+        db_session_options = {}
+    db = OCSPSQLAlchemy(app=app, session_options=db_session_options)
 
     Bootstrap(app)
     Swagger(app)  # Adds Swagger UI
