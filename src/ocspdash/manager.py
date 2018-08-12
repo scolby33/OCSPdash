@@ -579,7 +579,10 @@ class Manager:
         return query.all()
 
     def insert_payload(self, location: Location, results: Iterable[Mapping]):
-        """Take the submitted payload and insert its results into the database."""
+        """Take the submitted payload and insert its results into the database.
+
+        :raises sqlalchemy.IntegrityError: If a duplicate location is trying to be inserted. Rolls back.
+        """
         for prepared_result_dict in results:
             result = Result(**prepared_result_dict)
             result.location = location

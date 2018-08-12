@@ -12,9 +12,10 @@ from functools import partial
 from http import HTTPStatus
 
 import jsonlines
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from jose import jwt
 from jose.exceptions import JWTError
+from sqlalchemy.exc import IntegrityError
 
 from ocspdash.constants import OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
 from ocspdash.web.exceptions import InvalidUsage
@@ -85,9 +86,9 @@ def get_manifest():
         required: false
         type: integer
     """
-    n = request.args.get('n', type=int, default=10)  # TODO make configurable at app level
-    if n > 10:
-        raise InvalidUsage(f'n too large, max is 10: {n}')  # TODO get the max config value here too
+    n = request.args.get('n', type=int, default=current_app.config['OCSPDASH_API_MANIFEST_DEFAULT_SIZE'])
+    if n > current_app.config['OCSPDASH_API_MANIFEST_MAX_SIZE']:
+        raise InvalidUsage(f'n too large, max is {current_app.config["OCSPDASH_API_MANIFEST_MAX_SIZE"]}: {n}')
     manifest_lines = io.StringIO()
     with jsonlines.Writer(manifest_lines, sort_keys=True) as writer:
         writer.write_all(
@@ -157,8 +158,11 @@ def submit():
         except (KeyError, ValueError):
             raise InvalidUsage('invalid result data', payload={'result': result_data})
 
-    # TODO: can this raise an exception? I think yes if there's a constraint broken on the DB when commit is called()
-    manager.insert_payload(submitting_location, prepared_result_dicts)
+    try:
+        manager.insert_payload(submitting_location, prepared_result_dicts)
+    except IntegrityError:
+        manager.session.rollback()
+        raise
 
     return '', HTTPStatus.NO_CONTENT
 

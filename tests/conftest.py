@@ -3,6 +3,7 @@
 """Test configuration module for OCSPdash."""
 
 import logging
+import os
 
 import pytest
 from sqlalchemy import create_engine, event
@@ -151,7 +152,8 @@ def client_session(rfc):
     logger.debug('creating connection for web client')
     connection = engine.connect()
 
-    app = create_application(connection=rfc, db_session_options={'bind': connection})
+    secret_key = os.urandom(8)
+    app = create_application(connection=rfc, db_session_options={'bind': connection}, secret_key=secret_key)
     app.testing = True
 
     @event.listens_for(app.manager.session, 'after_transaction_end')
