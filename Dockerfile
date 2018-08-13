@@ -1,4 +1,4 @@
-FROM python:3.6.5
+FROM python:3.7.0
 
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install gunicorn psycopg2
