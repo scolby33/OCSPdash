@@ -226,6 +226,8 @@ class Location(Base):
         """Set the pubkey and key_id for the Location based on an input public key.
 
         :param public_key: The public key for the Location.
+
+        :raises ValueError: if the passed-in public key is not of a valid algorithm as defined in constants.OCSPSCRAPE_PRIVATE_KEY_ALGORITHMS.
         """
         pubkey = b64decode(public_key)
         loaded_pubkey = serialization.load_pem_public_key(pubkey, default_backend())

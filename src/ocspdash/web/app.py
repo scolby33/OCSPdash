@@ -4,7 +4,7 @@
 
 import logging
 import os
-from typing import Optional
+from typing import Mapping, Optional
 
 from flasgger import Swagger
 from flask import Flask
@@ -23,22 +23,29 @@ __all__ = [
 logger = logging.getLogger('web')
 
 
-def create_application(connection: Optional[str] = None, flask_debug: bool = False) -> Flask:
+def create_application(connection: Optional[str] = None, flask_debug: bool = False,
+                       db_session_options: Optional[Mapping] = None, secret_key=None) -> Flask:
     """Create the OCSPdash Flask application.
 
-    :param connection: Database connection string
+    :param connection: Database connection string, overridden by env $OCSPDASH_CONNECTION
     :param flask_debug: Enable Flask debug mode, overridden by env $DEBUG
+    :param db_session_options: Mapping of options passed to the flask-sqlalchemy constructor for eventual passage to
+     sqlalchemy.sessionmaker.
     """
     app = Flask(__name__)
     app.config.update(dict(
         SQLALCHEMY_DATABASE_URI=connection or OCSPDASH_CONNECTION,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SECRET_KEY=os.environ.get('SECRET_KEY', 'test key'),
+        SECRET_KEY=secret_key or os.environ['SECRET_KEY'],  # keep it secret; keep it safe
         DEBUG=os.environ.get('DEBUG', flask_debug),
         CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
         CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
+        OCSPDASH_API_MANIFEST_DEFAULT_SIZE=int(os.environ.get('OCSPDASH_API_MANIFEST_DEFAULT_SIZE', default=10)),
+        OCSPDASH_API_MANIFEST_MAX_SIZE=int(os.environ.get('OCSPDASH_API_MANIFEST_MAX_SIZE', default=10)),
+
     ))
-    db = OCSPSQLAlchemy(app=app)
+
+    db = OCSPSQLAlchemy(app=app, session_options=db_session_options)
 
     Bootstrap(app)
     Swagger(app)  # Adds Swagger UI

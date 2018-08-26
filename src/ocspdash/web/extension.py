@@ -2,6 +2,8 @@
 
 """An extension of Flask-SQLAlchemy to support the OCSPdash manager."""
 
+from __future__ import annotations
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy, get_state
 
@@ -25,6 +27,14 @@ class OCSPSQLAlchemy(SQLAlchemy):
         super().init_app(app)
 
         self.manager = Manager(engine=self.engine, session=self.session)
+
+    @staticmethod
+    def get_db(app: Flask) -> SQLAlchemy:  # noqa: F821
+        """Get the db from an app.
+
+        :param app: A Flask app
+        """
+        return get_state(app).db
 
     @staticmethod
     def get_manager(app: Flask) -> Manager:
