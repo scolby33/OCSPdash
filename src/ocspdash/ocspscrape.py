@@ -44,7 +44,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from jose import jwt
-from ocspbuilder import OCSPRequestBuilder
+from ocspbuilder import OCSPRequestBuilder  # TODO use cryptography's OCSP capabilities?
 from oscrypto import asymmetric
 from tqdm import tqdm
 
