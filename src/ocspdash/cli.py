@@ -13,7 +13,7 @@ from ocspdash.manager import Manager
 
 @click.group()
 def main():
-    """Run OCSP Dashboard."""
+    """Run OCSPdash."""
 
 
 @main.command()

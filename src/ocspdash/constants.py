@@ -34,7 +34,7 @@ NAMESPACE_OCSPDASH_CERTIFICATE_CHAIN_ID = uuid.UUID(
 
 OCSPDASH_API_VERSION = 'v0'
 
-#: The directory in which data for OCSP Dashboard is stored. Can be set from the environment variable
+#: The directory in which data for OCSPdash is stored. Can be set from the environment variable
 #: ``OCSPDASH_DIRECTORY`` or defaults to ``~/.ocspdash``
 OCSPDASH_DIRECTORY = os.environ.get(
     'OCSPDASH_DIRECTORY', os.path.join(os.path.expanduser('~'), '.ocspdash')
