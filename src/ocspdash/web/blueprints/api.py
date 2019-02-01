@@ -63,7 +63,9 @@ def get_manifest():
         required: false
         type: integer
     """
-    n = request.args.get('n', type=int, default=10)  # TODO make configurable at app level
+    n = request.args.get(  # TODO make configurable at app level
+        'n', type=int, default=10
+    )
     if n > 10:
         abort(400, 'n too large, max is 10')  # TODO get the max config value here too
     manifest_lines = io.StringIO()
@@ -73,9 +75,13 @@ def get_manifest():
             for chain in manager.get_most_recent_chains_for_authorities(n)
         )
 
-    return manifest_lines.getvalue(), {
-        'Content-Type': 'application/json', 'Content-Disposition': 'inline; filename="manifest.jsonl"'
-    }
+    return (
+        manifest_lines.getvalue(),
+        {
+            'Content-Type': 'application/json',
+            'Content-Disposition': 'inline; filename="manifest.jsonl"',
+        },
+    )
 
 
 def _prepare_result_dictionary(result_data):
@@ -88,7 +94,7 @@ def _prepare_result_dictionary(result_data):
         'chain': chain,
         'retrieved': retrieved,
         'ping': result_data['ping'],
-        'ocsp': result_data['ocsp']
+        'ocsp': result_data['ocsp'],
     }
 
 
@@ -110,8 +116,10 @@ def submit():
     except JWTError:
         return abort(400)
 
-    prepared_result_dicts = (_prepare_result_dictionary(result_data)
-                             for result_data in claims[OCSP_RESULTS_JWT_CLAIM])
+    prepared_result_dicts = (
+        _prepare_result_dictionary(result_data)
+        for result_data in claims[OCSP_RESULTS_JWT_CLAIM]
+    )
     manager.insert_payload(submitting_location, prepared_result_dicts)
 
     return ('', HTTPStatus.NO_CONTENT)

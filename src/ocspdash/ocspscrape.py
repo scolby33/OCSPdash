@@ -48,7 +48,12 @@ from ocspbuilder import OCSPRequestBuilder  # TODO use cryptography's OCSP capab
 from oscrypto import asymmetric
 from tqdm import tqdm
 
-from ocspdash.constants import NAMESPACE_OCSPDASH_KID, OCSPSCRAPE_USER_AGENT, OCSP_JWT_ALGORITHM, OCSP_RESULTS_JWT_CLAIM
+from ocspdash.constants import (
+    NAMESPACE_OCSPDASH_KID,
+    OCSPSCRAPE_USER_AGENT,
+    OCSP_JWT_ALGORITHM,
+    OCSP_RESULTS_JWT_CLAIM,
+)
 
 API_URL = 'api/v0/'
 MANIFEST_URL = urllib.parse.urljoin(API_URL, 'manifest.jsonl')
@@ -88,6 +93,7 @@ def main():
 
 # TODO better loading of default host
 
+
 @main.command()
 @click.argument('invite_token')
 @click.option('--host', default='http://localhost:8000')
@@ -99,19 +105,18 @@ def genkey(invite_token, host, no_post):
     serialized_private_key = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     ).decode('utf-8')
     write_private_key(serialized_private_key)
 
-    public_key = b64encode(private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )).decode('utf-8')
+    public_key = b64encode(
+        private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+    ).decode('utf-8')
 
-    payload = {
-        'pk': public_key,
-        'token': invite_token
-    }
+    payload = {'pk': public_key, 'token': invite_token}
     token = jwt.encode(payload, private_key, algorithm=OCSP_JWT_ALGORITHM)
 
     if no_post:
@@ -174,13 +179,15 @@ def _build_result(session: requests.Session, query: Mapping) -> Mapping:
 
     time = datetime.utcnow().strftime('%FT%TZ')
     ping_result = ping(netloc)
-    ocsp_result = check_ocsp_response(subject_bytes, issuer_bytes, responder_url, session)
+    ocsp_result = check_ocsp_response(
+        subject_bytes, issuer_bytes, responder_url, session
+    )
 
     return {
         'certificate_chain_uuid': query['certificate_chain_uuid'],
         'time': time,
         'ping': ping_result,
-        'ocsp': ocsp_result
+        'ocsp': ocsp_result,
     }
 
 
@@ -194,16 +201,13 @@ def scrape(key: str, queries: Iterable[Mapping]) -> str:
 
     claims = {
         'iat': datetime.utcnow(),
-        OCSP_RESULTS_JWT_CLAIM: [build_result(query) for query in tqdm(queries)]
+        OCSP_RESULTS_JWT_CLAIM: [build_result(query) for query in tqdm(queries)],
     }
 
     key_id = str(_keyid_from_private_key(key))
 
     return jwt.encode(
-        claims=claims,
-        key=key,
-        headers={'kid': key_id},
-        algorithm=OCSP_JWT_ALGORITHM
+        claims=claims, key=key, headers={'kid': key_id}, algorithm=OCSP_JWT_ALGORITHM
     )
 
 
@@ -213,14 +217,14 @@ def _keyid_from_private_key(private_key_data: str) -> uuid.UUID:
     :param private_key_data: The data for a private key
     """
     loaded_private_key = serialization.load_pem_private_key(
-        data=private_key_data.encode('utf-8'),
-        password=None,
-        backend=default_backend()
+        data=private_key_data.encode('utf-8'), password=None, backend=default_backend()
     )
-    public_key = b64encode(loaded_private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )).decode('utf-8')
+    public_key = b64encode(
+        loaded_private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+    ).decode('utf-8')
     key_id = uuid.uuid5(NAMESPACE_OCSPDASH_KID, public_key)
     return key_id
 
@@ -237,7 +241,9 @@ def ping(host: str) -> bool:
     return results.returncode == 0
 
 
-def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, session: requests.Session) -> bool:
+def check_ocsp_response(
+    subject_cert: bytes, issuer_cert: bytes, url: str, session: requests.Session
+) -> bool:
     """Create and send an OCSP request.
 
     :param subject_cert: The certificate that information is being requested about
@@ -257,7 +263,11 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, sessi
     ocsp_request = builder.build()
 
     try:
-        ocsp_resp = session.post(url, data=ocsp_request.dump(), headers={'Content-Type': 'application/ocsp-request'})
+        ocsp_resp = session.post(
+            url,
+            data=ocsp_request.dump(),
+            headers={'Content-Type': 'application/ocsp-request'},
+        )
     except requests.RequestException:
         return False
 
@@ -266,7 +276,10 @@ def check_ocsp_response(subject_cert: bytes, issuer_cert: bytes, url: str, sessi
     except ValueError:
         return False
 
-    return parsed_ocsp_response and parsed_ocsp_response.native['response_status'] == 'successful'
+    return (
+        parsed_ocsp_response
+        and parsed_ocsp_response.native['response_status'] == 'successful'
+    )
 
 
 if __name__ == '__main__':

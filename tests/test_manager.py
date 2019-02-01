@@ -6,15 +6,19 @@ from datetime import datetime
 
 from ocspdash.manager import Manager
 from ocspdash.models import Chain, Result
-from .constants import TEST_BAD_CERTIFICATE_CHAIN_UUID, TEST_KEY_ID, TEST_LOCATION_NAME, TEST_PUBLIC_KEY
+from .constants import (
+    TEST_BAD_CERTIFICATE_CHAIN_UUID,
+    TEST_KEY_ID,
+    TEST_LOCATION_NAME,
+    TEST_PUBLIC_KEY,
+)
 
 
 def test_count_authorities(manager_function: Manager):
     """Test the counting query for authorities."""
     for i in range(10):
         manager_function.ensure_authority(
-            name=f'Test Authority {i}',
-            cardinality=i * 10 + 7
+            name=f'Test Authority {i}', cardinality=i * 10 + 7
         )
 
     assert manager_function.count_authorities() == 10
@@ -23,14 +27,13 @@ def test_count_authorities(manager_function: Manager):
 def test_count_responders(manager_function: Manager):
     """Test the counting query for responders."""
     authority = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
     for i in range(10):
         manager_function.ensure_responder(
             authority=authority,
             url=f'http://test-responder.url/{i}',
-            cardinality=i * 9 - 3
+            cardinality=i * 9 - 3,
         )
 
     assert manager_function.count_responders() == 10
@@ -39,17 +42,18 @@ def test_count_responders(manager_function: Manager):
 def test_count_chains(manager_function: Manager):
     """Test the counting query for chains."""
     authority = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
     responder = manager_function.ensure_responder(
-        authority=authority,
-        url='http://test-responder.url/',
-        cardinality=123
+        authority=authority, url='http://test-responder.url/', cardinality=123
     )
 
     for i in range(10):
-        chain = Chain(responder=responder, subject=f'c{i}s'.encode('utf-8'), issuer=f'c{i}i'.encode('utf-8'))
+        chain = Chain(
+            responder=responder,
+            subject=f'c{i}s'.encode('utf-8'),
+            issuer=f'c{i}i'.encode('utf-8'),
+        )
         manager_function.session.add(chain)
     manager_function.session.commit()
 
@@ -59,8 +63,7 @@ def test_count_chains(manager_function: Manager):
 def test_get_authority_by_name(manager_function: Manager):
     """Test getting an authority by its name."""
     authority = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
     assert manager_function.get_authority_by_name('Test Authority') is authority
     assert manager_function.get_authority_by_name('Nonexistent Authority') is None
@@ -69,15 +72,13 @@ def test_get_authority_by_name(manager_function: Manager):
 def test_ensure_authority(manager_function: Manager):
     """Test the creation of Authority objects."""
     authority1 = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
     assert authority1.name == 'Test Authority'
     assert authority1.cardinality == 1234
 
     authority2 = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=2345
+        name='Test Authority', cardinality=2345
     )
     assert authority1 is authority2
     assert authority2.name == 'Test Authority'
@@ -87,30 +88,27 @@ def test_ensure_authority(manager_function: Manager):
 def test_get_responder(manager_function: Manager):
     """Test getting a responder for an Authority and URL."""
     authority = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
     responder = manager_function.ensure_responder(
-        authority=authority,
-        url='http://test-responder.url/',
-        cardinality=123
+        authority=authority, url='http://test-responder.url/', cardinality=123
     )
 
-    assert manager_function.get_responder(authority, 'http://test-responder.url/') is responder
+    assert (
+        manager_function.get_responder(authority, 'http://test-responder.url/')
+        is responder
+    )
     assert manager_function.get_responder(authority, 'http://non-existent.url/') is None
 
 
 def test_ensure_responder(manager_function: Manager):
     """Test the creation of Responder objects."""
     authority = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
 
     responder1 = manager_function.ensure_responder(
-        authority=authority,
-        url='http://test-responder.url/',
-        cardinality=123
+        authority=authority, url='http://test-responder.url/', cardinality=123
     )
 
     assert responder1.authority is authority
@@ -118,9 +116,7 @@ def test_ensure_responder(manager_function: Manager):
     assert responder1.cardinality == 123
 
     responder2 = manager_function.ensure_responder(
-        authority=authority,
-        url='http://test-responder.url/',
-        cardinality=234
+        authority=authority, url='http://test-responder.url/', cardinality=234
     )
 
     assert responder2 is responder1
@@ -131,44 +127,61 @@ def test_ensure_responder(manager_function: Manager):
 def test_get_chain_by_certificate_chain_uuid(manager_function: Manager):
     """Test retrieving a Chain by its certificate chain UUID."""
     authority = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
     responder = manager_function.ensure_responder(
-        authority=authority,
-        url='http://test-responder.url/',
-        cardinality=234
+        authority=authority, url='http://test-responder.url/', cardinality=234
     )
-    chain = Chain(
-        responder=responder,
-        subject=b'cs',
-        issuer=b'ci'
-    )
+    chain = Chain(responder=responder, subject=b'cs', issuer=b'ci')
     manager_function.session.add(chain)
     manager_function.session.commit()
 
     certificate_hash = chain.certificate_chain_uuid
 
-    assert manager_function.get_chain_by_certificate_chain_uuid(certificate_hash) is chain
-    assert manager_function.get_chain_by_certificate_chain_uuid(TEST_BAD_CERTIFICATE_CHAIN_UUID) is None
+    assert (
+        manager_function.get_chain_by_certificate_chain_uuid(certificate_hash) is chain
+    )
+    assert (
+        manager_function.get_chain_by_certificate_chain_uuid(
+            TEST_BAD_CERTIFICATE_CHAIN_UUID
+        )
+        is None
+    )
 
 
 def test_get_most_recent_chain_by_responder(manager_function: Manager):
     """Test that we get the proper Chain for a Responder."""
     authority = manager_function.ensure_authority(
-        name='Test Authority',
-        cardinality=1234
+        name='Test Authority', cardinality=1234
     )
     responder = manager_function.ensure_responder(
-        authority=authority,
-        url='http://test-responder.url/',
-        cardinality=234
+        authority=authority, url='http://test-responder.url/', cardinality=234
     )
 
-    c1 = Chain(responder=responder, subject=b'c1s', issuer=b'c1i', retrieved=datetime(2018, 7, 1))
-    c2 = Chain(responder=responder, subject=b'c2s', issuer=b'c2i', retrieved=datetime(2018, 7, 2))
-    c3 = Chain(responder=responder, subject=b'c3s', issuer=b'c3i', retrieved=datetime(2018, 7, 3))
-    c4 = Chain(responder=responder, subject=b'c4s', issuer=b'c4i', retrieved=datetime(2018, 7, 4))
+    c1 = Chain(
+        responder=responder,
+        subject=b'c1s',
+        issuer=b'c1i',
+        retrieved=datetime(2018, 7, 1),
+    )
+    c2 = Chain(
+        responder=responder,
+        subject=b'c2s',
+        issuer=b'c2i',
+        retrieved=datetime(2018, 7, 2),
+    )
+    c3 = Chain(
+        responder=responder,
+        subject=b'c3s',
+        issuer=b'c3i',
+        retrieved=datetime(2018, 7, 3),
+    )
+    c4 = Chain(
+        responder=responder,
+        subject=b'c4s',
+        issuer=b'c4i',
+        retrieved=datetime(2018, 7, 4),
+    )
     manager_function.session.add_all([c1, c2, c3, c4])
     manager_function.session.commit()
 
@@ -198,7 +211,9 @@ def test_location_invites(manager_function: Manager):
     assert location.pubkey is None
     assert location.key_id is None
 
-    processed_location = manager_function.process_location(b''.join((selector, validator)), TEST_PUBLIC_KEY)
+    processed_location = manager_function.process_location(
+        b''.join((selector, validator)), TEST_PUBLIC_KEY
+    )
     assert location is processed_location
     assert isinstance(processed_location.b64encoded_pubkey, str)
     assert processed_location.b64encoded_pubkey == TEST_PUBLIC_KEY

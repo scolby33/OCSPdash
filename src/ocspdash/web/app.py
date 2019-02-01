@@ -16,28 +16,30 @@ from ocspdash.web.admin import make_admin
 from ocspdash.web.blueprints import api, ui
 from ocspdash.web.extension import OCSPSQLAlchemy
 
-__all__ = [
-    'create_application',
-]
+__all__ = ['create_application']
 
 logger = logging.getLogger('web')
 
 
-def create_application(connection: Optional[str] = None, flask_debug: bool = False) -> Flask:
+def create_application(
+    connection: Optional[str] = None, flask_debug: bool = False
+) -> Flask:
     """Create the OCSPdash Flask application.
 
     :param connection: Database connection string
     :param flask_debug: Enable Flask debug mode, overridden by env $DEBUG
     """
     app = Flask(__name__)
-    app.config.update(dict(
-        SQLALCHEMY_DATABASE_URI=connection or OCSPDASH_CONNECTION,
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SECRET_KEY=os.environ.get('SECRET_KEY', 'test key'),
-        DEBUG=os.environ.get('DEBUG', flask_debug),
-        CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
-        CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
-    ))
+    app.config.update(
+        dict(
+            SQLALCHEMY_DATABASE_URI=connection or OCSPDASH_CONNECTION,
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+            SECRET_KEY=os.environ.get('SECRET_KEY', 'test key'),
+            DEBUG=os.environ.get('DEBUG', flask_debug),
+            CENSYS_API_ID=os.environ.get('CENSYS_API_ID'),
+            CENSYS_API_SECRET=os.environ.get('CENSYS_API_SECRET'),
+        )
+    )
     db = OCSPSQLAlchemy(app=app)
 
     Bootstrap(app)

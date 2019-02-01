@@ -38,29 +38,32 @@ class ToJSONCustomEncoder(JSONEncoder):
 class OrderedDefaultDict(collections.OrderedDict):
     """A defaultdict with OrderedDict as its base class."""
 
-    def __init__(self, default_factory: Callable=None, *args, **kwargs) -> None:
+    def __init__(self, default_factory: Callable = None, *args, **kwargs) -> None:
         """Create a dict with a default factory that remembers insertion order.
 
         :param default_factory: The default factory is called without arguments when a key is missing
         """
-        if not (default_factory is None or
-                callable(default_factory)):
+        if not (default_factory is None or callable(default_factory)):
             raise TypeError('first argument must be callable or None')
         super().__init__(*args, **kwargs)
         self.default_factory = default_factory  # called by __missing__
 
     def __missing__(self, key):
         if self.default_factory is None:
-            raise KeyError(key, )
+            raise KeyError(key)
         self[key] = value = self.default_factory()
         return value
 
     def __reduce__(self):  # for pickle support
-        args = (self.default_factory, ) if self.default_factory else tuple()
+        args = (self.default_factory,) if self.default_factory else tuple()
         return self.__class__, args, None, None, self.items()
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.default_factory, list(self.items()))
+        return '%s(%r, %r)' % (
+            self.__class__.__name__,
+            self.default_factory,
+            list(self.items()),
+        )
 
 
 def uuid5(namespace: uuid.UUID, name: Union[str, bytes]) -> uuid.UUID:

@@ -8,9 +8,7 @@ from flask_admin.contrib.sqla import ModelView
 
 from ocspdash.models import Authority, Chain, Location, Responder, Result
 
-__all__ = [
-    'make_admin',
-]
+__all__ = ['make_admin']
 
 
 def make_admin(app: Flask, session) -> Admin:

@@ -6,9 +6,7 @@ from flask import Blueprint, render_template
 
 from ocspdash.web.proxies import manager
 
-__all__ = [
-    'ui',
-]
+__all__ = ['ui']
 
 ui = Blueprint('ui', __name__)
 

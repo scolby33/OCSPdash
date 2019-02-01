@@ -8,9 +8,7 @@ from werkzeug.local import LocalProxy
 from ocspdash.manager import Manager
 from ocspdash.web.extension import OCSPSQLAlchemy
 
-__all__ = [
-    'manager',
-]
+__all__ = ['manager']
 
 
 def get_manager_proxy():
