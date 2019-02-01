@@ -22,7 +22,7 @@ python-jose = "*"
 requests = "*"
 sqlalchemy = "*"
 tqdm = "*"
-"e1839a8" = {editable = true, path = "."}
+ocspdash = {editable = true,path = "."}
 
 [dev-packages]
 tox = "*"

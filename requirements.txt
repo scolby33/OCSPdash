@@ -10,7 +10,6 @@ click==7.0
 cryptography==2.5
 dominate==2.3.5
 ecdsa==0.13
-flasgger==0.9.2
 flask-admin==1.5.3
 flask-bootstrap==3.3.7.1
 flask-sqlalchemy==2.3.2
@@ -20,9 +19,7 @@ idna==2.8
 itsdangerous==1.1.0
 jinja2==2.10
 jsonlines==1.2.0
-jsonschema==2.6.0
 markupsafe==1.1.0
-mistune==0.8.4
 netaddr==0.7.19
 ocspbuilder==0.10.2
 oscrypto==0.19.1
@@ -30,7 +27,6 @@ passlib==1.7.1
 pyasn1==0.4.5
 pycparser==2.19
 python-jose==3.0.1
-pyyaml==3.13
 requests==2.21.0
 rsa==4.0
 six==1.12.0
