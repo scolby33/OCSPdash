@@ -27,7 +27,7 @@ INSTALL_REQUIRES = [
     'censys',
     'click',
     'cryptography',
-    #'flasgger',
+    # 'flasgger',  # flasgger is temporarily disabled due to a security vulnerability
     'flask',
     'flask-admin',
     'flask-bootstrap',

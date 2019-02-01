@@ -6,7 +6,7 @@ import logging
 import os
 from typing import Optional
 
-#from flasgger import Swagger
+# from flasgger import Swagger
 from flask import Flask
 from flask_bootstrap import Bootstrap
 
@@ -43,7 +43,8 @@ def create_application(
     db = OCSPSQLAlchemy(app=app)
 
     Bootstrap(app)
-    #Swagger(app)  # Adds Swagger UI
+    # flasgger is temporarily disabled due to a security vulnerability
+    # Swagger(app)  # Adds Swagger UI
 
     app.manager = db.manager
     app.json_encoder = ToJSONCustomEncoder
