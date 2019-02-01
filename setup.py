@@ -27,7 +27,7 @@ INSTALL_REQUIRES = [
     'censys',
     'click',
     'cryptography',
-    'flasgger',
+    #'flasgger',
     'flask',
     'flask-admin',
     'flask-bootstrap',
