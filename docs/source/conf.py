@@ -165,7 +165,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'OCSPdash', 'OCSPdash Documentation',
-     author, 'OCSPdash', 'One line description of project.',
+     author, 'OCSPdash', "A dashboard for the status of the top certificate authorities' OCSP responders.",
      'Miscellaneous'),
 ]
 
