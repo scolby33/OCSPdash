@@ -1,5 +1,8 @@
 OCSPdash |python_versions| |license| |develop_build| |develop_coverage|
-=======================================================================
+OCSPdash 
+========
+|python_versions| |license| |develop_build| |develop_coverage|
+
 A dashboard for the status of the top certificate authorities' OCSP responders.
 
 .. |python_versions| image:: https://img.shields.io/badge/python->%3D3.6-blue.svg?style=flat-square
