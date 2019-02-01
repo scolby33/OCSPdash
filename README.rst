@@ -1,4 +1,4 @@
-OCSPdash 
+OCSPdash
 ========
 |python_versions| |license| |develop_build| |develop_coverage|
 
