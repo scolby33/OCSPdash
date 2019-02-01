@@ -13,12 +13,12 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from oscrypto import asymmetric
 from sqlalchemy import (
-    Binary,
     Boolean,
     Column,
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -173,9 +173,9 @@ class Chain(Base):
     responder_id = Column(Integer, ForeignKey('responder.id'))
     responder = relationship('Responder', backref=backref('chains'))
 
-    subject = Column(Binary, nullable=False, doc='raw bytes of the subject certificate')
+    subject = Column(LargeBinary, nullable=False, doc='raw bytes of the subject certificate')
     issuer = Column(
-        Binary, nullable=False, doc="raw bytes of the subject's issuer certificate"
+        LargeBinary, nullable=False, doc="raw bytes of the subject's issuer certificate"
     )
     retrieved = Column(
         DateTime,
@@ -236,10 +236,10 @@ class Location(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(255), doc='the name of the invited location')
 
-    selector = Column(Binary(16), nullable=False, unique=True, index=True, doc='')
+    selector = Column(LargeBinary(16), nullable=False, unique=True, index=True, doc='')
     validator_hash = Column(String(255), nullable=False, doc='')
 
-    pubkey = Column(Binary, doc="the location's public signing key")
+    pubkey = Column(LargeBinary, doc="the location's public signing key")
     key_id = Column(UUID, doc="the UUID of the location's public key", index=True)
 
     @property
