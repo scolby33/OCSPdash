@@ -23,6 +23,7 @@ requests = "*"
 sqlalchemy = "*"
 tqdm = "*"
 ocspdash = {editable = true,path = "."}
+easy-config = "*"
 
 [dev-packages]
 tox = "*"
